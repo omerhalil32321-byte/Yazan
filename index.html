@@ -1,232 +1,217 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة المتاجر - نظام شامل</title>
-    <style>
-        :root {
-            --primary: #6366f1; --primary-dark: #4f46e5; --secondary: #10b981;
-            --danger: #ef4444; --warning: #f59e0b; --dark: #1f2937;
-            --gray: #6b7280; --light: #f3f4f6; --white: #ffffff;
-            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
-            --radius: 12px;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background: #f8fafc; color: var(--dark); line-height: 1.6; }
-        .hidden { display: none !important; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>منصة المتاجر - نظام شامل</title>
+<style>
+:root {
+    --primary: #6366f1; --primary-dark: #4f46e5; --secondary: #10b981;
+    --danger: #ef4444; --warning: #f59e0b; --dark: #1f2937;
+    --gray: #6b7280; --light: #f3f4f6; --white: #ffffff;
+    --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+    --radius: 12px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+body { background: #f8fafc; color: var(--dark); line-height: 1.6; }
+.hidden { display: none !important; }
 
-        /* Login */
-        .login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); }
-        .login-box { background: white; padding: 40px; border-radius: var(--radius); box-shadow: var(--shadow-lg); width: 100%; max-width: 420px; }
-        .login-box h1 { text-align: center; margin-bottom: 8px; color: var(--primary); }
-        .login-box p { text-align: center; color: var(--gray); margin-bottom: 24px; }
-        .login-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
-        .login-tab { flex: 1; padding: 10px; border: none; background: var(--light); border-radius: 8px; cursor: pointer; font-weight: 600; }
-        .login-tab.active { background: var(--primary); color: white; }
+/* Login */
+.login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 20px; }
+.login-box { background: white; padding: 40px; border-radius: var(--radius); box-shadow: var(--shadow-lg); width: 100%; max-width: 440px; }
+.login-box h1 { text-align: center; margin-bottom: 8px; color: var(--primary); font-size: 28px; }
+.login-box p { text-align: center; color: var(--gray); margin-bottom: 28px; font-size: 14px; }
+.login-box .logo-icon { font-size: 56px; text-align: center; margin-bottom: 8px; }
 
-        /* Layout */
-        .app-layout { display: flex; min-height: 100vh; }
-        .sidebar { width: 270px; background: var(--dark); color: white; position: fixed; right: 0; top: 0; bottom: 0; overflow-y: auto; padding: 20px 0; }
-        .sidebar .logo { padding: 0 20px 20px; font-size: 22px; font-weight: 800; border-bottom: 1px solid #374151; margin-bottom: 12px; }
-        .sidebar .role-badge { padding: 0 20px; margin-bottom: 16px; font-size: 12px; color: #9ca3af; }
-        .sidebar a { display: flex; align-items: center; gap: 10px; padding: 12px 20px; color: #9ca3af; text-decoration: none; font-weight: 500; transition: all 0.2s; cursor: pointer; }
-        .sidebar a:hover, .sidebar a.active { background: #374151; color: white; }
-        .sidebar .nav-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid #374151; }
-        .main-content { margin-right: 270px; flex: 1; padding: 24px; }
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-        .page-header h1 { font-size: 26px; }
+/* Layout */
+.app-layout { display: flex; min-height: 100vh; }
+.sidebar { width: 270px; background: var(--dark); color: white; position: fixed; right: 0; top: 0; bottom: 0; overflow-y: auto; padding: 20px 0; z-index: 100; }
+.sidebar .logo { padding: 0 20px 20px; font-size: 22px; font-weight: 800; border-bottom: 1px solid #374151; margin-bottom: 12px; }
+.sidebar .role-badge { padding: 0 20px; margin-bottom: 16px; font-size: 12px; color: #9ca3af; }
+.sidebar a { display: flex; align-items: center; gap: 10px; padding: 12px 20px; color: #9ca3af; text-decoration: none; font-weight: 500; transition: all 0.2s; cursor: pointer; }
+.sidebar a:hover, .sidebar a.active { background: #374151; color: white; }
+.sidebar .nav-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid #374151; }
+.main-content { margin-right: 270px; flex: 1; padding: 24px; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+.page-header h1 { font-size: 26px; }
+.back-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #f3f4f6; color: var(--dark); border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+.back-btn:hover { background: #e5e7eb; }
 
-        /* Cards */
-        .card { background: var(--white); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); margin-bottom: 20px; }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .card-header h2 { font-size: 18px; }
+/* Cards */
+.card { background: var(--white); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); margin-bottom: 20px; }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 
-        /* Buttons */
-        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: 8px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-dark); }
-        .btn-success { background: var(--secondary); color: white; }
-        .btn-success:hover { background: #059669; }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-danger:hover { background: #dc2626; }
-        .btn-warning { background: var(--warning); color: white; }
-        .btn-outline { background: transparent; border: 1px solid #e5e7eb; color: var(--dark); }
-        .btn-sm { padding: 6px 12px; font-size: 12px; }
-        .btn-block { width: 100%; justify-content: center; }
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: 8px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-success { background: var(--secondary); color: white; }
+.btn-danger { background: var(--danger); color: white; }
+.btn-warning { background: var(--warning); color: white; }
+.btn-outline { background: transparent; border: 1px solid #e5e7eb; color: var(--dark); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-block { width: 100%; justify-content: center; }
 
-        /* Forms */
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
-        .form-control { width: 100%; padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; transition: border-color 0.2s; }
-        .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+/* Forms */
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
+.form-control { width: 100%; padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; transition: border-color 0.2s; }
+.form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
-        /* Stats */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background: var(--white); padding: 20px; border-radius: var(--radius); box-shadow: var(--shadow); }
-        .stat-card h3 { font-size: 28px; color: var(--primary); margin-bottom: 4px; }
-        .stat-card p { color: var(--gray); font-size: 13px; }
+/* Stats */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: var(--white); padding: 20px; border-radius: var(--radius); box-shadow: var(--shadow); }
+.stat-card h3 { font-size: 28px; color: var(--primary); margin-bottom: 4px; }
+.stat-card p { color: var(--gray); font-size: 13px; }
 
-        /* Tables */
-        .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: right; border-bottom: 1px solid #e5e7eb; font-size: 14px; }
-        th { background: var(--light); font-weight: 600; color: var(--gray); font-size: 12px; text-transform: uppercase; }
-        tr:hover { background: #f9fafb; }
+/* Tables */
+.table-container { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 12px; text-align: right; border-bottom: 1px solid #e5e7eb; font-size: 14px; }
+th { background: var(--light); font-weight: 600; color: var(--gray); font-size: 12px; text-transform: uppercase; }
+tr:hover { background: #f9fafb; }
 
-        /* Badges */
-        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-        .badge-green { background: #d1fae5; color: #065f46; }
-        .badge-red { background: #fee2e2; color: #991b1b; }
-        .badge-blue { background: #dbeafe; color: #1e40af; }
-        .badge-orange { background: #fef3c7; color: #92400e; }
-        .badge-gray { background: #f3f4f6; color: #6b7280; }
+/* Badges */
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+.badge-green { background: #d1fae5; color: #065f46; }
+.badge-red { background: #fee2e2; color: #991b1b; }
+.badge-blue { background: #dbeafe; color: #1e40af; }
+.badge-orange { background: #fef3c7; color: #92400e; }
+.badge-gray { background: #f3f4f6; color: #6b7280; }
 
-        /* Modals */
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
-        .modal-overlay.active { display: flex; }
-        .modal { background: var(--white); border-radius: var(--radius); width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; }
-        .modal-header { padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
-        .modal-body { padding: 20px; }
-        .modal-footer { padding: 16px 20px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+/* Modals */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
+.modal-overlay.active { display: flex; }
+.modal { background: var(--white); border-radius: var(--radius); width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; }
+.modal-header { padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+.modal-body { padding: 20px; }
+.modal-footer { padding: 16px 20px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
 
-        /* Store Front */
-        .store-header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; padding: 50px 20px; text-align: center; }
-        .store-header h1 { font-size: 32px; margin-bottom: 8px; }
-        .store-header p { opacity: 0.9; }
-        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
-        .product-card { background: var(--white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: transform 0.2s; }
-        .product-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
-        .product-img { width: 100%; height: 180px; object-fit: cover; background: #e5e7eb; display: flex; align-items: center; justify-content: center; font-size: 48px; }
-        .product-info { padding: 16px; }
-        .product-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
-        .product-price { color: var(--primary); font-size: 18px; font-weight: 800; margin-bottom: 10px; }
-        .product-desc { color: var(--gray); font-size: 13px; margin-bottom: 12px; }
-        .add-to-cart { width: 100%; padding: 10px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
-        .add-to-cart:hover { background: var(--primary-dark); }
+/* Store */
+.store-header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; padding: 50px 20px; text-align: center; }
+.store-header h1 { font-size: 32px; margin-bottom: 8px; }
+.store-header p { opacity: 0.9; }
+.products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+.product-card { background: var(--white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: transform 0.2s; }
+.product-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+.product-img { width: 100%; height: 180px; object-fit: cover; background: #e5e7eb; display: flex; align-items: center; justify-content: center; font-size: 48px; }
+.product-info { padding: 16px; }
+.product-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+.product-price { color: var(--primary); font-size: 18px; font-weight: 800; margin-bottom: 10px; }
+.product-desc { color: var(--gray); font-size: 13px; margin-bottom: 12px; }
+.add-to-cart { width: 100%; padding: 10px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.add-to-cart:hover { background: var(--primary-dark); }
 
-        /* Cart */
-        .cart-btn { position: fixed; bottom: 24px; left: 24px; background: var(--secondary); color: white; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-lg); cursor: pointer; border: none; font-size: 22px; z-index: 99; }
-        .cart-count { position: absolute; top: -4px; right: -4px; background: var(--danger); color: white; width: 22px; height: 22px; border-radius: 50%; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
-        .cart-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #e5e7eb; }
-        .cart-item-info { flex: 1; }
-        .cart-item-info h4 { font-size: 14px; }
-        .cart-item-info p { color: var(--primary); font-weight: 700; }
-        .qty-control { display: flex; align-items: center; gap: 8px; }
-        .qty-control button { width: 26px; height: 26px; border-radius: 6px; border: 1px solid #e5e7eb; background: white; cursor: pointer; }
-        .cart-total { padding: 16px 0; border-top: 2px solid #e5e7eb; margin-top: 12px; }
-        .cart-total-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; }
-        .cart-total-row.total { font-size: 18px; font-weight: 800; color: var(--primary); }
-        .whatsapp-btn { width: 100%; padding: 14px; background: #25d366; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 12px; }
-        .whatsapp-btn:hover { background: #128c7e; }
+/* Cart */
+.cart-btn { position: fixed; bottom: 24px; left: 24px; background: var(--secondary); color: white; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-lg); cursor: pointer; border: none; font-size: 22px; z-index: 99; }
+.cart-count { position: absolute; top: -4px; right: -4px; background: var(--danger); color: white; width: 22px; height: 22px; border-radius: 50%; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.cart-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #e5e7eb; }
+.cart-item-info { flex: 1; }
+.cart-item-info h4 { font-size: 14px; }
+.cart-item-info p { color: var(--primary); font-weight: 700; }
+.qty-control { display: flex; align-items: center; gap: 8px; }
+.qty-control button { width: 26px; height: 26px; border-radius: 6px; border: 1px solid #e5e7eb; background: white; cursor: pointer; }
+.cart-total { padding: 16px 0; border-top: 2px solid #e5e7eb; margin-top: 12px; }
+.cart-total-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; }
+.cart-total-row.total { font-size: 18px; font-weight: 800; color: var(--primary); }
+.whatsapp-btn { width: 100%; padding: 14px; background: #25d366; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 12px; }
+.whatsapp-btn:hover { background: #128c7e; }
 
-        /* Toast */
-        .toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-120px); background: var(--dark); color: white; padding: 14px 28px; border-radius: 10px; font-weight: 600; z-index: 1001; transition: transform 0.3s; box-shadow: var(--shadow-lg); }
-        .toast.show { transform: translateX(-50%) translateY(0); }
+/* Toast */
+.toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-120px); background: var(--dark); color: white; padding: 14px 28px; border-radius: 10px; font-weight: 600; z-index: 1001; transition: transform 0.3s; box-shadow: var(--shadow-lg); }
+.toast.show { transform: translateX(-50%) translateY(0); }
 
-        /* Messages */
-        .msg-list { max-height: 400px; overflow-y: auto; }
-        .msg-item { padding: 12px; border-radius: 8px; margin-bottom: 8px; }
-        .msg-item.sent { background: #dbeafe; margin-left: 40px; }
-        .msg-item.received { background: #f3f4f6; margin-right: 40px; }
-        .msg-item small { color: var(--gray); font-size: 11px; }
-        .msg-item p { margin-top: 4px; font-size: 14px; }
+/* Messages */
+.msg-list { max-height: 400px; overflow-y: auto; }
+.msg-item { padding: 12px; border-radius: 8px; margin-bottom: 8px; }
+.msg-item.sent { background: #dbeafe; margin-left: 40px; }
+.msg-item.received { background: #f3f4f6; margin-right: 40px; }
+.msg-item small { color: var(--gray); font-size: 11px; }
+.msg-item p { margin-top: 4px; font-size: 14px; }
 
-        /* Subscription */
-        .sub-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
-        .sub-card { border: 2px solid #e5e7eb; border-radius: var(--radius); padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; }
-        .sub-card:hover, .sub-card.selected { border-color: var(--primary); background: #eef2ff; }
-        .sub-card h3 { font-size: 20px; margin-bottom: 4px; }
-        .sub-card .price { font-size: 28px; color: var(--primary); font-weight: 800; }
-        .sub-card .period { color: var(--gray); font-size: 13px; }
+/* Subscription */
+.sub-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.sub-card { border: 2px solid #e5e7eb; border-radius: var(--radius); padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; }
+.sub-card:hover, .sub-card.selected { border-color: var(--primary); background: #eef2ff; }
+.sub-card h3 { font-size: 20px; margin-bottom: 4px; }
+.sub-card .price { font-size: 28px; color: var(--primary); font-weight: 800; }
+.sub-card .period { color: var(--gray); font-size: 13px; }
 
-        /* Color Picker */
-        .color-picker { display: flex; gap: 10px; flex-wrap: wrap; }
-        .color-option { width: 36px; height: 36px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 0.2s; }
-        .color-option:hover, .color-option.active { border-color: var(--dark); transform: scale(1.15); }
+/* Toggle */
+.toggle-switch { position: relative; width: 48px; height: 26px; display: inline-block; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #e5e7eb; border-radius: 26px; transition: 0.3s; }
+.toggle-slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
+input:checked + .toggle-slider { background: var(--secondary); }
+input:checked + .toggle-slider:before { transform: translateX(22px); }
 
-        /* Toggle */
-        .toggle-switch { position: relative; width: 48px; height: 26px; display: inline-block; }
-        .toggle-switch input { opacity: 0; width: 0; height: 0; }
-        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #e5e7eb; border-radius: 26px; transition: 0.3s; }
-        .toggle-slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
-        input:checked + .toggle-slider { background: var(--secondary); }
-        input:checked + .toggle-slider:before { transform: translateX(22px); }
+/* Tabs */
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid #e5e7eb; margin-bottom: 20px; }
+.tab { padding: 10px 20px; border: none; background: none; cursor: pointer; font-weight: 600; color: var(--gray); border-bottom: 2px solid transparent; }
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
 
-        /* Tabs */
-        .tabs { display: flex; gap: 4px; border-bottom: 1px solid #e5e7eb; margin-bottom: 20px; }
-        .tab { padding: 10px 20px; border: none; background: none; cursor: pointer; font-weight: 600; color: var(--gray); border-bottom: 2px solid transparent; }
-        .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+/* Branch Row */
+.branch-row { display: flex; align-items: center; gap: 14px; padding: 14px; border: 1px solid #e5e7eb; border-radius: 12px; margin-bottom: 10px; }
+.branch-avatar { width: 44px; height: 44px; border-radius: 10px; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; }
+.branch-info { flex: 1; }
+.branch-info h4 { font-size: 15px; margin-bottom: 2px; }
+.branch-info p { color: var(--gray); font-size: 12px; }
+.branch-link { background: #f3f4f6; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-family: monospace; color: var(--primary); }
 
-        /* Branch Row */
-        .branch-row { display: flex; align-items: center; gap: 14px; padding: 14px; border: 1px solid #e5e7eb; border-radius: 12px; margin-bottom: 10px; }
-        .branch-avatar { width: 44px; height: 44px; border-radius: 10px; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; }
-        .branch-info { flex: 1; }
-        .branch-info h4 { font-size: 15px; margin-bottom: 2px; }
-        .branch-info p { color: var(--gray); font-size: 12px; }
-        .branch-link { background: #f3f4f6; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-family: monospace; color: var(--primary); }
+.customer-row { display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid #e5e7eb; }
+.customer-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; }
 
-        .customer-row { display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid #e5e7eb; }
-        .customer-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.category-filter { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+.category-btn { padding: 8px 20px; border-radius: 20px; border: 1px solid #e5e7eb; background: white; cursor: pointer; font-weight: 500; transition: all 0.2s; }
+.category-btn:hover, .category-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        .category-filter { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
-        .category-btn { padding: 8px 20px; border-radius: 20px; border: 1px solid #e5e7eb; background: white; cursor: pointer; font-weight: 500; transition: all 0.2s; }
-        .category-btn:hover, .category-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+.color-picker { display: flex; gap: 10px; flex-wrap: wrap; }
+.color-option { width: 36px; height: 36px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 0.2s; }
+.color-option:hover, .color-option.active { border-color: var(--dark); transform: scale(1.15); }
 
-        @media (max-width: 768px) {
-            .sidebar { width: 100%; position: relative; }
-            .main-content { margin-right: 0; }
-            .form-row { grid-template-columns: 1fr; }
-            .products-grid { grid-template-columns: repeat(2, 1fr); }
-            .page-header { flex-direction: column; align-items: flex-start; }
-        }
-        .empty-state { text-align: center; padding: 40px; color: var(--gray); }
-        .empty-state div { font-size: 48px; margin-bottom: 12px; }
-    </style>
+.empty-state { text-align: center; padding: 40px; color: var(--gray); }
+.empty-state div { font-size: 48px; margin-bottom: 12px; }
+
+@media (max-width: 768px) {
+    .sidebar { width: 100%; position: relative; }
+    .main-content { margin-right: 0; }
+    .form-row { grid-template-columns: 1fr; }
+    .products-grid { grid-template-columns: repeat(2, 1fr); }
+    .page-header { flex-direction: column; align-items: flex-start; }
+}
+</style>
 </head>
 <body>
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<!-- Login Page -->
+<!-- ==================== LOGIN PAGE ==================== -->
 <div class="login-page" id="loginPage">
     <div class="login-box">
-        <h1>🏪 منصة المتاجر</h1>
+        <div class="logo-icon">🏪</div>
+        <h1>منصة المتاجر</h1>
         <p>نظام إدارة المتاجر الفرعية الشامل</p>
-        <div class="login-tabs">
-            <button class="login-tab active" onclick="switchLoginTab('admin')">أدمن رئيسي</button>
-            <button class="login-tab" onclick="switchLoginTab('branch')">صاحب فرع</button>
-            <button class="login-tab" onclick="switchLoginTab('customer')">زبون</button>
+
+        <div class="form-group">
+            <label>📧 البريد الإلكتروني</label>
+            <input type="email" class="form-control" id="loginEmail" placeholder="أدخل بريدك الإلكتروني هنا">
         </div>
-        <div id="loginForm">
-            <div class="form-group">
-                <label>البريد الإلكتروني</label>
-                <input type="email" class="form-control" id="loginEmail" placeholder="admin@store.com">
-            </div>
-            <div class="form-group">
-                <label>كلمة المرور</label>
-                <input type="password" class="form-control" id="loginPass" placeholder="12341234">
-            </div>
-            <button class="btn btn-primary btn-block" onclick="doLogin()" style="margin-top:8px;">تسجيل الدخول</button>
+        <div class="form-group">
+            <label>🔒 كلمة المرور</label>
+            <input type="password" class="form-control" id="loginPass" placeholder="أدخل كلمة المرور هنا">
         </div>
-        <div id="customerLoginForm" class="hidden">
-            <div class="form-group">
-                <label>رقم الهاتف</label>
-                <input type="tel" class="form-control" id="customerPhone" placeholder="05xxxxxxxx">
-            </div>
-            <button class="btn btn-primary btn-block" onclick="doCustomerLogin()" style="margin-top:8px;">دخول سريع</button>
-            <p style="text-align:center; margin-top:12px; font-size:13px; color:var(--gray);">أو يمكنك تصفح المتاجر بدون تسجيل</p>
-            <button class="btn btn-outline btn-block" onclick="browseAsGuest()">تصفح كزائر</button>
-        </div>
+        <button class="btn btn-primary btn-block" onclick="doLogin()" style="margin-top:8px; padding:14px; font-size:16px;">🔐 تسجيل الدخول</button>
+
+        
     </div>
 </div>
 
-<!-- App Layout -->
+<!-- ==================== APP LAYOUT ==================== -->
 <div class="app-layout hidden" id="appLayout">
 
     <!-- Sidebar -->
@@ -235,28 +220,28 @@
         <div class="role-badge" id="roleBadge">أدمن رئيسي</div>
 
         <div id="adminNav">
-            <a class="active" onclick="showPage('adminDashboard')">📊 لوحة التحكم</a>
-            <a onclick="showPage('branches')">🏪 الفروع</a>
-            <a onclick="showPage('subscriptions')">💎 الاشتراكات</a>
-            <a onclick="showPage('currencySettings')">💱 إعدادات العملة</a>
-            <a onclick="showPage('messages')">💬 الرسائل</a>
-            <a onclick="showPage('customers')">👥 الزبائن</a>
-            <a onclick="showPage('reports')">📈 التقارير</a>
+            <a class="active" onclick="goTo('adminDashboard', this)">📊 لوحة التحكم</a>
+            <a onclick="goTo('branches', this)">🏪 الفروع</a>
+            <a onclick="goTo('subscriptions', this)">💎 الاشتراكات</a>
+            <a onclick="goTo('currencySettings', this)">💱 إعدادات العملة</a>
+            <a onclick="goTo('messages', this)">💬 الرسائل</a>
+            <a onclick="goTo('customers', this)">👥 الزبائن</a>
+            <a onclick="goTo('reports', this)">📈 التقارير</a>
         </div>
 
         <div id="branchNav" class="hidden">
-            <a class="active" onclick="showPage('branchDashboard')">📊 لوحة الفرع</a>
-            <a onclick="showPage('myProducts')">📦 منتجاتي</a>
-            <a onclick="showPage('branchSettings')">⚙️ إعدادات المتجر</a>
-            <a onclick="showPage('branchMessages')">💬 رسائل الأدمن</a>
-            <a onclick="showPage('branchCustomers')">👥 زبائني</a>
-            <a onclick="showPage('myLink')">🔗 رابط متجري</a>
+            <a class="active" onclick="goTo('branchDashboard', this)">📊 لوحة الفرع</a>
+            <a onclick="goTo('myProducts', this)">📦 منتجاتي</a>
+            <a onclick="goTo('branchSettings', this)">⚙️ إعدادات المتجر</a>
+            <a onclick="goTo('branchMessages', this)">💬 رسائل الأدمن</a>
+            <a onclick="goTo('branchCustomers', this)">👥 زبائني</a>
+            <a onclick="goTo('myLink', this)">🔗 رابط متجري</a>
         </div>
 
         <div id="customerNav" class="hidden">
-            <a class="active" onclick="showPage('browseStores')">🏪 تصفح المتاجر</a>
-            <a onclick="showPage('myOrders')">📦 طلباتي</a>
-            <a onclick="showPage('customerProfile')">👤 حسابي</a>
+            <a class="active" onclick="goTo('browseStores', this)">🏪 تصفح المتاجر</a>
+            <a onclick="goTo('myOrders', this)">📦 طلباتي</a>
+            <a onclick="goTo('customerProfile', this)">👤 حسابي</a>
         </div>
 
         <div class="nav-section">
@@ -270,7 +255,10 @@
         <!-- Admin Dashboard -->
         <div id="adminDashboard" class="page">
             <div class="page-header">
-                <h1>📊 لوحة التحكم الرئيسية</h1>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <button class="back-btn" onclick="logout()">🔙 خروج</button>
+                    <h1>📊 لوحة التحكم الرئيسية</h1>
+                </div>
                 <button class="btn btn-primary" onclick="openModal('addBranchModal')">➕ إنشاء فرع جديد</button>
             </div>
             <div class="stats-grid">
@@ -285,10 +273,13 @@
             </div>
         </div>
 
-        <!-- Branches Page -->
+        <!-- Branches -->
         <div id="branches" class="page hidden">
             <div class="page-header">
-                <h1>🏪 إدارة الفروع</h1>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <button class="back-btn" onclick="goTo('adminDashboard', document.querySelector('#adminNav a'))">🔙 رجوع</button>
+                    <h1>🏪 إدارة الفروع</h1>
+                </div>
                 <button class="btn btn-primary" onclick="openModal('addBranchModal')">➕ فرع جديد</button>
             </div>
             <div class="card">
@@ -362,7 +353,7 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>رمز ISO (مثال: USD, SAR)</label>
+                        <label>رمز ISO</label>
                         <input type="text" class="form-control" id="currencyISOInput" value="USD" maxlength="3">
                     </div>
                     <div class="form-group">
@@ -373,9 +364,7 @@
                         </select>
                     </div>
                 </div>
-                <div style="margin-top:8px;">
-                    <button class="btn btn-success" onclick="saveCurrencySettings()">💾 حفظ إعدادات العملة</button>
-                </div>
+                <button class="btn btn-success" onclick="saveCurrencySettings()">💾 حفظ إعدادات العملة</button>
                 <div style="margin-top:20px; padding:16px; background:var(--light); border-radius:8px;">
                     <p style="font-weight:600; margin-bottom:8px;">📝 معاينة:</p>
                     <p id="currencyPreview" style="font-size:18px;">سعر المنتج: $100</p>
@@ -388,9 +377,9 @@
             <div class="page-header"><h1>💬 الرسائل</h1></div>
             <div class="card">
                 <div class="tabs">
-                    <button class="tab active" onclick="switchMsgTab('inbox')">📥 الوارد</button>
-                    <button class="tab" onclick="switchMsgTab('sent')">📤 المرسل</button>
-                    <button class="tab" onclick="switchMsgTab('new')">✉️ رسالة جديدة</button>
+                    <button class="tab active" onclick="switchMsgTab('inbox', this)">📥 الوارد</button>
+                    <button class="tab" onclick="switchMsgTab('sent', this)">📤 المرسل</button>
+                    <button class="tab" onclick="switchMsgTab('new', this)">✉️ رسالة جديدة</button>
                 </div>
                 <div id="msgInbox" class="tab-content active">
                     <div class="table-container">
@@ -469,8 +458,10 @@
         <!-- Branch Dashboard -->
         <div id="branchDashboard" class="page hidden">
             <div class="page-header">
-                <h1>📊 لوحة تحكم الفرع</h1>
-                <div id="subscriptionStatus"></div>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <button class="back-btn" onclick="logout()">🔙 خروج</button>
+                    <h1>📊 لوحة تحكم الفرع</h1>
+                </div>
             </div>
             <div class="stats-grid">
                 <div class="stat-card"><h3>50</h3><p>منتجاتي</p></div>
@@ -488,7 +479,7 @@
                 </div>
             </div>
             <div class="card">
-                <div class="card-header"><h2>📦 آخر المنتجات</h2><button class="btn btn-primary btn-sm" onclick="showPage('myProducts')">عرض الكل</button></div>
+                <div class="card-header"><h2>📦 آخر المنتجات</h2></div>
                 <div class="products-grid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));">
                     <div class="product-card"><div class="product-img">👕</div><div class="product-info"><div class="product-name">تيشيرت قطني</div><div class="product-price">75 <span class="currencySymbol">$</span></div></div></div>
                     <div class="product-card"><div class="product-img">👖</div><div class="product-info"><div class="product-name">بنطلون جينز</div><div class="product-price">120 <span class="currencySymbol">$</span></div></div></div>
@@ -501,7 +492,10 @@
         <!-- My Products -->
         <div id="myProducts" class="page hidden">
             <div class="page-header">
-                <h1>📦 منتجاتي</h1>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <button class="back-btn" onclick="goTo('branchDashboard', document.querySelector('#branchNav a'))">🔙 رجوع</button>
+                    <h1>📦 منتجاتي</h1>
+                </div>
                 <button class="btn btn-primary" onclick="openModal('addProductModal')">➕ منتج جديد</button>
             </div>
             <div class="card">
@@ -546,10 +540,6 @@
                         <div class="color-option" style="background:#ec4899;" onclick="selectColor(this, '#ec4899')"></div>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>شعار المتجر</label>
-                    <input type="file" class="form-control" accept="image/*">
-                </div>
                 <button class="btn btn-success" onclick="saveBranchSettings()">💾 حفظ الإعدادات</button>
             </div>
         </div>
@@ -559,8 +549,8 @@
             <div class="page-header"><h1>💬 رسائل الأدمن</h1></div>
             <div class="card">
                 <div class="tabs">
-                    <button class="tab active" onclick="switchBranchMsgTab('bInbox')">📥 الوارد</button>
-                    <button class="tab" onclick="switchBranchMsgTab('bNew')">✉️ رسالة جديدة</button>
+                    <button class="tab active" onclick="switchBranchMsgTab('bInbox', this)">📥 الوارد</button>
+                    <button class="tab" onclick="switchBranchMsgTab('bNew', this)">✉️ رسالة جديدة</button>
                 </div>
                 <div id="bInbox" class="tab-content active">
                     <div class="msg-list" id="branchInboxList"></div>
@@ -616,11 +606,11 @@
             </div>
         </div>
 
-        <!-- Browse Stores (Customer) -->
+        <!-- Browse Stores -->
         <div id="browseStores" class="page hidden">
             <div class="store-header">
                 <h1>🏪 تصفح المتاجر</h1>
-                <p>اكتشف أفضل المتاجر واطلب مباشرة عبر الواتساب</p>
+                <p>اكتشف أفضل المتاجر واطلب مباشرة عبر الواتساب - بدون تسجيل دخول</p>
             </div>
             <div style="max-width:1200px; margin:0 auto; padding:24px;">
                 <div class="form-group" style="max-width:500px; margin:0 auto 24px;">
@@ -632,6 +622,10 @@
 
         <!-- Store View -->
         <div id="storeView" class="page hidden">
+            <div style="background:var(--dark); color:white; padding:12px 24px; display:flex; justify-content:space-between; align-items:center;">
+                <button class="back-btn" onclick="goTo('browseStores', document.querySelector('#customerNav a'))" style="background:rgba(255,255,255,0.2); color:white; border:none;">🔙 رجوع للمتاجر</button>
+                <span style="font-size:14px; opacity:0.8;">👤 زائر</span>
+            </div>
             <div class="store-header" id="storeViewHeader">
                 <h1 id="storeViewName">متجر الأناقة</h1>
                 <p id="storeViewDesc">أفضل المنتجات بأجود الخامات</p>
@@ -655,7 +649,11 @@
 
         <!-- My Orders -->
         <div id="myOrders" class="page hidden">
-            <div class="page-header"><h1>📦 طلباتي</h1></div>
+            <div class="page-header">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <button class="back-btn" onclick="goTo('browseStores', document.querySelector('#customerNav a'))">🔙 رجوع</button>
+                    <h1>📦 طلباتي</h1>
+                </div></div>
             <div class="card">
                 <div class="table-container">
                     <table>
@@ -668,7 +666,11 @@
 
         <!-- Customer Profile -->
         <div id="customerProfile" class="page hidden">
-            <div class="page-header"><h1>👤 حسابي</h1></div>
+            <div class="page-header">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <button class="back-btn" onclick="goTo('browseStores', document.querySelector('#customerNav a'))">🔙 رجوع</button>
+                    <h1>👤 حسابي</h1>
+                </div></div>
             <div class="card">
                 <div class="form-group">
                     <label>الاسم الكامل</label>
@@ -725,7 +727,7 @@
                     <span style="color:var(--gray);">store.com/</span>
                     <input type="text" class="form-control" id="newBranchSlug" placeholder="a1" style="width:100px; text-transform:lowercase;" maxlength="3">
                 </div>
-                <p style="font-size:12px; color:var(--gray); margin-top:6px;">مثال: a1, b2, xy3 (حرف + رقم أو حرفين + رقم)</p>
+                <p style="font-size:12px; color:var(--gray); margin-top:6px;">مثال: a1, b2, xy3</p>
             </div>
             <div class="form-group">
                 <label>خطة الاشتراك</label>
@@ -899,12 +901,14 @@
 <script>
 // ==================== DATA ====================
 let currentUser = null;
-let currentRole = 'admin';
+let currentRole = 'guest';
 let currentBranchId = null;
 let cart = [];
 let currentStore = null;
 
 let currency = { symbol: '$', name: 'دولار', iso: 'USD', position: 'before' };
+const ADMIN_EMAIL = 'admin@store.com';
+const DEMO_PASSWORD = '123456789';
 
 let branches = [
     { id: 1, name: 'متجر الأناقة', owner: 'أحمد محمد', email: 'ahmed@store.com', slug: 'a1', whatsapp: '+966501234567', phone: '+966501234567', active: true, plan: 'pro', expiry: '2026-12-31', products: 50, orders: 520, customers: 320, sales: 12500, color: '#6366f1', desc: 'أفضل المنتجات بأجود الخامات' },
@@ -944,79 +948,78 @@ let customerOrders = [
 ];
 
 // ==================== LOGIN ====================
-function switchLoginTab(role) {
-    document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
-    event.target.classList.add('active');
-    if(role === 'customer') {
-        document.getElementById('loginForm').classList.add('hidden');
-        document.getElementById('customerLoginForm').classList.remove('hidden');
-    } else {
-        document.getElementById('loginForm').classList.remove('hidden');
-        document.getElementById('customerLoginForm').classList.add('hidden');
-    }
-    currentRole = role;
-}
-
 function doLogin() {
-    const email = document.getElementById('loginEmail').value;
+    const email = document.getElementById('loginEmail').value.trim();
     const pass = document.getElementById('loginPass').value;
-    if(!email || !pass) { showToast('❌ يرجى إدخال البريد وكلمة المرور'); return; }
 
-    if(currentRole === 'admin') {
+    if(!email) { showToast('❌ يرجى إدخال البريد الإلكتروني'); return; }
+    if(!pass) { showToast('❌ يرجى إدخال كلمة المرور'); return; }
+    if(pass !== DEMO_PASSWORD) { showToast('❌ كلمة المرور غير صحيحة'); return; }
+
+    // Admin Login
+    if(email === ADMIN_EMAIL) {
         currentUser = { name: 'الأدمن', email: email, role: 'admin' };
-        document.getElementById('roleBadge').textContent = 'أدمن رئيسي';
+        currentRole = 'admin';
         document.getElementById('adminNav').classList.remove('hidden');
         document.getElementById('branchNav').classList.add('hidden');
         document.getElementById('customerNav').classList.add('hidden');
+        document.getElementById('roleBadge').textContent = 'أدمن رئيسي';
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('appLayout').classList.remove('hidden');
         showPage('adminDashboard');
-    } else {
-        const branch = branches.find(b => b.email === email);
-        if(!branch) { showToast('❌ الفرع غير موجود'); return; }
-        if(!branch.active) { showToast('❌ حسابك معلق، تواصل مع الأدمن'); return; }
+        showToast('✅ مرحباً أيها الأدمن!');
+        return;
+    }
+
+    // Branch Login
+    const branch = branches.find(b => b.email === email);
+    if(branch) {
+        if(!branch.active) { 
+            showToast('❌ حسابك معلق، تواصل مع الأدمن'); 
+            return; 
+        }
         currentUser = { name: branch.owner, email: email, role: 'branch' };
+        currentRole = 'branch';
         currentBranchId = branch.id;
-        document.getElementById('roleBadge').textContent = 'صاحب فرع: ' + branch.name;
+
         document.getElementById('adminNav').classList.add('hidden');
         document.getElementById('branchNav').classList.remove('hidden');
         document.getElementById('customerNav').classList.add('hidden');
+        document.getElementById('roleBadge').textContent = 'صاحب فرع: ' + branch.name;
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('appLayout').classList.remove('hidden');
+
         document.getElementById('branchLinkDisplay').value = 'store.com/' + branch.slug;
         document.getElementById('myStoreLink').value = 'store.com/' + branch.slug;
-        showPage('branchDashboard');
-    }
-    document.getElementById('loginPage').classList.add('hidden');
-    document.getElementById('appLayout').classList.remove('hidden');
-    showToast('✅ مرحباً ' + currentUser.name + '!');
-    updateAllCurrencyDisplays();
-}
+        document.getElementById('branchStoreName').value = branch.name;
+        document.getElementById('branchStoreDesc').value = branch.desc;
+        document.getElementById('branchWhatsApp').value = branch.whatsapp;
+        document.getElementById('branchPhone').value = branch.phone;
 
-function doCustomerLogin() {
-    const phone = document.getElementById('customerPhone').value;
-    if(!phone) { showToast('❌ يرجى إدخال رقم الهاتف'); return; }
-    currentUser = { name: 'زبون', phone: phone, role: 'customer' };
-    document.getElementById('roleBadge').textContent = 'زبون';
-    document.getElementById('adminNav').classList.add('hidden');
-    document.getElementById('branchNav').classList.add('hidden');
-    document.getElementById('customerNav').classList.remove('hidden');
-    document.getElementById('loginPage').classList.add('hidden');
-    document.getElementById('appLayout').classList.remove('hidden');
-    showPage('browseStores');
-    showToast('✅ مرحباً بك!');
+        showPage('branchDashboard');
+        showToast('✅ مرحباً ' + branch.owner + '!');
+        return;
+    }
+
+    showToast('❌ البريد الإلكتروني غير موجود');
 }
 
 function browseAsGuest() {
     currentUser = { name: 'زائر', role: 'guest' };
-    document.getElementById('roleBadge').textContent = 'زائر';
+    currentRole = 'guest';
     document.getElementById('adminNav').classList.add('hidden');
     document.getElementById('branchNav').classList.add('hidden');
     document.getElementById('customerNav').classList.remove('hidden');
+    document.getElementById('roleBadge').textContent = 'زائر';
     document.getElementById('loginPage').classList.add('hidden');
     document.getElementById('appLayout').classList.remove('hidden');
     showPage('browseStores');
+    showToast('👋 مرحباً بك كزائر!');
 }
 
 function logout() {
     currentUser = null;
-    currentRole = 'admin';
+    currentRole = 'guest';
     currentBranchId = null;
     cart = [];
     document.getElementById('appLayout').classList.add('hidden');
@@ -1027,12 +1030,16 @@ function logout() {
 }
 
 // ==================== NAVIGATION ====================
+function goTo(pageId, element) {
+    document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+    if(element) element.classList.add('active');
+    showPage(pageId);
+}
+
 function showPage(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-    document.getElementById(pageId).classList.remove('hidden');
-
-    document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
-    event.target.classList.add('active');
+    const page = document.getElementById(pageId);
+    if(page) page.classList.remove('hidden');
 
     if(pageId === 'adminDashboard' || pageId === 'branches') renderBranchesList();
     if(pageId === 'subscriptions') renderSubscriptionsTable();
@@ -1049,18 +1056,12 @@ function showPage(pageId) {
 // ==================== MODALS ====================
 function openModal(id) {
     document.getElementById(id).classList.add('active');
-    if(id === 'editBranchModal') {
-        document.getElementById('editBranchActive').addEventListener('change', function() {
-            document.getElementById('branchStatusText').textContent = this.checked ? 'نشط' : 'معلق';
-        });
-    }
 }
 
 function closeModal(id) {
     document.getElementById(id).classList.remove('active');
 }
 
-// Close modal on overlay click
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', function(e) {
         if(e.target === this) this.classList.remove('active');
@@ -1077,17 +1078,14 @@ function showToast(msg) {
 
 // ==================== CURRENCY ====================
 function formatPrice(price) {
-    if(currency.position === 'before') {
-        return currency.symbol + price;
-    }
+    if(currency.position === 'before') return currency.symbol + price;
     return price + currency.symbol;
 }
 
 function updateAllCurrencyDisplays() {
-    document.querySelectorAll('.currencySymbol').forEach(el => {
-        el.textContent = currency.symbol;
-    });
-    document.getElementById('currencyPreview').textContent = 'سعر المنتج: ' + formatPrice(100);
+    document.querySelectorAll('.currencySymbol').forEach(el => { el.textContent = currency.symbol; });
+    const preview = document.getElementById('currencyPreview');
+    if(preview) preview.textContent = 'سعر المنتج: ' + formatPrice(100);
 }
 
 function saveCurrencySettings() {
@@ -1108,21 +1106,15 @@ function renderBranchesList() {
     branches.forEach(b => {
         const statusBadge = b.active ? '<span class="badge badge-green">نشط</span>' : '<span class="badge badge-red">معلق</span>';
         const planBadge = '<span class="badge badge-blue">' + getPlanName(b.plan) + '</span>';
-
-        html += `
-            <div class="branch-row" data-name="${b.name}">
-                <div class="branch-avatar" style="background:${b.color};">${b.name.charAt(0)}</div>
-                <div class="branch-info">
-                    <h4>${b.name} ${statusBadge} ${planBadge}</h4>
-                    <p>${b.owner} • ${b.products} منتج • ${b.orders} طلب</p>
-                </div>
-                <div class="branch-link">store.com/${b.slug}</div>
-                <div style="display:flex; gap:8px;">
-                    <button class="btn btn-sm btn-primary" onclick="openEditBranch(${b.id})">تعديل</button>
-                    ${!b.active ? `<button class="btn btn-sm btn-success" onclick="activateBranch(${b.id})">تفعيل</button>` : ''}
-                </div>
-            </div>
-        `;
+        html += '<div class="branch-row" data-name="' + b.name + '">' +
+            '<div class="branch-avatar" style="background:' + b.color + ';">' + b.name.charAt(0) + '</div>' +
+            '<div class="branch-info"><h4>' + b.name + ' ' + statusBadge + ' ' + planBadge + '</h4>' +
+            '<p>' + b.owner + ' • ' + b.products + ' منتج • ' + b.orders + ' طلب</p></div>' +
+            '<div class="branch-link">store.com/' + b.slug + '</div>' +
+            '<div style="display:flex; gap:8px;">' +
+            '<button class="btn btn-sm btn-primary" onclick="openEditBranch(' + b.id + ')">تعديل</button>' +
+            (!b.active ? '<button class="btn btn-sm btn-success" onclick="activateBranch(' + b.id + ')">تفعيل</button>' : '') +
+            '</div></div>';
     });
 
     if(list) list.innerHTML = html;
@@ -1146,29 +1138,18 @@ function createBranch() {
     const owner = document.getElementById('newBranchOwner').value;
     const email = document.getElementById('newBranchEmail').value;
     const slug = document.getElementById('newBranchSlug').value;
-    const plan = document.getElementById('newBranchPlan').value;
+    if(!name || !owner || !email || !slug) { showToast('❌ يرجى ملء جميع الحقول المطلوبة'); return; }
 
-    if(!name || !owner || !email || !slug) {
-        showToast('❌ يرجى ملء جميع الحقول المطلوبة');
-        return;
-    }
-
-    const newBranch = {
-        id: branches.length + 1,
-        name, owner, email, slug,
+    branches.push({
+        id: branches.length + 1, name: name, owner: owner, email: email, slug: slug,
         whatsapp: document.getElementById('newBranchWhatsApp').value,
         phone: document.getElementById('newBranchWhatsApp').value,
-        active: true, plan, expiry: '2027-07-02',
-        products: 0, orders: 0, customers: 0, sales: 0,
-        color: '#6366f1', desc: ''
-    };
-
-    branches.push(newBranch);
+        active: true, plan: document.getElementById('newBranchPlan').value, expiry: '2027-07-02',
+        products: 0, orders: 0, customers: 0, sales: 0, color: '#6366f1', desc: ''
+    });
     closeModal('addBranchModal');
     renderBranchesList();
     showToast('✅ تم إنشاء الفرع بنجاح!');
-
-    // Clear form
     document.getElementById('newBranchName').value = '';
     document.getElementById('newBranchOwner').value = '';
     document.getElementById('newBranchEmail').value = '';
@@ -1183,7 +1164,6 @@ function openEditBranch(id) {
     editingBranchId = id;
     const b = branches.find(x => x.id === id);
     if(!b) return;
-
     document.getElementById('editBranchId').value = id;
     document.getElementById('editBranchName').value = b.name;
     document.getElementById('editBranchOwner').value = b.owner;
@@ -1191,4 +1171,432 @@ function openEditBranch(id) {
     document.getElementById('editBranchPlan').value = b.plan;
     document.getElementById('editBranchActive').checked = b.active;
     document.getElementById('editBranchExpiry').value = b.expiry;
-    document.getElementById('branchStatusText').textCon
+    document.getElementById('branchStatusText').textContent = b.active ? 'نشط' : 'معلق';
+    openModal('editBranchModal');
+}
+
+function saveBranchEdit() {
+    const id = parseInt(document.getElementById('editBranchId').value);
+    const b = branches.find(x => x.id === id);
+    if(!b) return;
+    b.name = document.getElementById('editBranchName').value;
+    b.owner = document.getElementById('editBranchOwner').value;
+    b.whatsapp = document.getElementById('editBranchWhatsApp').value;
+    b.plan = document.getElementById('editBranchPlan').value;
+    b.active = document.getElementById('editBranchActive').checked;
+    b.expiry = document.getElementById('editBranchExpiry').value;
+    closeModal('editBranchModal');
+    renderBranchesList();
+    showToast('✅ تم تحديث الفرع بنجاح!');
+}
+
+function deleteBranch() {
+    if(!confirm('هل أنت متأكد من حذف هذا الفرع؟')) return;
+    branches = branches.filter(b => b.id !== editingBranchId);
+    closeModal('editBranchModal');
+    renderBranchesList();
+    showToast('🗑️ تم حذف الفرع');
+}
+
+function activateBranch(id) {
+    const b = branches.find(x => x.id === id);
+    if(b) { b.active = true; renderBranchesList(); showToast('✅ تم تفعيل الفرع'); }
+}
+
+// ==================== SUBSCRIPTIONS ====================
+function selectSubPlan(el, plan) {
+    document.querySelectorAll('.sub-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+}
+
+function saveSubscriptionPlans() { showToast('✅ تم حفظ خطط الاشتراك'); }
+
+function renderSubscriptionsTable() {
+    const tbody = document.getElementById('subscriptionsTable');
+    if(!tbody) return;
+    let html = '';
+    branches.forEach(b => {
+        const isExpired = new Date(b.expiry) < new Date();
+        const status = b.active && !isExpired ? '<span class="badge badge-green">نشط</span>' : 
+                      isExpired ? '<span class="badge badge-red">منتهي</span>' : '<span class="badge badge-gray">معلق</span>';
+        html += '<tr><td>' + b.name + '</td><td>' + getPlanName(b.plan) + '</td><td>2026-01-01</td><td>' + b.expiry + '</td><td>' + status + '</td><td><button class="btn btn-sm btn-primary" onclick="openEditBranch(' + b.id + ')">تعديل</button></td></tr>';
+    });
+    tbody.innerHTML = html;
+}
+
+// ==================== PRODUCTS ====================
+function renderBranchProducts() {
+    const list = document.getElementById('branchProductsList');
+    if(!list) return;
+    const branchProducts = products.filter(p => p.branchId === (currentBranchId || 1));
+    if(branchProducts.length === 0) { list.innerHTML = '<div class="empty-state"><div>📦</div><p>لا توجد منتجات بعد</p></div>'; return; }
+
+    let html = '';
+    branchProducts.forEach(p => {
+        html += '<div class="branch-row" data-pname="' + p.name + '"><div style="font-size:32px;">' + p.emoji + '</div>' +
+            '<div class="branch-info"><h4>' + p.name + '</h4><p>' + p.desc + ' • الكمية: ' + p.qty + '</p></div>' +
+            '<div style="font-weight:800; color:var(--primary); font-size:16px;">' + formatPrice(p.price) + '</div>' +
+            '<div style="display:flex; gap:8px;"><button class="btn btn-sm btn-primary" onclick="openEditProduct(' + p.id + ')">تعديل</button>' +
+            '<button class="btn btn-sm btn-danger" onclick="deleteProductById(' + p.id + ')">حذف</button></div></div>';
+    });
+    list.innerHTML = html;
+}
+
+function searchProducts() {
+    const term = document.getElementById('productSearch').value.toLowerCase();
+    document.querySelectorAll('#branchProductsList .branch-row').forEach(row => {
+        row.style.display = row.getAttribute('data-pname').toLowerCase().includes(term) ? 'flex' : 'none';
+    });
+}
+
+function saveProduct() {
+    const name = document.getElementById('productName').value;
+    const price = parseFloat(document.getElementById('productPrice').value);
+    if(!name || !price) { showToast('❌ يرجى ملء جميع الحقول'); return; }
+    products.push({ id: products.length + 1, branchId: currentBranchId || 1, name: name, price: price,
+        qty: parseInt(document.getElementById('productQty').value) || 100,
+        desc: document.getElementById('productDesc').value, emoji: '📦' });
+    closeModal('addProductModal');
+    renderBranchProducts();
+    showToast('✅ تم إضافة المنتج');
+    document.getElementById('productName').value = '';
+    document.getElementById('productPrice').value = '';
+    document.getElementById('productDesc').value = '';
+}
+
+let editingProductId = null;
+
+function openEditProduct(id) {
+    editingProductId = id;
+    const p = products.find(x => x.id === id);
+    if(!p) return;
+    document.getElementById('editProductId').value = id;
+    document.getElementById('editProductName').value = p.name;
+    document.getElementById('editProductPrice').value = p.price;
+    document.getElementById('editProductQty').value = p.qty;
+    document.getElementById('editProductDesc').value = p.desc;
+    openModal('editProductModal');
+}
+
+function saveProductEdit() {
+    const p = products.find(x => x.id === editingProductId);
+    if(!p) return;
+    p.name = document.getElementById('editProductName').value;
+    p.price = parseFloat(document.getElementById('editProductPrice').value);
+    p.qty = parseInt(document.getElementById('editProductQty').value);
+    p.desc = document.getElementById('editProductDesc').value;
+    closeModal('editProductModal');
+    renderBranchProducts();
+    showToast('✅ تم تحديث المنتج');
+}
+
+function deleteProduct() {
+    if(!confirm('هل أنت متأكد؟')) return;
+    products = products.filter(p => p.id !== editingProductId);
+    closeModal('editProductModal');
+    renderBranchProducts();
+    showToast('🗑️ تم حذف المنتج');
+}
+
+function deleteProductById(id) {
+    if(!confirm('هل أنت متأكد من حذف هذا المنتج؟')) return;
+    products = products.filter(p => p.id !== id);
+    renderBranchProducts();
+    showToast('🗑️ تم حذف المنتج');
+}
+
+// ==================== MESSAGES ====================
+function renderInbox() {
+    const tbody = document.getElementById('inboxTable');
+    if(!tbody) return;
+    const inbox = messages.filter(m => m.to === 'admin');
+    let html = '';
+    inbox.forEach(m => {
+        html += '<tr><td>' + m.from + '</td><td>' + m.subject + '</td><td>' + m.body.substring(0, 50) + '...</td><td>' + m.date + '</td><td><button class="btn btn-sm btn-primary" onclick="replyToMsg(\'' + m.from + '\')">رد</button></td></tr>';
+    });
+    tbody.innerHTML = html || '<tr><td colspan="5" style="text-align:center;">لا توجد رسائل</td></tr>';
+}
+
+function renderSent() {
+    const tbody = document.getElementById('sentTable');
+    if(!tbody) return;
+    const sent = messages.filter(m => m.fromRole === 'admin');
+    let html = '';
+    sent.forEach(m => {
+        html += '<tr><td>' + m.to + '</td><td>' + m.subject + '</td><td>' + m.body.substring(0, 50) + '...</td><td>' + m.date + '</td></tr>';
+    });
+    tbody.innerHTML = html || '<tr><td colspan="4" style="text-align:center;">لا توجد رسائل</td></tr>';
+}
+
+function populateMsgRecipients() {
+    const select = document.getElementById('msgRecipient');
+    if(!select) return;
+    select.innerHTML = branches.map(b => '<option value="' + b.name + '">' + b.name + ' (' + b.owner + ')</option>').join('');
+}
+
+function sendMessage() {
+    const to = document.getElementById('msgRecipient').value;
+    const subject = document.getElementById('msgSubject').value;
+    const body = document.getElementById('msgBody').value;
+    if(!subject || !body) { showToast('❌ يرجى ملء جميع الحقول'); return; }
+    messages.push({ id: messages.length + 1, from: 'admin', fromRole: 'admin', to: to,
+        subject: subject, body: body, date: new Date().toISOString().split('T')[0], read: false });
+    document.getElementById('msgSubject').value = '';
+    document.getElementById('msgBody').value = '';
+    renderSent();
+    showToast('✅ تم إرسال الرسالة');
+}
+
+function replyToMsg(from) {
+    switchMsgTab('new', null);
+    document.getElementById('msgRecipient').value = from;
+}
+
+function switchMsgTab(tab, el) {
+    document.querySelectorAll('#messages .tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#messages .tab-content').forEach(t => t.classList.remove('active'));
+    if(el) el.classList.add('active');
+    document.getElementById(tab === 'inbox' ? 'msgInbox' : tab === 'sent' ? 'msgSent' : 'msgNew').classList.add('active');
+}
+
+function renderBranchInbox() {
+    const list = document.getElementById('branchInboxList');
+    if(!list) return;
+    const branchName = currentBranchId ? branches.find(b => b.id === currentBranchId)?.name : 'متجر الأناقة';
+    const inbox = messages.filter(m => m.to === branchName || (m.to === 'admin' && m.fromRole === 'admin'));
+    let html = '';
+    inbox.forEach(m => {
+        const cls = m.fromRole === 'admin' ? 'received' : 'sent';
+        html += '<div class="msg-item ' + cls + '"><small>' + m.from + ' • ' + m.date + '</small><p style="font-weight:600;">' + m.subject + '</p><p>' + m.body + '</p></div>';
+    });
+    list.innerHTML = html || '<div class="empty-state"><div>💬</div><p>لا توجد رسائل</p></div>';
+}
+
+function switchBranchMsgTab(tab, el) {
+    document.querySelectorAll('#branchMessages .tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#branchMessages .tab-content').forEach(t => t.classList.remove('active'));
+    if(el) el.classList.add('active');
+    document.getElementById(tab).classList.add('active');
+}
+
+function sendBranchMessage() {
+    const subject = document.getElementById('branchMsgSubject').value;
+    const body = document.getElementById('branchMsgBody').value;
+    if(!subject || !body) { showToast('❌ يرجى ملء جميع الحقول'); return; }
+    const branchName = currentBranchId ? branches.find(b => b.id === currentBranchId)?.name : 'متجر الأناقة';
+    messages.push({ id: messages.length + 1, from: branchName, fromRole: 'branch', to: 'admin',
+        subject: subject, body: body, date: new Date().toISOString().split('T')[0], read: false });
+    document.getElementById('branchMsgSubject').value = '';
+    document.getElementById('branchMsgBody').value = '';
+    renderBranchInbox();
+    showToast('✅ تم إرسال الرسالة للأدمن');
+}
+
+// ==================== CUSTOMERS ====================
+function renderCustomersTable() {
+    const tbody = document.getElementById('customersTable');
+    if(!tbody) return;
+    let html = '';
+    customers.forEach(c => {
+        const branch = branches.find(b => b.id === c.branchId);
+        html += '<tr><td><div class="customer-row" style="padding:0; border:none;"><div class="customer-avatar">' + c.name.charAt(0) + '</div><span>' + c.name + '</span></div></td><td>' + c.phone + '</td><td>' + c.orders + '</td><td>' + formatPrice(c.total) + '</td><td>' + c.lastOrder + '</td><td>' + (branch ? branch.name : '-') + '</td></tr>';
+    });
+    tbody.innerHTML = html;
+}
+
+function searchCustomers() {
+    const term = document.getElementById('customerSearch').value.toLowerCase();
+    document.querySelectorAll('#customersTable tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
+    });
+}
+
+// ==================== BRANCH SETTINGS ====================
+function selectColor(el, color) {
+    document.querySelectorAll('.color-option').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+}
+
+function saveBranchSettings() { showToast('✅ تم حفظ إعدادات المتجر'); }
+
+function copyLink() {
+    const link = document.getElementById('branchLinkDisplay');
+    link.select();
+    document.execCommand('copy');
+    showToast('📋 تم نسخ الرابط!');
+}
+
+function copyMyLink() {
+    const link = document.getElementById('myStoreLink');
+    link.select();
+    document.execCommand('copy');
+    showToast('📋 تم نسخ الرابط!');
+}
+
+function previewStore() {
+    const slug = currentBranchId ? branches.find(b => b.id === currentBranchId)?.slug : 'a1';
+    openStoreBySlug(slug);
+}
+
+// ==================== STORE FRONT ====================
+function renderStoresList() {
+    const list = document.getElementById('storesList');
+    if(!list) return;
+    const activeBranches = branches.filter(b => b.active);
+    let html = '<div class="products-grid">';
+    activeBranches.forEach(b => {
+        html += '<div class="product-card" style="cursor:pointer;" onclick="openStoreBySlug(\'' + b.slug + '\')">' +
+            '<div class="product-img" style="background:' + b.color + '; color:white; font-size:48px; font-weight:800;">' + b.name.charAt(0) + '</div>' +
+            '<div class="product-info"><div class="product-name">' + b.name + '</div>' +
+            '<p style="color:var(--gray); font-size:13px; margin-bottom:8px;">' + b.desc + '</p>' +
+            '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+            '<span style="font-size:12px; color:var(--gray);">' + b.products + ' منتج</span>' +
+            '<button class="btn btn-sm btn-primary">تصفح</button></div></div></div>';
+    });
+    html += '</div>';
+    list.innerHTML = html;
+}
+
+function searchStores() {
+    const term = document.getElementById('storeSearch').value.toLowerCase();
+    document.querySelectorAll('#storesList .product-card').forEach(card => {
+        card.style.display = card.textContent.toLowerCase().includes(term) ? '' : 'none';
+    });
+}
+
+function openStoreBySlug(slug) {
+    const b = branches.find(x => x.slug === slug);
+    if(!b) { showToast('❌ المتجر غير موجود'); return; }
+    if(!b.active) { showToast('❌ هذا المتجر معلق حالياً'); return; }
+
+    currentStore = b;
+    document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+    document.getElementById('storeView').classList.remove('hidden');
+
+    document.getElementById('storeViewName').textContent = b.name;
+    document.getElementById('storeViewDesc').textContent = b.desc;
+    document.getElementById('storeViewHeader').style.background = 'linear-gradient(135deg, ' + b.color + ', ' + b.color + 'dd)';
+    document.getElementById('storeFooterName').textContent = b.name;
+    document.getElementById('storeFooterPhone').textContent = b.phone;
+
+    const storeProducts = products.filter(p => p.branchId === b.id);
+    const grid = document.getElementById('storeProducts');
+    let html = '';
+    storeProducts.forEach(p => {
+        html += '<div class="product-card"><div class="product-img">' + p.emoji + '</div>' +
+            '<div class="product-info"><div class="product-name">' + p.name + '</div>' +
+            '<div class="product-price">' + formatPrice(p.price) + '</div>' +
+            '<p class="product-desc">' + p.desc + '</p>' +
+            '<button class="add-to-cart" onclick="addToCart(\'' + p.name + '\', ' + p.price + ', \'' + b.whatsapp + '\')">🛒 أضف للسلة</button></div></div>';
+    });
+    grid.innerHTML = html || '<div class="empty-state" style="grid-column:1/-1;"><div>📦</div><p>لا توجد منتجات في هذا المتجر</p></div>';
+    window.scrollTo(0, 0);
+}
+
+// ==================== CART ====================
+function addToCart(name, price, whatsapp) {
+    const existing = cart.find(item => item.name === name);
+    if(existing) { existing.qty++; } else { cart.push({ name: name, price: price, qty: 1, whatsapp: whatsapp }); }
+    updateCartUI();
+    showToast('✅ تمت الإضافة للسلة!');
+}
+
+function removeFromCart(index) {
+    cart.splice(index, 1);
+    updateCartUI();
+}
+
+function updateQty(index, delta) {
+    cart[index].qty += delta;
+    if(cart[index].qty <= 0) { removeFromCart(index); } else { updateCartUI(); }
+}
+
+function updateCartUI() {
+    const count = cart.reduce((sum, item) => sum + item.qty, 0);
+    document.getElementById('cartCount').textContent = count;
+
+    const itemsContainer = document.getElementById('cartItems');
+    const totalSection = document.getElementById('cartTotalSection');
+    const emptyMsg = document.getElementById('emptyCart');
+    const footer = document.getElementById('cartFooter');
+
+    if(cart.length === 0) {
+        itemsContainer.innerHTML = '';
+        totalSection.style.display = 'none';
+        emptyMsg.style.display = 'block';
+        footer.style.display = 'none';
+        return;
+    }
+
+    emptyMsg.style.display = 'none';
+    totalSection.style.display = 'block';
+    footer.style.display = 'flex';
+
+    let html = '';
+    let subtotal = 0;
+
+    cart.forEach((item, index) => {
+        const itemTotal = item.price * item.qty;
+        subtotal += itemTotal;
+        html += '<div class="cart-item"><div style="font-size:28px;">🛍️</div>' +
+            '<div class="cart-item-info"><h4>' + item.name + '</h4><p>' + formatPrice(item.price) + '</p></div>' +
+            '<div class="qty-control"><button onclick="updateQty(' + index + ', -1)">−</button>' +
+            '<span style="font-weight:700; min-width:24px; text-align:center;">' + item.qty + '</span>' +
+            '<button onclick="updateQty(' + index + ', 1)">+</button></div>' +
+            '<button onclick="removeFromCart(' + index + ')" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:18px;">🗑️</button></div>';
+    });
+
+    itemsContainer.innerHTML = html;
+    document.getElementById('cartSubtotal').innerHTML = formatPrice(subtotal) + ' <span class="currencySymbol">' + currency.symbol + '</span>';
+    document.getElementById('cartTotalAmount').innerHTML = formatPrice(subtotal) + ' <span class="currencySymbol">' + currency.symbol + '</span>';
+}
+
+function openCart() { document.getElementById('cartModal').classList.add('active'); }
+
+function sendOrder() {
+    if(cart.length === 0) return;
+    const whatsapp = cart[0].whatsapp || '+966501234567';
+    let message = '🛒 *طلب جديد*\n\n';
+    let total = 0;
+
+    cart.forEach(item => {
+        const itemTotal = item.price * item.qty;
+        total += itemTotal;
+        message += '• ' + item.name + ' × ' + item.qty + ' = ' + formatPrice(itemTotal) + '\n';
+    });
+
+    message += '\n*الإجمالي: ' + formatPrice(total) + '*\n';
+    if(currentStore) message += '\n🏪 ' + currentStore.name;
+
+    const phone = whatsapp.replace(/\D/g, '');
+    const url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
+    window.open(url, '_blank');
+
+    cart = [];
+    updateCartUI();
+    closeModal('cartModal');
+    showToast('📱 تم فتح واتساب لإرسال الطلب!');
+}
+
+// ==================== CUSTOMER ORDERS ====================
+function renderCustomerOrders() {
+    const tbody = document.getElementById('customerOrdersTable');
+    if(!tbody) return;
+    let html = '';
+    customerOrders.forEach(o => {
+        const statusBadge = o.status === 'تم التوصيل' ? '<span class="badge badge-green">تم التوصيل</span>' : '<span class="badge badge-blue">قيد التجهيز</span>';
+        html += '<tr><td>#' + o.id + '</td><td>' + o.store + '</td><td>' + o.items + '</td><td>' + formatPrice(o.total) + '</td><td>' + o.date + '</td><td>' + statusBadge + '</td></tr>';
+    });
+    tbody.innerHTML = html;
+}
+
+function saveCustomerProfile() { showToast('✅ تم حفظ التغييرات'); }
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded', function() {
+    updateAllCurrencyDisplays();
+    renderBranchesList();
+});
+</script>
+</body>
+</html>
