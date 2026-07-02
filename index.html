@@ -1,1121 +1,1194 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>توصل سريع - مع نجم  </title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}body{font-family:Segoe UI,Tahoma,Arial,sans-serif;background:#f5f5f5;padding-bottom:120px;padding-top:80px;direction:rtl}
-    .header{color:#fff;padding:0;text-align:center;position:fixed;top:0;left:0;right:0;z-index:100;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;background-size:cover;background-position:center;background-repeat:no-repeat;overflow:hidden}.nav{display:flex;gap:10px;padding:10px;overflow:auto;background:#fff;border-bottom:1px solid #ddd}
-    .nav-btn{padding:8px 14px;border-radius:20px;border:0;background:#ecf0f1;color:#333;cursor:pointer}
-    .nav-btn.active{background:#e74c3c;color:#fff}.products{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:10px}
-    .product-card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);display:flex;flex-direction:column}
-    .product-card img{width:100%;height:150px;object-fit:cover}
-    .product-info{padding:10px;flex:1}.add-cart-btn{width:100%;padding:10px;background:#27ae60;color:#fff;border:0;cursor:pointer;border-radius:6px}
-    .store-info,.admin-section{background:#fff;padding:15px;margin:10px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
-    .admin-panel{display:none;padding:15px}
-    .hidden-admin-btn{position:fixed;bottom:0;left:0;width:12px;height:12px;background:transparent;border:0;opacity:0;cursor:pointer;z-index:99}
-    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;padding:20px}
-    .modal-content{background:#fff;padding:20px;border-radius:12px;max-width:520px;width:100%;text-align:center;direction:rtl}
-    .toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 18px;border-radius:20px;display:none;z-index:300}
-    .cart-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:2px solid #e74c3c;padding:12px 15px;display:flex;align-items:center;justify-content:space-between;z-index:90;box-shadow:0 -4px 12px rgba(0,0,0,0.08)}
-    .cart-icon{font-size:24px;position:relative}
-    .cart-count{position:absolute;top:-8px;right:-10px;background:#e74c3c;color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold}
-    .cart-total{font-weight:bold;color:#e74c3c}
-    .cart-btn{background:#27ae60;color:#fff;padding:10px 14px;border-radius:20px;border:0;cursor:pointer}
-    .cart-items{max-height:300px;overflow:auto;text-align:right}
-    .cart-item{display:flex;gap:10px;align-items:center;padding:10px;border-bottom:1px solid #eee}
-    .cart-item img{width:60px;height:60px;object-fit:cover;border-radius:8px}
-    .qty-btn{width:32px;height:32px;border-radius:6px;border:0;background:#ecf0f1;cursor:pointer}
-    .file-label{display:inline-block;padding:10px;background:#ecf0f1;border-radius:8px;border:2px dashed #bdc3c7;cursor:pointer;color:#7f8c8d}
-    .img-preview{width:90px;height:90px;object-fit:cover;border-radius:8px;border:2px dashed #ddd;display:block;margin-top:8px}
-    @media(min-width:768px){.products{grid-template-columns:repeat(3,1fr);max-width:900px;margin:0 auto}}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة المتاجر - نظام شامل</title>
+    <style>
+        :root {
+            --primary: #6366f1; --primary-dark: #4f46e5; --secondary: #10b981;
+            --danger: #ef4444; --warning: #f59e0b; --dark: #1f2937;
+            --gray: #6b7280; --light: #f3f4f6; --white: #ffffff;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --radius: 12px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background: #f8fafc; color: var(--dark); line-height: 1.6; }
+        .hidden { display: none !important; }
+
+        /* Login */
+        .login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); }
+        .login-box { background: white; padding: 40px; border-radius: var(--radius); box-shadow: var(--shadow-lg); width: 100%; max-width: 420px; }
+        .login-box h1 { text-align: center; margin-bottom: 8px; color: var(--primary); }
+        .login-box p { text-align: center; color: var(--gray); margin-bottom: 24px; }
+        .login-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+        .login-tab { flex: 1; padding: 10px; border: none; background: var(--light); border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .login-tab.active { background: var(--primary); color: white; }
+
+        /* Layout */
+        .app-layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 270px; background: var(--dark); color: white; position: fixed; right: 0; top: 0; bottom: 0; overflow-y: auto; padding: 20px 0; }
+        .sidebar .logo { padding: 0 20px 20px; font-size: 22px; font-weight: 800; border-bottom: 1px solid #374151; margin-bottom: 12px; }
+        .sidebar .role-badge { padding: 0 20px; margin-bottom: 16px; font-size: 12px; color: #9ca3af; }
+        .sidebar a { display: flex; align-items: center; gap: 10px; padding: 12px 20px; color: #9ca3af; text-decoration: none; font-weight: 500; transition: all 0.2s; cursor: pointer; }
+        .sidebar a:hover, .sidebar a.active { background: #374151; color: white; }
+        .sidebar .nav-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid #374151; }
+        .main-content { margin-right: 270px; flex: 1; padding: 24px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+        .page-header h1 { font-size: 26px; }
+
+        /* Cards */
+        .card { background: var(--white); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); margin-bottom: 20px; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .card-header h2 { font-size: 18px; }
+
+        /* Buttons */
+        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: 8px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-success { background: var(--secondary); color: white; }
+        .btn-success:hover { background: #059669; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-outline { background: transparent; border: 1px solid #e5e7eb; color: var(--dark); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .btn-block { width: 100%; justify-content: center; }
+
+        /* Forms */
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
+        .form-control { width: 100%; padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; transition: border-color 0.2s; }
+        .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        /* Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: var(--white); padding: 20px; border-radius: var(--radius); box-shadow: var(--shadow); }
+        .stat-card h3 { font-size: 28px; color: var(--primary); margin-bottom: 4px; }
+        .stat-card p { color: var(--gray); font-size: 13px; }
+
+        /* Tables */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: right; border-bottom: 1px solid #e5e7eb; font-size: 14px; }
+        th { background: var(--light); font-weight: 600; color: var(--gray); font-size: 12px; text-transform: uppercase; }
+        tr:hover { background: #f9fafb; }
+
+        /* Badges */
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .badge-green { background: #d1fae5; color: #065f46; }
+        .badge-red { background: #fee2e2; color: #991b1b; }
+        .badge-blue { background: #dbeafe; color: #1e40af; }
+        .badge-orange { background: #fef3c7; color: #92400e; }
+        .badge-gray { background: #f3f4f6; color: #6b7280; }
+
+        /* Modals */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--white); border-radius: var(--radius); width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 16px 20px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+
+        /* Store Front */
+        .store-header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; padding: 50px 20px; text-align: center; }
+        .store-header h1 { font-size: 32px; margin-bottom: 8px; }
+        .store-header p { opacity: 0.9; }
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+        .product-card { background: var(--white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: transform 0.2s; }
+        .product-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+        .product-img { width: 100%; height: 180px; object-fit: cover; background: #e5e7eb; display: flex; align-items: center; justify-content: center; font-size: 48px; }
+        .product-info { padding: 16px; }
+        .product-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+        .product-price { color: var(--primary); font-size: 18px; font-weight: 800; margin-bottom: 10px; }
+        .product-desc { color: var(--gray); font-size: 13px; margin-bottom: 12px; }
+        .add-to-cart { width: 100%; padding: 10px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .add-to-cart:hover { background: var(--primary-dark); }
+
+        /* Cart */
+        .cart-btn { position: fixed; bottom: 24px; left: 24px; background: var(--secondary); color: white; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-lg); cursor: pointer; border: none; font-size: 22px; z-index: 99; }
+        .cart-count { position: absolute; top: -4px; right: -4px; background: var(--danger); color: white; width: 22px; height: 22px; border-radius: 50%; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+        .cart-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #e5e7eb; }
+        .cart-item-info { flex: 1; }
+        .cart-item-info h4 { font-size: 14px; }
+        .cart-item-info p { color: var(--primary); font-weight: 700; }
+        .qty-control { display: flex; align-items: center; gap: 8px; }
+        .qty-control button { width: 26px; height: 26px; border-radius: 6px; border: 1px solid #e5e7eb; background: white; cursor: pointer; }
+        .cart-total { padding: 16px 0; border-top: 2px solid #e5e7eb; margin-top: 12px; }
+        .cart-total-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; }
+        .cart-total-row.total { font-size: 18px; font-weight: 800; color: var(--primary); }
+        .whatsapp-btn { width: 100%; padding: 14px; background: #25d366; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 12px; }
+        .whatsapp-btn:hover { background: #128c7e; }
+
+        /* Toast */
+        .toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-120px); background: var(--dark); color: white; padding: 14px 28px; border-radius: 10px; font-weight: 600; z-index: 1001; transition: transform 0.3s; box-shadow: var(--shadow-lg); }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* Messages */
+        .msg-list { max-height: 400px; overflow-y: auto; }
+        .msg-item { padding: 12px; border-radius: 8px; margin-bottom: 8px; }
+        .msg-item.sent { background: #dbeafe; margin-left: 40px; }
+        .msg-item.received { background: #f3f4f6; margin-right: 40px; }
+        .msg-item small { color: var(--gray); font-size: 11px; }
+        .msg-item p { margin-top: 4px; font-size: 14px; }
+
+        /* Subscription */
+        .sub-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+        .sub-card { border: 2px solid #e5e7eb; border-radius: var(--radius); padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .sub-card:hover, .sub-card.selected { border-color: var(--primary); background: #eef2ff; }
+        .sub-card h3 { font-size: 20px; margin-bottom: 4px; }
+        .sub-card .price { font-size: 28px; color: var(--primary); font-weight: 800; }
+        .sub-card .period { color: var(--gray); font-size: 13px; }
+
+        /* Color Picker */
+        .color-picker { display: flex; gap: 10px; flex-wrap: wrap; }
+        .color-option { width: 36px; height: 36px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 0.2s; }
+        .color-option:hover, .color-option.active { border-color: var(--dark); transform: scale(1.15); }
+
+        /* Toggle */
+        .toggle-switch { position: relative; width: 48px; height: 26px; display: inline-block; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #e5e7eb; border-radius: 26px; transition: 0.3s; }
+        .toggle-slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
+        input:checked + .toggle-slider { background: var(--secondary); }
+        input:checked + .toggle-slider:before { transform: translateX(22px); }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 4px; border-bottom: 1px solid #e5e7eb; margin-bottom: 20px; }
+        .tab { padding: 10px 20px; border: none; background: none; cursor: pointer; font-weight: 600; color: var(--gray); border-bottom: 2px solid transparent; }
+        .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Branch Row */
+        .branch-row { display: flex; align-items: center; gap: 14px; padding: 14px; border: 1px solid #e5e7eb; border-radius: 12px; margin-bottom: 10px; }
+        .branch-avatar { width: 44px; height: 44px; border-radius: 10px; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; }
+        .branch-info { flex: 1; }
+        .branch-info h4 { font-size: 15px; margin-bottom: 2px; }
+        .branch-info p { color: var(--gray); font-size: 12px; }
+        .branch-link { background: #f3f4f6; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-family: monospace; color: var(--primary); }
+
+        .customer-row { display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid #e5e7eb; }
+        .customer-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+
+        .category-filter { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+        .category-btn { padding: 8px 20px; border-radius: 20px; border: 1px solid #e5e7eb; background: white; cursor: pointer; font-weight: 500; transition: all 0.2s; }
+        .category-btn:hover, .category-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 100%; position: relative; }
+            .main-content { margin-right: 0; }
+            .form-row { grid-template-columns: 1fr; }
+            .products-grid { grid-template-columns: repeat(2, 1fr); }
+            .page-header { flex-direction: column; align-items: flex-start; }
+        }
+        .empty-state { text-align: center; padding: 40px; color: var(--gray); }
+        .empty-state div { font-size: 48px; margin-bottom: 12px; }
+    </style>
 </head>
 <body>
 
-  <div id="storeView">
-<div class="header" id="storeHeader" style="background-color:#e74c3c"></div>
-    <div class="store-info" style="text-align:center"><h1 style="color:#e74c3c;margin:0">  تصميم ابو نجم الحلبي </h1><div style="font-size:12px;color:#666;margin-top:5px">   رقم الهاتف +963981738986 </div></div>
-    <div class="store-info">
-      <h2 id="storeName">متجر الطعام</h2>
-      <p id="storeDesc">أشهى المأكولات</p>
-      <div style="margin-top:10px"><span style="background:#25d366;color:#fff;padding:8px 12px;border-radius:20px">📱 <span id="whatsappText">+963XXXXXXXXX</span></span></div>
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Login Page -->
+<div class="login-page" id="loginPage">
+    <div class="login-box">
+        <h1>🏪 منصة المتاجر</h1>
+        <p>نظام إدارة المتاجر الفرعية الشامل</p>
+        <div class="login-tabs">
+            <button class="login-tab active" onclick="switchLoginTab('admin')">أدمن رئيسي</button>
+            <button class="login-tab" onclick="switchLoginTab('branch')">صاحب فرع</button>
+            <button class="login-tab" onclick="switchLoginTab('customer')">زبون</button>
+        </div>
+        <div id="loginForm">
+            <div class="form-group">
+                <label>البريد الإلكتروني</label>
+                <input type="email" class="form-control" id="loginEmail" placeholder="admin@store.com">
+            </div>
+            <div class="form-group">
+                <label>كلمة المرور</label>
+                <input type="password" class="form-control" id="loginPass" placeholder="••••••••">
+            </div>
+            <button class="btn btn-primary btn-block" onclick="doLogin()" style="margin-top:8px;">تسجيل الدخول</button>
+        </div>
+        <div id="customerLoginForm" class="hidden">
+            <div class="form-group">
+                <label>رقم الهاتف</label>
+                <input type="tel" class="form-control" id="customerPhone" placeholder="05xxxxxxxx">
+            </div>
+            <button class="btn btn-primary btn-block" onclick="doCustomerLogin()" style="margin-top:8px;">دخول سريع</button>
+            <p style="text-align:center; margin-top:12px; font-size:13px; color:var(--gray);">أو يمكنك تصفح المتاجر بدون تسجيل</p>
+            <button class="btn btn-outline btn-block" onclick="browseAsGuest()">تصفح كزائر</button>
+        </div>
+    </div>
+</div>
+
+<!-- App Layout -->
+<div class="app-layout hidden" id="appLayout">
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">🏪 منصة المتاجر</div>
+        <div class="role-badge" id="roleBadge">أدمن رئيسي</div>
+
+        <div id="adminNav">
+            <a class="active" onclick="showPage('adminDashboard')">📊 لوحة التحكم</a>
+            <a onclick="showPage('branches')">🏪 الفروع</a>
+            <a onclick="showPage('subscriptions')">💎 الاشتراكات</a>
+            <a onclick="showPage('currencySettings')">💱 إعدادات العملة</a>
+            <a onclick="showPage('messages')">💬 الرسائل</a>
+            <a onclick="showPage('customers')">👥 الزبائن</a>
+            <a onclick="showPage('reports')">📈 التقارير</a>
+        </div>
+
+        <div id="branchNav" class="hidden">
+            <a class="active" onclick="showPage('branchDashboard')">📊 لوحة الفرع</a>
+            <a onclick="showPage('myProducts')">📦 منتجاتي</a>
+            <a onclick="showPage('branchSettings')">⚙️ إعدادات المتجر</a>
+            <a onclick="showPage('branchMessages')">💬 رسائل الأدمن</a>
+            <a onclick="showPage('branchCustomers')">👥 زبائني</a>
+            <a onclick="showPage('myLink')">🔗 رابط متجري</a>
+        </div>
+
+        <div id="customerNav" class="hidden">
+            <a class="active" onclick="showPage('browseStores')">🏪 تصفح المتاجر</a>
+            <a onclick="showPage('myOrders')">📦 طلباتي</a>
+            <a onclick="showPage('customerProfile')">👤 حسابي</a>
+        </div>
+
+        <div class="nav-section">
+            <a onclick="logout()" style="color: #ef4444;">🚪 تسجيل الخروج</a>
+        </div>
     </div>
 
-    <div class="nav" id="categoryNav">
-      <button class="nav-btn active" onclick="filterCategory('all', event)">الكل</button>
-      <button class="nav-btn" onclick="filterCategory('main', event)">أطباق رئيسية</button>
-      <button class="nav-btn" onclick="filterCategory('appetizer', event)">مقبلات</button>
-      <button class="nav-btn" onclick="filterCategory('drink', event)">مشروبات</button>
-      <button class="nav-btn" onclick="filterCategory('dessert', event)">حلويات</button>
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+
+        <!-- Admin Dashboard -->
+        <div id="adminDashboard" class="page">
+            <div class="page-header">
+                <h1>📊 لوحة التحكم الرئيسية</h1>
+                <button class="btn btn-primary" onclick="openModal('addBranchModal')">➕ إنشاء فرع جديد</button>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card"><h3 id="statBranches">3</h3><p>عدد الفروع</p></div>
+                <div class="stat-card"><h3 id="statProducts">205</h3><p>إجمالي المنتجات</p></div>
+                <div class="stat-card"><h3 id="statOrders">1,240</h3><p>الطلبات هذا الشهر</p></div>
+                <div class="stat-card"><h3 id="statRevenue">24,500</h3><p>الإيرادات (<span class="currencySymbol">$</span>)</p></div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h2>🏪 الفروع النشطة</h2></div>
+                <div id="adminBranchesList"></div>
+            </div>
+        </div>
+
+        <!-- Branches Page -->
+        <div id="branches" class="page hidden">
+            <div class="page-header">
+                <h1>🏪 إدارة الفروع</h1>
+                <button class="btn btn-primary" onclick="openModal('addBranchModal')">➕ فرع جديد</button>
+            </div>
+            <div class="card">
+                <div class="form-group" style="max-width:400px;">
+                    <input type="text" class="form-control" id="branchSearch" placeholder="🔍 بحث عن فرع..." oninput="searchBranches()">
+                </div>
+                <div id="allBranchesList"></div>
+            </div>
+        </div>
+
+        <!-- Subscriptions -->
+        <div id="subscriptions" class="page hidden">
+            <div class="page-header"><h1>💎 إدارة الاشتراكات</h1></div>
+            <div class="card">
+                <h3 style="margin-bottom:16px;">📋 خطط الاشتراك المتاحة</h3>
+                <div class="sub-cards" id="subscriptionPlans">
+                    <div class="sub-card selected" onclick="selectSubPlan(this, 'free')">
+                        <h3>مجاني</h3>
+                        <div class="price">0 <span class="currencySymbol">$</span></div>
+                        <div class="period">/شهر</div>
+                        <p style="margin-top:12px; font-size:13px; color:var(--gray);">10 منتجات<br>بدون دعم</p>
+                    </div>
+                    <div class="sub-card" onclick="selectSubPlan(this, 'basic')">
+                        <h3>أساسي</h3>
+                        <div class="price">29 <span class="currencySymbol">$</span></div>
+                        <div class="period">/شهر</div>
+                        <p style="margin-top:12px; font-size:13px; color:var(--gray);">50 منتج<br>دعم عبر الواتساب</p>
+                    </div>
+                    <div class="sub-card" onclick="selectSubPlan(this, 'pro')">
+                        <h3>احترافي</h3>
+                        <div class="price">79 <span class="currencySymbol">$</span></div>
+                        <div class="period">/شهر</div>
+                        <p style="margin-top:12px; font-size:13px; color:var(--gray);">منتجات غير محدودة<br>دعم كامل + تقارير</p>
+                    </div>
+                    <div class="sub-card" onclick="selectSubPlan(this, 'yearly')">
+                        <h3>سنوي</h3>
+                        <div class="price">599 <span class="currencySymbol">$</span></div>
+                        <div class="period">/سنة</div>
+                        <p style="margin-top:12px; font-size:13px; color:var(--gray);">كل المميزات<br>وفر 30%</p>
+                    </div>
+                </div>
+                <div style="margin-top:20px;">
+                    <button class="btn btn-success" onclick="saveSubscriptionPlans()">💾 حفظ خطط الاشتراك</button>
+                </div>
+            </div>
+            <div class="card">
+                <h3 style="margin-bottom:16px;">📊 اشتراكات الفروع الحالية</h3>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>الفرع</th><th>الخطة</th><th>تاريخ البدء</th><th>تاريخ الانتهاء</th><th>الحالة</th><th>إجراء</th></tr></thead>
+                        <tbody id="subscriptionsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Currency Settings -->
+        <div id="currencySettings" class="page hidden">
+            <div class="page-header"><h1>💱 إعدادات العملة</h1></div>
+            <div class="card">
+                <h3 style="margin-bottom:16px;">⚙️ إعدادات العملة العالمية</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>رمز العملة (أي رموز/حروف)</label>
+                        <input type="text" class="form-control" id="currencySymbolInput" value="$" maxlength="5">
+                    </div>
+                    <div class="form-group">
+                        <label>اسم العملة</label>
+                        <input type="text" class="form-control" id="currencyNameInput" value="دولار">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>رمز ISO (مثال: USD, SAR)</label>
+                        <input type="text" class="form-control" id="currencyISOInput" value="USD" maxlength="3">
+                    </div>
+                    <div class="form-group">
+                        <label>موضع الرمز</label>
+                        <select class="form-control" id="currencyPosition">
+                            <option value="before">قبل السعر ($100)</option>
+                            <option value="after">بعد السعر (100$)</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="margin-top:8px;">
+                    <button class="btn btn-success" onclick="saveCurrencySettings()">💾 حفظ إعدادات العملة</button>
+                </div>
+                <div style="margin-top:20px; padding:16px; background:var(--light); border-radius:8px;">
+                    <p style="font-weight:600; margin-bottom:8px;">📝 معاينة:</p>
+                    <p id="currencyPreview" style="font-size:18px;">سعر المنتج: $100</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div id="messages" class="page hidden">
+            <div class="page-header"><h1>💬 الرسائل</h1></div>
+            <div class="card">
+                <div class="tabs">
+                    <button class="tab active" onclick="switchMsgTab('inbox')">📥 الوارد</button>
+                    <button class="tab" onclick="switchMsgTab('sent')">📤 المرسل</button>
+                    <button class="tab" onclick="switchMsgTab('new')">✉️ رسالة جديدة</button>
+                </div>
+                <div id="msgInbox" class="tab-content active">
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>من</th><th>الموضوع</th><th>الرسالة</th><th>التاريخ</th><th>إجراء</th></tr></thead>
+                            <tbody id="inboxTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="msgSent" class="tab-content">
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>إلى</th><th>الموضوع</th><th>الرسالة</th><th>التاريخ</th></tr></thead>
+                            <tbody id="sentTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="msgNew" class="tab-content">
+                    <div class="form-group">
+                        <label>إلى الفرع</label>
+                        <select class="form-control" id="msgRecipient"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>الموضوع</label>
+                        <input type="text" class="form-control" id="msgSubject" placeholder="موضوع الرسالة">
+                    </div>
+                    <div class="form-group">
+                        <label>الرسالة</label>
+                        <textarea class="form-control" rows="5" id="msgBody" placeholder="اكتب رسالتك هنا..."></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="sendMessage()">📨 إرسال الرسالة</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customers -->
+        <div id="customers" class="page hidden">
+            <div class="page-header"><h1>👥 إدارة الزبائن</h1></div>
+            <div class="card">
+                <div class="form-group" style="max-width:400px;">
+                    <input type="text" class="form-control" placeholder="🔍 بحث عن زبون..." id="customerSearch" oninput="searchCustomers()">
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>الزبون</th><th>الهاتف</th><th>الطلبات</th><th>الإجمالي</th><th>آخر طلب</th><th>الفرع</th></tr></thead>
+                        <tbody id="customersTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports -->
+        <div id="reports" class="page hidden">
+            <div class="page-header"><h1>📈 التقارير</h1></div>
+            <div class="stats-grid">
+                <div class="stat-card"><h3>1,240</h3><p>إجمالي الطلبات</p></div>
+                <div class="stat-card"><h3>856</h3><p>زبون فريد</p></div>
+                <div class="stat-card"><h3>3</h3><p>فروع نشطة</p></div>
+                <div class="stat-card"><h3>87%</h3><p>معدل التحويل</p></div>
+            </div>
+            <div class="card">
+                <h3 style="margin-bottom:16px;">📊 أداء الفروع</h3>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>الفرع</th><th>الطلبات</th><th>المبيعات</th><th>الزبائن</th><th>معدل التحويل</th></tr></thead>
+                        <tbody>
+                            <tr><td>متجر الأناقة</td><td>520</td><td>12,500 <span class="currencySymbol">$</span></td><td>320</td><td><span class="badge badge-green">92%</span></td></tr>
+                            <tr><td>متجر التقنية</td><td>410</td><td>8,200 <span class="currencySymbol">$</span></td><td>280</td><td><span class="badge badge-green">88%</span></td></tr>
+                            <tr><td>متجر البيت</td><td>310</td><td>3,800 <span class="currencySymbol">$</span></td><td>256</td><td><span class="badge badge-orange">75%</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Branch Dashboard -->
+        <div id="branchDashboard" class="page hidden">
+            <div class="page-header">
+                <h1>📊 لوحة تحكم الفرع</h1>
+                <div id="subscriptionStatus"></div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card"><h3>50</h3><p>منتجاتي</p></div>
+                <div class="stat-card"><h3>320</h3><p>زبائني</p></div>
+                <div class="stat-card"><h3>520</h3><p>طلباتي</p></div>
+                <div class="stat-card"><h3>12,500</h3><p>مبيعاتي (<span class="currencySymbol">$</span>)</p></div>
+            </div>
+            <div class="card" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color:white;">
+                <h3 style="margin-bottom:8px;">🔗 رابط متجرك</h3>
+                <p style="opacity:0.9; margin-bottom:12px;">شارك هذا الرابط مع زبائنك - لا يحتاجون تسجيل دخول!</p>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <input type="text" class="form-control" id="branchLinkDisplay" value="store.com/a1" readonly style="background:rgba(255,255,255,0.2); color:white; border:none;">
+                    <button class="btn" style="background:white; color:var(--primary);" onclick="copyLink()">📋 نسخ</button>
+                    <button class="btn" style="background:white; color:var(--primary);" onclick="previewStore()">👁️ معاينة</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h2>📦 آخر المنتجات</h2><button class="btn btn-primary btn-sm" onclick="showPage('myProducts')">عرض الكل</button></div>
+                <div class="products-grid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));">
+                    <div class="product-card"><div class="product-img">👕</div><div class="product-info"><div class="product-name">تيشيرت قطني</div><div class="product-price">75 <span class="currencySymbol">$</span></div></div></div>
+                    <div class="product-card"><div class="product-img">👖</div><div class="product-info"><div class="product-name">بنطلون جينز</div><div class="product-price">120 <span class="currencySymbol">$</span></div></div></div>
+                    <div class="product-card"><div class="product-img">👟</div><div class="product-info"><div class="product-name">حذاء رياضي</div><div class="product-price">199 <span class="currencySymbol">$</span></div></div></div>
+                    <div class="product-card"><div class="product-img">🧥</div><div class="product-info"><div class="product-name">جاكيت جلد</div><div class="product-price">350 <span class="currencySymbol">$</span></div></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Products -->
+        <div id="myProducts" class="page hidden">
+            <div class="page-header">
+                <h1>📦 منتجاتي</h1>
+                <button class="btn btn-primary" onclick="openModal('addProductModal')">➕ منتج جديد</button>
+            </div>
+            <div class="card">
+                <div class="form-group" style="max-width:400px;">
+                    <input type="text" class="form-control" placeholder="🔍 بحث عن منتج..." id="productSearch" oninput="searchProducts()">
+                </div>
+                <div id="branchProductsList"></div>
+            </div>
+        </div>
+
+        <!-- Branch Settings -->
+        <div id="branchSettings" class="page hidden">
+            <div class="page-header"><h1>⚙️ إعدادات المتجر</h1></div>
+            <div class="card">
+                <h3 style="margin-bottom:16px;">معلومات المتجر</h3>
+                <div class="form-group">
+                    <label>اسم المتجر</label>
+                    <input type="text" class="form-control" id="branchStoreName" value="متجر الأناقة">
+                </div>
+                <div class="form-group">
+                    <label>وصف المتجر</label>
+                    <textarea class="form-control" rows="3" id="branchStoreDesc">أفضل المنتجات بأجود الخامات</textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>رقم الواتساب</label>
+                        <input type="text" class="form-control" id="branchWhatsApp" value="+966501234567">
+                    </div>
+                    <div class="form-group">
+                        <label>رقم الهاتف</label>
+                        <input type="text" class="form-control" id="branchPhone" value="+966501234567">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>لون المتجر</label>
+                    <div class="color-picker">
+                        <div class="color-option active" style="background:#6366f1;" onclick="selectColor(this, '#6366f1')"></div>
+                        <div class="color-option" style="background:#10b981;" onclick="selectColor(this, '#10b981')"></div>
+                        <div class="color-option" style="background:#f59e0b;" onclick="selectColor(this, '#f59e0b')"></div>
+                        <div class="color-option" style="background:#ef4444;" onclick="selectColor(this, '#ef4444')"></div>
+                        <div class="color-option" style="background:#8b5cf6;" onclick="selectColor(this, '#8b5cf6')"></div>
+                        <div class="color-option" style="background:#ec4899;" onclick="selectColor(this, '#ec4899')"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>شعار المتجر</label>
+                    <input type="file" class="form-control" accept="image/*">
+                </div>
+                <button class="btn btn-success" onclick="saveBranchSettings()">💾 حفظ الإعدادات</button>
+            </div>
+        </div>
+
+        <!-- Branch Messages -->
+        <div id="branchMessages" class="page hidden">
+            <div class="page-header"><h1>💬 رسائل الأدمن</h1></div>
+            <div class="card">
+                <div class="tabs">
+                    <button class="tab active" onclick="switchBranchMsgTab('bInbox')">📥 الوارد</button>
+                    <button class="tab" onclick="switchBranchMsgTab('bNew')">✉️ رسالة جديدة</button>
+                </div>
+                <div id="bInbox" class="tab-content active">
+                    <div class="msg-list" id="branchInboxList"></div>
+                </div>
+                <div id="bNew" class="tab-content">
+                    <div class="form-group">
+                        <label>الموضوع</label>
+                        <input type="text" class="form-control" id="branchMsgSubject" placeholder="موضوع الرسالة">
+                    </div>
+                    <div class="form-group">
+                        <label>الرسالة</label>
+                        <textarea class="form-control" rows="5" id="branchMsgBody" placeholder="اكتب رسالتك للأدمن..."></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="sendBranchMessage()">📨 إرسال للأدمن</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Branch Customers -->
+        <div id="branchCustomers" class="page hidden">
+            <div class="page-header"><h1>👥 زبائني</h1></div>
+            <div class="card">
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>الزبون</th><th>الهاتف</th><th>الطلبات</th><th>الإجمالي</th><th>آخر طلب</th></tr></thead>
+                        <tbody>
+                            <tr><td>محمد أحمد</td><td>+966501111111</td><td>12</td><td>1,250 <span class="currencySymbol">$</span></td><td>2026-07-01</td></tr>
+                            <tr><td>سارة خالد</td><td>+966502222222</td><td>8</td><td>890 <span class="currencySymbol">$</span></td><td>2026-06-28</td></tr>
+                            <tr><td>عبدالله فهد</td><td>+966503333333</td><td>5</td><td>620 <span class="currencySymbol">$</span></td><td>2026-06-25</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Link -->
+        <div id="myLink" class="page hidden">
+            <div class="page-header"><h1>🔗 رابط متجري</h1></div>
+            <div class="card" style="text-align:center; padding:40px;">
+                <div style="font-size:64px; margin-bottom:16px;">🔗</div>
+                <h2 style="margin-bottom:8px;">رابط متجرك الفريد</h2>
+                <p style="color:var(--gray); margin-bottom:24px;">شارك هذا الرابط مع زبائنك على وسائل التواصل</p>
+                <div style="display:flex; gap:8px; justify-content:center; max-width:500px; margin:0 auto 24px;">
+                    <input type="text" class="form-control" id="myStoreLink" value="store.com/a1" readonly style="text-align:center; font-size:16px;">
+                    <button class="btn btn-primary" onclick="copyMyLink()">📋 نسخ</button>
+                </div>
+                <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+                    <button class="btn" style="background:#1877f2; color:white;">📘 فيسبوك</button>
+                    <button class="btn" style="background:#25d366; color:white;">💬 واتساب</button>
+                    <button class="btn" style="background:#000; color:white;">📱 تيك توك</button>
+                    <button class="btn" style="background:#e4405f; color:white;">📸 إنستغرام</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Browse Stores (Customer) -->
+        <div id="browseStores" class="page hidden">
+            <div class="store-header">
+                <h1>🏪 تصفح المتاجر</h1>
+                <p>اكتشف أفضل المتاجر واطلب مباشرة عبر الواتساب</p>
+            </div>
+            <div style="max-width:1200px; margin:0 auto; padding:24px;">
+                <div class="form-group" style="max-width:500px; margin:0 auto 24px;">
+                    <input type="text" class="form-control" placeholder="🔍 ابحث عن متجر..." id="storeSearch" oninput="searchStores()">
+                </div>
+                <div id="storesList"></div>
+            </div>
+        </div>
+
+        <!-- Store View -->
+        <div id="storeView" class="page hidden">
+            <div class="store-header" id="storeViewHeader">
+                <h1 id="storeViewName">متجر الأناقة</h1>
+                <p id="storeViewDesc">أفضل المنتجات بأجود الخامات</p>
+            </div>
+            <div style="max-width:1200px; margin:0 auto; padding:24px;">
+                <div class="category-filter" id="storeCategories">
+                    <button class="category-btn active">الكل</button>
+                </div>
+                <div class="products-grid" id="storeProducts"></div>
+            </div>
+            <div style="background:var(--dark); color:white; padding:30px; margin-top:40px; text-align:center;">
+                <h3 id="storeFooterName">متجر الأناقة</h3>
+                <p style="opacity:0.7; margin-top:8px;">جميع الطلبات تُرسل مباشرة عبر الواتساب</p>
+                <p style="opacity:0.7;">📞 <span id="storeFooterPhone">+966 50 123 4567</span></p>
+            </div>
+            <button class="cart-btn" onclick="openCart()">
+                🛒
+                <span class="cart-count" id="cartCount">0</span>
+            </button>
+        </div>
+
+        <!-- My Orders -->
+        <div id="myOrders" class="page hidden">
+            <div class="page-header"><h1>📦 طلباتي</h1></div>
+            <div class="card">
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>#</th><th>المتجر</th><th>المنتجات</th><th>الإجمالي</th><th>التاريخ</th><th>الحالة</th></tr></thead>
+                        <tbody id="customerOrdersTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Profile -->
+        <div id="customerProfile" class="page hidden">
+            <div class="page-header"><h1>👤 حسابي</h1></div>
+            <div class="card">
+                <div class="form-group">
+                    <label>الاسم الكامل</label>
+                    <input type="text" class="form-control" id="custName" value="محمد أحمد">
+                </div>
+                <div class="form-group">
+                    <label>رقم الهاتف</label>
+                    <input type="text" class="form-control" id="custPhone" value="+966501111111" readonly>
+                </div>
+                <div class="form-group">
+                    <label>العنوان</label>
+                    <textarea class="form-control" rows="2" id="custAddress">الرياض، حي العليا</textarea>
+                </div>
+                <button class="btn btn-success" onclick="saveCustomerProfile()">💾 حفظ التغييرات</button>
+            </div>
+        </div>
+
     </div>
+</div>
 
-    <div class="products" id="productsContainer"></div>
-  </div>
+<!-- ==================== MODALS ==================== -->
 
-  <!-- Admin -->
-  <div id="adminPanel" class="admin-panel">
-    <div class="admin-section">
-      <h3>🖼️ صورة الهيدر (الشريط العلوي)</h3>
-      <p style="font-size:13px;color:#666;margin-bottom:8px">اختر صورة من معرض هاتفك لتحل محل الشريط البرتقالي في أعلى المتجر</p>
-      <label class="file-label" onclick="document.getElementById('headerImageFile').click()">📷 اختيار صورة الهيدر</label>
-      <input id="headerImageFile" type="file" accept="image/*" style="display:none" onchange="previewHeaderImage(this)">
-      <img id="headerImagePreview" class="img-preview" style="display:none;width:100%;height:120px;object-fit:cover">
-      <div style="display:flex;gap:8px;margin-top:10px">
-        <button onclick="saveHeaderImage()" style="flex:1;background:#27ae60;color:#fff;padding:10px;border-radius:8px;border:0;cursor:pointer">💾 حفظ الصورة</button>
-        <button onclick="removeHeaderImage()" style="flex:1;background:#e74c3c;color:#fff;padding:10px;border-radius:8px;border:0;cursor:pointer">🗑️ إزالة الصورة</button>
-      </div>
+<!-- Add Branch Modal -->
+<div class="modal-overlay" id="addBranchModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>➕ إنشاء فرع جديد</h3>
+            <button onclick="closeModal('addBranchModal')" style="background:none; border:none; font-size:24px; cursor:pointer;">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>اسم المتجر *</label>
+                <input type="text" class="form-control" id="newBranchName" placeholder="مثال: متجر الأناقة">
+            </div>
+            <div class="form-group">
+                <label>اسم صاحب الفرع *</label>
+                <input type="text" class="form-control" id="newBranchOwner" placeholder="مثال: أحمد محمد">
+            </div>
+            <div class="form-group">
+                <label>البريد الإلكتروني *</label>
+                <input type="email" class="form-control" id="newBranchEmail" placeholder="branch@store.com">
+            </div>
+            <div class="form-group">
+                <label>كلمة المرور *</label>
+                <input type="password" class="form-control" id="newBranchPass" placeholder="••••••••">
+            </div>
+            <div class="form-group">
+                <label>رقم الواتساب *</label>
+                <input type="text" class="form-control" id="newBranchWhatsApp" placeholder="+966501234567">
+            </div>
+            <div class="form-group">
+                <label>الرابط الفرعي *</label>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <span style="color:var(--gray);">store.com/</span>
+                    <input type="text" class="form-control" id="newBranchSlug" placeholder="a1" style="width:100px; text-transform:lowercase;" maxlength="3">
+                </div>
+                <p style="font-size:12px; color:var(--gray); margin-top:6px;">مثال: a1, b2, xy3 (حرف + رقم أو حرفين + رقم)</p>
+            </div>
+            <div class="form-group">
+                <label>خطة الاشتراك</label>
+                <select class="form-control" id="newBranchPlan">
+                    <option value="free">مجاني</option>
+                    <option value="basic">أساسي - 29 <span class="currencySymbol">$</span>/شهر</option>
+                    <option value="pro">احترافي - 79 <span class="currencySymbol">$</span>/شهر</option>
+                    <option value="yearly">سنوي - 599 <span class="currencySymbol">$</span>/سنة</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" onclick="closeModal('addBranchModal')" style="background:#f3f4f6; color:var(--dark);">إلغاء</button>
+            <button class="btn btn-primary" onclick="createBranch()">✅ إنشاء الفرع</button>
+        </div>
     </div>
+</div>
 
-    <button onclick="showStore()" style="background:#95a5a6;color:#fff;padding:10px;border-radius:8px;border:0;margin-bottom:12px;cursor:pointer">← العودة للمتجر</button>
-
-    <div class="admin-section">
-      <h3>⚙️ إعدادات المتجر</h3>
-      <label>اسم المتجر</label>
-      <input id="adminStoreName" style="width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #ddd">
-      <label>وصف المتجر</label>
-      <textarea id="adminStoreDesc" style="width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #ddd"></textarea>
-      <label>رقم الواتساب (بدون +)</label>
-      <input id="adminWhatsapp" style="width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #ddd">
-      <button onclick="saveStoreSettings()" style="background:#3498db;color:#fff;padding:12px;border-radius:8px;border:0;cursor:pointer;width:100%">💾 حفظ الإعدادات مؤقتاً</button>
+<!-- Edit Branch Modal -->
+<div class="modal-overlay" id="editBranchModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>✏️ تعديل الفرع</h3>
+            <button onclick="closeModal('editBranchModal')" style="background:none; border:none; font-size:24px; cursor:pointer;">×</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="editBranchId">
+            <div class="form-group">
+                <label>اسم المتجر</label>
+                <input type="text" class="form-control" id="editBranchName">
+            </div>
+            <div class="form-group">
+                <label>اسم صاحب الفرع</label>
+                <input type="text" class="form-control" id="editBranchOwner">
+            </div>
+            <div class="form-group">
+                <label>رقم الواتساب</label>
+                <input type="text" class="form-control" id="editBranchWhatsApp">
+            </div>
+            <div class="form-group">
+                <label>خطة الاشتراك</label>
+                <select class="form-control" id="editBranchPlan">
+                    <option value="free">مجاني</option>
+                    <option value="basic">أساسي</option>
+                    <option value="pro">احترافي</option>
+                    <option value="yearly">سنوي</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>حالة الحساب</label>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="editBranchActive" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span id="branchStatusText">نشط</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>تاريخ انتهاء الاشتراك</label>
+                <input type="date" class="form-control" id="editBranchExpiry">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-danger" onclick="deleteBranch()">🗑️ حذف الفرع</button>
+            <button class="btn" onclick="closeModal('editBranchModal')" style="background:#f3f4f6; color:var(--dark);">إلغاء</button>
+            <button class="btn btn-primary" onclick="saveBranchEdit()">💾 حفظ التغييرات</button>
+        </div>
     </div>
+</div>
 
-    <div class="admin-section">
-      <h3>➕ إضافة/تعديل منتج</h3>
-      <input type="hidden" id="editProductId">
-      <label>اسم المنتج</label>
-      <input id="productName" style="width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #ddd">
-      <label>الوصف</label>
-      <textarea id="productDesc" style="width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #ddd"></textarea>
-      <label>السعر (ل.س)</label>
-      <input id="productPrice" type="number" style="width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #ddd">
-      <label>التصنيف</label>
-      <select id="productCategory" style="width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #ddd">
-        <option value="main">أطباق رئيسية</option><option value="appetizer">مقبلات</option><option value="drink">مشروبات</option><option value="dessert">حلويات</option>
-      </select>
-
-      <label>صورة من المعرض (مباشرة من الهاتف)</label>
-      <label class="file-label" onclick="document.getElementById('productImageFile').click()">📷 اختيار صورة</label>
-      <input id="productImageFile" type="file" accept="image/*" style="display:none" onchange="previewImageFile(this)">
-      <img id="imagePreview" class="img-preview" style="display:none">
-
-      <div style="margin-top:10px">
-        <button onclick="saveProduct()" style="background:#27ae60;color:#fff;padding:12px;border-radius:8px;border:0;cursor:pointer;width:100%">💾 إضافة / تعديل المنتج</button>
-      </div>
+<!-- Add Product Modal -->
+<div class="modal-overlay" id="addProductModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>➕ إضافة منتج</h3>
+            <button onclick="closeModal('addProductModal')" style="background:none; border:none; font-size:24px; cursor:pointer;">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>صورة المنتج</label>
+                <input type="file" class="form-control" accept="image/*" id="productImage">
+            </div>
+            <div class="form-group">
+                <label>اسم المنتج *</label>
+                <input type="text" class="form-control" id="productName" placeholder="مثال: تيشيرت قطني">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>السعر *</label>
+                    <input type="number" class="form-control" id="productPrice" placeholder="75">
+                </div>
+                <div class="form-group">
+                    <label>الكمية</label>
+                    <input type="number" class="form-control" id="productQty" value="100">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>الوصف</label>
+                <textarea class="form-control" rows="3" id="productDesc" placeholder="وصف المنتج..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" onclick="closeModal('addProductModal')" style="background:#f3f4f6; color:var(--dark);">إلغاء</button>
+            <button class="btn btn-primary" onclick="saveProduct()">💾 حفظ المنتج</button>
+        </div>
     </div>
+</div>
 
-    <div class="admin-section">
-      <h3>📦 المنتجات الحالية</h3>
-      <div id="adminProductsList"></div>
+<!-- Edit Product Modal -->
+<div class="modal-overlay" id="editProductModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>✏️ تعديل منتج</h3>
+            <button onclick="closeModal('editProductModal')" style="background:none; border:none; font-size:24px; cursor:pointer;">×</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="editProductId">
+            <div class="form-group">
+                <label>اسم المنتج</label>
+                <input type="text" class="form-control" id="editProductName">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>السعر</label>
+                    <input type="number" class="form-control" id="editProductPrice">
+                </div>
+                <div class="form-group">
+                    <label>الكمية</label>
+                    <input type="number" class="form-control" id="editProductQty">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>الوصف</label>
+                <textarea class="form-control" rows="3" id="editProductDesc"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-danger" onclick="deleteProduct()">🗑️ حذف</button>
+            <button class="btn" onclick="closeModal('editProductModal')" style="background:#f3f4f6; color:var(--dark);">إلغاء</button>
+            <button class="btn btn-primary" onclick="saveProductEdit()">💾 حفظ</button>
+        </div>
     </div>
+</div>
 
-    <div class="admin-section">
-      <h3>⚠️ حفظ التغييرات إلى GitHub</h3>
-      <p style="font-size:13px;color:#666">اضغط للحفظ إلى المستودع: سُيطلب منك إدخال owner, repo, path (مثل index.html) وPersonal Access Token مؤقت (يُخزن بالجلسة فقط). يمكنك أيضاً تحديد فرع للحفظ.</p>
-      <button onclick="startSaveToGitHub()" style="background:#8e44ad;color:#fff;padding:12px;border-radius:8px;border:0;cursor:pointer;width:100%">✨ حفظ إلى GitHub</button>
+<!-- Cart Modal -->
+<div class="modal-overlay" id="cartModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>🛒 سلة المشتريات</h3>
+            <button onclick="closeModal('cartModal')" style="background:none; border:none; font-size:24px; cursor:pointer;">×</button>
+        </div>
+        <div class="modal-body">
+            <div id="cartItems"></div>
+            <div class="cart-total" id="cartTotalSection" style="display:none;">
+                <div class="cart-total-row"><span>المجموع:</span><span id="cartSubtotal">0 <span class="currencySymbol">$</span></span></div>
+                <div class="cart-total-row"><span>التوصيل:</span><span>مجاني 🚚</span></div>
+                <div class="cart-total-row total"><span>الإجمالي:</span><span id="cartTotalAmount">0 <span class="currencySymbol">$</span></span></div>
+            </div>
+            <div id="emptyCart" style="text-align:center; padding:40px; color:var(--gray);">
+                <div style="font-size:48px;">🛒</div>
+                <p>السلة فارغة</p>
+            </div>
+        </div>
+        <div class="modal-footer" id="cartFooter" style="display:none;">
+            <button class="whatsapp-btn" onclick="sendOrder()">📱 إرسال الطلب عبر واتساب</button>
+        </div>
     </div>
-  </div>
-
-  <button class="hidden-admin-btn" onclick="showAdmin()" title="لوحة التحكم"></button>
-
-  <div class="modal-overlay" id="passwordModal">
-    <div class="modal-content">
-      <h3>🔒 دخول لوحة التحكم</h3>
-      <input id="passwordInput" type="password" maxlength="6" placeholder="••••" style="padding:12px;width:80%;margin:12px 0;border-radius:8px;border:1px solid #ddd;text-align:center">
-      <div id="passwordError" style="color:#e74c3c;display:none;margin-bottom:8px">كلمة المرور غير صحيحة</div>
-      <div style="display:flex;gap:8px;justify-content:center">
-        <button id="passwordEnterBtn" style="background:#3498db;color:#fff;padding:10px;border-radius:8px;border:0;cursor:pointer;width:40%">دخول</button>
-        <button onclick="closePasswordModal()" style="background:#95a5a6;color:#fff;padding:10px;border-radius:8px;border:0;cursor:pointer;width:40%">إلغاء</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="cartModal">
-    <div class="modal-content" id="cartModalContent">
-      <h3>🛒 سلة المشتريات</h3>
-      <div class="cart-items" id="cartItems"></div>
-      <div id="cartSummary" style="margin-top:12px;text-align:right"></div>
-      <div style="margin-top:12px">
-        <label>ملاحظات الطلب</label>
-        <textarea id="cartNote" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd"></textarea>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:12px">
-        <button onclick="sendCartOrder()" style="flex:1;background:#27ae60;color:#fff;padding:10px;border-radius:8px;border:0;cursor:pointer">📱 إرسال عبر واتساب</button>
-        <button onclick="closeCartModal()" style="flex:1;background:#95a5a6;color:#fff;padding:10px;border-radius:8px;border:0;cursor:pointer">إغلاق</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="savingModal" style="display:none"><div class="modal-content" id="savingContent"><p>جاري الحفظ...</p></div></div>
-
-  <div class="cart-bar" id="cartBar" style="display:none">
-    <div style="display:flex;align-items:center;gap:12px">
-      <div class="cart-icon">🛒<div class="cart-count" id="cartCount">0</div></div>
-      <div style="text-align:right">
-        <div style="font-size:13px;color:#666">السلة</div>
-        <div class="cart-total" id="cartTotal">0 ل.س</div>
-      </div>
-    </div>
-    <div>
-      <button class="cart-btn" onclick="openCartModal()">عرض السلة</button>
-    </div>
-  </div>
-
-  <div class="toast" id="toast"></div>
+</div>
 
 <script>
-/* ======= بيانات افتراضية ======= */
-const ADMIN_PASSWORD = "085085";
-const defaultProducts = [
-    {
-        "id": 3,
-        "name": "كباب مشوي",
-        "desc": "كباب لحمة مشوي على الفحم",
-        "price": 4500,
-        "category": "main",
-        "image": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 4,
-        "name": "كفتة مشوية",
-        "desc": "كفتة لحمة مشوية مع طماطم",
-        "price": 4000,
-        "category": "main",
-        "image": "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 5,
-        "name": "دجاج مشوي",
-        "desc": "نصف دجاجة مشوية على الفحم",
-        "price": 5000,
-        "category": "main",
-        "image": "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 6,
-        "name": "دجاج مسحب",
-        "desc": "دجاج مسحب مقلي مع بطاطا",
-        "price": 3500,
-        "category": "main",
-        "image": "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 7,
-        "name": "برجر لحمة",
-        "desc": "برجر لحمة مع جبنة وخضار",
-        "price": 3000,
-        "category": "main",
-        "image": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 9,
-        "name": "بيتزا مارغريتا",
-        "desc": "بيتزا جبنة وطماطم وريحان",
-        "price": 4000,
-        "category": "main",
-        "image": "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 10,
-        "name": "بيتزا ببروني",
-        "desc": "بيتزا ببروني حار مع جبنة",
-        "price": 5000,
-        "category": "main",
-        "image": "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 11,
-        "name": "بيتزا خضار",
-        "desc": "بيتزا فلفل، زيتون، طماطم",
-        "price": 3500,
-        "category": "main",
-        "image": "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 12,
-        "name": "مندي دجاج",
-        "desc": "أرز مندي مع دجاج مشوي",
-        "price": 5500,
-        "category": "main",
-        "image": "https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 15,
-        "name": "فتة شامية",
-        "desc": "فتة باللحمة والطحينة والخبز",
-        "price": 4000,
-        "category": "main",
-        "image": "https://images.unsplash.com/photo-1541518763669-27fef04b14ea?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 17,
-        "name": "سجق مشوي",
-        "desc": "سجق لحمة مشوي مع فلفل",
-        "price": 3000,
-        "category": "main",
-        "image": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 19,
-        "name": "سمك مشوي",
-        "desc": "سمك مشوي على الفحم مع ليمون",
-        "price": 6000,
-        "category": "main",
-        "image": "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 20,
-        "name": "سمك مقلي",
-        "desc": "سمك مقلي مع بطاطا وسلطة",
-        "price": 5500,
-        "category": "main",
-        "image": "https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 21,
-        "name": "ريزو دجاج",
-        "desc": "أرز بالكريمة مع دجاج",
-        "price": 3500,
-        "category": "main",
-        "image": "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 22,
-        "name": "سباغيتي بولونيز",
-        "desc": "معكرونة بصلصة اللحمة",
-        "price": 3000,
-        "category": "main",
-        "image": "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 25,
-        "name": "ستيك لحمة",
-        "desc": "ستيك لحمة مشوي مع خضار",
-        "price": 7000,
-        "category": "main",
-        "image": "https://images.unsplash.com/photo-1600891964092-4316c288032e?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 27,
-        "name": "شيش طاووق",
-        "desc": "دجاج شيش طاووق مشوي",
-        "price": 4000,
-        "category": "main",
-        "image": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 31,
-        "name": "حمص",
-        "desc": "حمص ناعم مع زيت زيتون",
-        "price": 1500,
-        "category": "appetizer",
-        "image": "https://images.unsplash.com/photo-1637949385162-e416fb15b2ce?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 34,
-        "name": "فتوش",
-        "desc": "سلطة فتوش بالسماق والخبز المحمص",
-        "price": 1200,
-        "category": "appetizer",
-        "image": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 35,
-        "name": "تبولة",
-        "desc": "سلطة تبولة بالبقدونس والبرغل",
-        "price": 1200,
-        "category": "appetizer",
-        "image": "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 36,
-        "name": "سلطة يونانية",
-        "desc": "سلطة يونانية بالجبنة الفيتا",
-        "price": 1500,
-        "category": "appetizer",
-        "image": "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 37,
-        "name": "سلطة سيزر",
-        "desc": "سلطة سيزر مع دجاج مشوي",
-        "price": 2000,
-        "category": "appetizer",
-        "image": "https://images.unsplash.com/photo-1550304943-4f24f54ddde9?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 39,
-        "name": "سمبوسك جبنة",
-        "desc": "سمبوسك جبنة مقلي",
-        "price": 1500,
-        "category": "appetizer",
-        "image": "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 40,
-        "name": "سمبوسك لحمة",
-        "desc": "سمبوسك لحمة مقلي",
-        "price": 1800,
-        "category": "appetizer",
-        "image": "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 43,
-        "name": "أونيون رينجز",
-        "desc": "حلقات بصل مقلية",
-        "price": 1000,
-        "category": "appetizer",
-        "image": "https://images.unsplash.com/photo-1639024471283-03518883512d?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 46,
-        "name": "حلومي مشوي",
-        "desc": "جبنة حلومي مشوية",
-        "price": 2500,
-        "category": "appetizer",
-        "image": "https://images.unsplash.com/photo-1504544750208-dc0358e63f7f?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 49,
-        "name": "كبة مقلية",
-        "desc": "كبة لحمة مقلية",
-        "price": 2500,
-        "category": "appetizer",
-        "image": "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 51,
-        "name": "لبنة",
-        "desc": "لبنة بالزيت والزعتر",
-        "price": 1200,
-        "category": "appetizer",
-        "image": "https://images.unsplash.com/photo-1637949385162-e416fb15b2ce?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 52,
-        "name": "زيتون مشكلة",
-        "desc": "زيتون أسود وأخضر",
-        "price": 1000,
-        "category": "appetizer",
-        "image": "https://images.unsplash.com/photo-1599020792689-9fde458e7e17?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 55,
-        "name": "شوربة خضار",
-        "desc": "شوربة خضار مشكلة",
-        "price": 1000,
-        "category": "appetizer",
-        "image": "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 56,
-        "name": "كولا",
-        "desc": "كولا بارد",
-        "price": 500,
-        "category": "drink",
-        "image": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 59,
-        "name": "عصير برتقال طازج",
-        "desc": "عصير برتقال طازج",
-        "price": 1000,
-        "category": "drink",
-        "image": "https://images.unsplash.com/photo-1613478223719-2ab802602423?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 60,
-        "name": "عصير ليمون",
-        "desc": "عصير ليمون طازج",
-        "price": 800,
-        "category": "drink",
-        "image": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 61,
-        "name": "عصير مانجو",
-        "desc": "عصير مانجو طازج",
-        "price": 1000,
-        "category": "drink",
-        "image": "https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 63,
-        "name": "عصير أفوكادو",
-        "desc": "عصير أفوكادو بالحليب",
-        "price": 1500,
-        "category": "drink",
-        "image": "https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 64,
-        "name": "عصير كوكتيل",
-        "desc": "عصير فواكه مشكلة",
-        "price": 1200,
-        "category": "drink",
-        "image": "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 65,
-        "name": "ماء",
-        "desc": "ماء معدني بارد",
-        "price": 300,
-        "category": "drink",
-        "image": "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 66,
-        "name": "شاي",
-        "desc": "شاي ساخن بالنعناع",
-        "price": 500,
-        "category": "drink",
-        "image": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 67,
-        "name": "قهوة تركية",
-        "desc": "قهوة تركية ساخنة",
-        "price": 800,
-        "category": "drink",
-        "image": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 69,
-        "name": "كابتشينو",
-        "desc": "كابتشينو بالحليب",
-        "price": 1200,
-        "category": "drink",
-        "image": "https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 70,
-        "name": "لاتيه",
-        "desc": "لاتيه بالحليب",
-        "price": 1200,
-        "category": "drink",
-        "image": "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 71,
-        "name": "ميلك شيك فراولة",
-        "desc": "ميلك شيك فراولة",
-        "price": 1500,
-        "category": "drink",
-        "image": "https://images.unsplash.com/photo-1579954115563-e72bf1381629?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 74,
-        "name": "عصير جزر",
-        "desc": "عصير جزر طازج",
-        "price": 800,
-        "category": "drink",
-        "image": "https://images.unsplash.com/photo-1597481499750-3e6b22637e12?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 76,
-        "name": "سحلب",
-        "desc": "سحلب ساخن بالمكسرات",
-        "price": 1200,
-        "category": "drink",
-        "image": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 77,
-        "name": "سموذي توت",
-        "desc": "سموذي توت أحمر",
-        "price": 1500,
-        "category": "drink",
-        "image": "https://images.unsplash.com/photo-1553530979-7ee52a2670c4?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 78,
-        "name": "سموذي مانجو",
-        "desc": "سموذي مانجو بالحليب",
-        "price": 1500,
-        "category": "drink",
-        "image": "https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 80,
-        "name": "عصير بطيخ",
-        "desc": "عصير بطيخ طازج",
-        "price": 800,
-        "category": "drink",
-        "image": "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 81,
-        "name": "كنافة نابلسية",
-        "desc": "كنافة بالجبنة والقطر",
-        "price": 2500,
-        "category": "dessert",
-        "image": "https://images.unsplash.com/photo-1519915028121-7d3463d20b13?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 82,
-        "name": "بقلاوة",
-        "desc": "بقلاوة بالفستق والقطر",
-        "price": 2000,
-        "category": "dessert",
-        "image": "https://images.unsplash.com/photo-1519676867240-f03562e64548?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 83,
-        "name": "قطايف",
-        "desc": "قطايف بالجبنة أو جوز",
-        "price": 1500,
-        "category": "dessert",
-        "image": "https://images.unsplash.com/photo-1541518763669-27fef04b14ea?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 84,
-        "name": "مهلبية",
-        "desc": "مهلبية بالحليب والمكسرات",
-        "price": 1000,
-        "category": "dessert",
-        "image": "https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 87,
-        "name": "كيك شوكولاتة",
-        "desc": "كيك شوكولاتة بالصوص",
-        "price": 1500,
-        "category": "dessert",
-        "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 88,
-        "name": "تشيز كيك",
-        "desc": "تشيز كيك بالفراولة",
-        "price": 2000,
-        "category": "dessert",
-        "image": "https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 89,
-        "name": "تيراميسو",
-        "desc": "تيراميسو إيطالي",
-        "price": 2500,
-        "category": "dessert",
-        "image": "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 90,
-        "name": "كريم كراميل",
-        "desc": "كريم كراميل بالفانيليا",
-        "price": 1200,
-        "category": "dessert",
-        "image": "https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 91,
-        "name": "آيس كريم فانيليا",
-        "desc": "آيس كريم فانيليا",
-        "price": 800,
-        "category": "dessert",
-        "image": "https://images.unsplash.com/photo-1560008581-09826d1de69e?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 92,
-        "name": "آيس كريم شوكولاتة",
-        "desc": "آيس كريم شوكولاتة",
-        "price": 800,
-        "category": "dessert",
-        "image": "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 93,
-        "name": "آيس كريم فراولة",
-        "desc": "آيس كريم فراولة",
-        "price": 800,
-        "category": "dessert",
-        "image": "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 95,
-        "name": "كريب نوتيلا",
-        "desc": "كريب بالنوتيلا والموز",
-        "price": 1500,
-        "category": "dessert",
-        "image": "https://images.unsplash.com/photo-1519915028121-7d3463d20b13?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 96,
-        "name": "كريب فراولة",
-        "desc": "كريب بالفراولة والشوكولاتة",
-        "price": 1500,
-        "category": "dessert",
-        "image": "https://images.unsplash.com/photo-1506084868230-bb9d95c24759?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 97,
-        "name": "بسبوسة",
-        "desc": "بسبوسة بالقطر والمكسرات",
-        "price": 1000,
-        "category": "dessert",
-        "image": "https://images.unsplash.com/photo-1541518763669-27fef04b14ea?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 98,
-        "name": "معمول",
-        "desc": "معمول بالتمر أو الجوز",
-        "price": 1200,
-        "category": "dessert",
-        "image": "https://images.unsplash.com/photo-1519676867240-f03562e64548?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 99,
-        "name": "غريبة",
-        "desc": "غريبة بالفستق",
-        "price": 1000,
-        "category": "dessert",
-        "image": "https://images.unsplash.com/photo-1519915028121-7d3463d20b13?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 100,
-        "name": "حلوى الجبن",
-        "desc": "حلوى الجبن بالقطر",
-        "price": 1500,
-        "category": "dessert",
-        "image": "https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 101,
-        "name": "فطيرة تفاح",
-        "desc": "فطيرة تفاح بالقرفة",
-        "price": 1500,
-        "category": "dessert",
-        "image": "https://images.unsplash.com/photo-1568571780765-9276ac8b75a2?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 102,
-        "name": "بودينغ شوكولاتة",
-        "desc": "بودينغ شوكولاتة",
-        "price": 1000,
-        "category": "dessert",
-        "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 103,
-        "name": "جيلي فواكه",
-        "desc": "جيلي فواكه مشكلة",
-        "price": 800,
-        "category": "dessert",
-        "image": "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 104,
-        "name": "كنافة بالقشطة",
-        "desc": "كنافة بالقشطة والقطر",
-        "price": 2500,
-        "category": "dessert",
-        "image": "https://images.unsplash.com/photo-1519915028121-7d3463d20b13?w=400&h=300&fit=crop"
-    },
-    {
-        "id": 105,
-        "name": "موس شوكولاتة",
-        "desc": "موس شوكولاتة فرنسي",
-        "price": 1800,
-        "category": "dessert",
-        "image": "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400&h=300&fit=crop"
-    }
-];
-const defaultStore = {
-    "name": "خدمة التوصيل من ساعة 10:00صباح حتا الساعة 12:00مساءا",
-    "desc": "أشهى المأكولات - توصيل سريع",
-    "whatsapp": "963981738986",
-    "headerImage": "data:image/jpeg;base64,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gAAAAAAAAAAAAAAAAAAAAEgAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwE4MgkwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAIAEIIMAAAIIAMEEIAAAAAEAMIIAAAMIIAAAAAAAAAAAswYUUgo0Y4A4MgMgYIwUg4M08E8U0wU8MAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/8QAAv/aAAwDAQACAAMAAAAQ888888888888888884Mc87888sc088888888888888888888888888888888888888gg788888888888888888888888888888888888888U889P+j+/8o8888888888888888888888888888888888U84MhOJ998o8888888888888888888888888888888888U82ff7t708o8888888888888888888888888888888888U851miOnd8o8888888888888888888888888888888888U888bqQ888o8888888888888888888888888888888888U8888sp888o8888888888888888880cMMMMMMMMMMMMMMc888888888sMMMMMMMMMMMMMMs4808888888888888888888888888888888888888888888488888888888888888888888888888888888888888888888uNNNNNNNNNNb888888tINEd8MNsL8lNNNNNNNNNNe88889+8+++++++/o83/wD/AHzW35b3z73ejxT/AO++++++8+988889++88888888o8Uo+98+r88888+8o8U98888888++988889++6/wD/AP8A488o8078/wDn+fPPPPvXePFPfNf/AP8A/wBvvvfPPPPfvqfvvvqPPKPHqvOP97fPPPPvdbvFPfFfvvvlfvvfPPPPfvqfvvvqPPKPPPPPPPq/PPPPPl/PFPfFfvvvlfvvfPPPPfvqfvvvqPPKPJGfLv8AynwY7z709jxT3xX7775X773zzzz376n7776jzyjxCPz/AC5j8Rw86y5g8U98V++++V++988889++8PPPPe88o8kb8/OW88888uONY8U98uPPPP8APvvfPPPPfv8A3333333ajxy3z3xbj3Tn3z/+zxTr3333333/AO988889++++++++++o8Ur8/+Wq+Wo+/8Xo8U++++++++++98888/wDvvvvvvvvvrPFK/fvnOvv7vvvX6PHPvvvvvvvvvv8Azzzz3zTvzjDzzzXjxGX37zW3znTDDD+zzHTDjTz7DjHzzzzzz373zxX7zzz3z5Sv73z6vxfz7/xejxTz7ynyn7z3zzzzzz40x/w00Z4wxs1eo17y5/yU417yVjyY8218wg014x3zzzzzzLTHHFLbDKTBib3nHz7FLXH/AMVo8bw9z39tx0+9388888888+8+8888o8Uo+8+Wq+Wo+/8AF6PPPfvPfvPvPvvfPPPPvNPfHPPOPNLPFOPbPPKPFPPHPNKPPr/NK/KPPOPPvPPPPfvvPPPFffva/lK/vfPq/F/vPPl6Pl/PPPfqfPffPPPPPPjffvPvLzDfOTXrDT/JyfRz/bTVqzfvfL3zWvLXfPPPPPPPM9sOsO98+58/PPOcXqsWNceMW5cc889PsZvPP8dvPPPPPPPPPPFffva/lPPP/lqvlqPv/F/fvPPvPvqfPPvvfPPPLzPfPJjP/wDy47zTow/y4swd0z7zXsxf/wA8+89MNM8/88888/z2yW/37/3/APU5f+vf6fFeMusnaMnf/fPvfv8Afn3fzzzzzz/75Xzzzzyv72vz/wC8r8X8+8+88+X9+8++p88++98888v/AHbffP8A37x+r1bny31f7z+v3z9e/wBeu9fv9s/9u9/88885+99+9+9488q8cr8/+W888o+/8X5+99+19+9+0++188888888888888888Eb8/OtL8Hc888nI8888NdOJ8tdOf88884yyyyyyyyyyx8Up8994m8V6yyyXo8x183/9vy5w9388889++++++++++o8Ur8/+W88X8+8+8o8U9889+8+8++988889+OPPPPPPPfo8uO89Psb8cv8A3/H+PDDPPf8Az/y94/3zzzz3773/AP8A/wDnzyjzzz7jzW3zfvzb7+vzb7zX/wA8+/68188889++p++++o88o88r+98+r8X+888X9+88+89+p889+988889++p++++o88o82o/8AfP7PFfPnfPafd7//AG/3/wC8v9e88889++p++++o88o8Ti959088a09/81q9V890/wDf8dOPf/PPPPfvqfvvvqPPKPPK/vPlvPPKPv8Axf35f37z36nzz773zzzz3767HHHGTzyjzmQEQ53zDOIFfyEQ7644gc47zyw57zzzz377zzzzzzzyjxSj73zyr5Tz7/xejzzzzynzzzzzzzzzzz35/wA888888+o8Vr9+88q9Xs//APFbfPv/AB3vzzz77x7zzzz/AN999999999u8Vu9888t9U/888e492683q888/49/wDPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPDMPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPMDPPPDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDPPPPPPPPPPPPPPPPPPPPPPOFONPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPKOGHEHNDNPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPHPPHPPPPPPPPPPPPPPPPPPPPPPPPPPOOPMOPNNPMNOOMNPPNMOPNMPPMOPNOPONNPPPPPPPPPPPINLBEFCMFLCBPEGANDNNJCEMJNIPPDJIFPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP/EADsRAAEDAQQIBQMDAwQCAwAAAAEAAgMEEBEzcRITFCExUVKRIDJTcqEiQYEjYWIwUIIFJGPBQEJwgLH/2gAIAQIBAT8A/wDFfRTtiZJdpNLQd32v/ttOf9vD7G//AIqiihlvI+l3MKamlhP1DdzHD+103+o6LWskG4C4EJsjXgFpBCNxBBCnoWOvMZ0Ty+yfG+M3Obd/aA1XBRyvidexxChrmvua8aLvhbyq9t0AP8h/Z2hXJwKYwveGi68qCiZHcT9Tk1i/1PREDReLy4bv7O11yBBsLQVT10kJAeNJvyFP/qm7Rgbd/Ipz3PcXOcST9z/aQ/nYeH9tv/8Ah+kAMwBF+4rVx9Dey1cfQ3stXH0N7LVx9Dey1cfQ3stXH0N7LVx9Dey1cfQ3stXH0N7LVx9DeyqWMEDyGjxwsYYo72jyj7Ixx7vob2Wrj6G9kI49/wBDeymYwRSXNHlP2soWtIkvAPBauPob2QjjuH0N7Kta0RNuaB9VlMxhgYS0LVx9Dey1cfQ3stXH0N7LVx9Dey1cfQ3stXH0N7LVx9Dey1cfQ3stXH0N7LVx9DeyqwBMQBduHho8duRskqo43lpDrwtuh5OW3Q8nLboeTlt0PJy26Hk5bdDyctuh5OTHh7A4cCqrAfZFTyStJbdxuWxzfxWxTfx7qWB8V2ldvshP6Ue4+UKSQRt0nA3ArboeTltsO/c5SVkTo3tAdeQRZQ8JPwrzyKBNw3FV2E33WUuAxPeGMLjwC26Hk5bdDyctuh5OW3Q8nLboeTlt0PJy26Hk5R1Ucjw0B15srMd2Q8NHjtyNlXjv/H9CmwGZKqwH2UOE73I8DZX8I/zZDgx+0KswDmPDQcJPxYOAVdhN91lLgMVTgPy/oUmOz82VmO7IeGjx25Gyrx3/AIUIDpWAi8ErZoPTC2aD0wtmg9MLZoPTCqoY2RXtaAb7KbAZkqrAfZQ4TvcnD6XZLap+tU/+4LhL9Vw3LZKfo+SmtAaAOACrB+gcx4aHhJ+FcgNwVdhN91lLgMVTgPyspIY3xXuaCb1s0HphbNB6YWzQemFs0HphTANleALgCqTHZ+bKzHdkPDR47cjZV47/AMKnxo8/DW4P+QspsBmSqsB9lJLGyNwc4A6SdUQlrvrHCyjkYxz9J114W0QeoE1wLQQqw/oHMeGh4SfhXoVEIA+sKrljfG0NcCdKylwGKpwH5WUWD/kfDUY0mapMdn5srMd2Q8NHjtyNlXjv/Cp8aPPw1uD/AJCymwGZKqwH+OHBj9oVZgHMeGg4Sfiw8TbS4DFU4D8rKLB/yPhqMaTNUmOz82VmO7IeGjx25Gyrx3/hU+NHn4a3B/yFlNgMyVVgPsp6ZsrC4uIuNydQsAJ0zZTwtlLgSRcFsLOtyY0tY0A8Aqy/UnMWQUrZYw4uIUlGxrHO0juBNlDfdJ+Fv5hbCw79MqopmxMDg4m83WUuAxVOA/Kyiwf8j4ajGkzVJjs/NlZjuyHho8duRsq8d/4VPjR5+Gtwf8hZTYDMlVYD7KHCd7k8jQdkbKHzPyV45oEXcVWEag5iyjI1IzKmI1MntNlBwk/CvHNAi4b1XEapvuspcBiqcB+VlFg/5Hw1GNJmqTHZ+bKzHdkPDR47cjZV47/xZpHmVpHmVpHmVpHmVeedlNgMyVVgPsocJ3uT/I7I2UHmflZLiye4+Kg4SfiwcAq7Cb7rKXAYqnAflZeea0jzK0jzK0jzK0jzNlJjs/NlZjuyHho8duRsnpXySOcHAArYZOtq2GTrathk62rYZOtq2GTrathk62rYZOtqhYWRtafsqrAfZQ36p3uT79B2RsofM/Jb+QUuI/3FRRmR4aCthk62qWMxvLSU1uk4DmblsMnW1NOyXhw0tLktvZ0FNJ0Rkq6/VN91lLgMUzC+NzR91sMnW1bDJ1tWwydbVsMnW1bDJ1tWwydbVsMnW1QUj45A4uBusrMd2Q8NHjtyP9OqwH2UOE73J/kdkbKDzPyslxZPcVSY7cjZV47vwosWP3Cyv8zMjYzyNyCrsJvuspcBn9Osx3ZDwtc5pvBIK183qO7rXzeo7utfN6ju6183qO7rXzeo7utfN6ju6183qO7rXzeo7utfN6ju6183qO7oyyuFxe4jOyhH6TvciBccls8PphVQEQYY/pvvvuWvm9R3dRwxOjY4sBJaCSqhjI4y5g0TfxC183qO7pznON5JJQJBBC183qO7qlAlD9Z9V11162eH0wgBcFXD9JvusEsrRcHuAzWvm9R3da+b1Hd1r5vUd3Wvm9R3da+b1Hd1r5vUd3Wvm9R3da+b1Hd1r5vUd3Wvm9R3dOc5xvJJPhYxz3aLReVss/R8hbLP0fITqaZoJLNw/cWRwySX6Db7lss/R8jwNp5nNDmsvBWyz9HyFss/R8hQPbTtLJdxJvRq4CLtL4Kv/Yqu4R/myE/pR+0KswDmLGQSvbe1t4Wyz9HyFss/R8hQHZ9IS/Tfdctrg6vgpp3DJV2E33WNp5ntDmsvBWyz9HyFss/R8hbLP0fIWyz9HyLGRvkJDRetln6PkLZZ+j5CfBKxuk5tw8dHjtyNg4nNT4MntNlB5ZMxYbabAZkj/wBiytxh7QhxFlfwj/NkODH7QqzAOYso8AZlHhZX+ZmRsZ5G5BV2E33WUuAxGz7lO8pysofO/KwKswHZjxxyOjcHN4rbJ+Y7Kne6SMOJ3kqfBk3/APqbIp3xA6N29bZPzHZCjhIBvctihv4uWxQ83J08kLjG0i5puCiqZXyNaSLiVceZVbjD2hDiFceZVdwj/NjauZrQ0EXAKSplkbouuuso8Eb/ALlSktjeQeAJW2T8x2Usz5SC77WMH0N3ngFXYTfdZTYDN6I/dXHmVUzyRSANPFq2yY7rx2WxQ83KVuy3GPi7jetsn5jstsm5jso5XzvEbz9J5LYoeblURtjlLW8PHSPYIQC4DefupnsMTwHgktP3Wg/pPZaD+k9loP6T2TZI9EfW3hzWsjvH1t7rWx9be6na50ryASCeIUDXNmYSCADxK1sfW3uqv65QW7xo8Qgx94+k9leOYVaC4R3C/itB/Se1gBPALQf0nsqVzWxAOcAbzuKlkYYngPBJafutB/SeyII4gixhGg3eOAVcQYm+6ymkYIGAvAOa1kZ4Pb3V45hVgLpRcCfpQY+/ynsrxzCrQXBl2/eVoP6T2spMdv5V45hVeOch/QhxY/eLPubDbTYDMlVYD7KHCd7keBs+4yslxZPcVSY7cjZV47vwosWP3Cyv8zMjYzyNyCrsJvutp8ePOz7lHgbPuLJsWT3FUmOz82VmO7IeGGPWvDb7lsB9T4UserkLL77kx2i9ruRBW3n0/lbeb8P5W3n0/lChvF+s+FsB9T4WwH1PhbSYP0tG/R3X3raTP+lo3aX3WwH1Phaw0n6d2lfvv4Lbid2r+VvU85h0To333rbz6fyhSGT69O7S33Xc1qTTfq6Wld9uHFbefT+VqTU3y6Wjf9uPBGk1f6mnfo77ruS28+n8q41e/wAuj+eK2A+p8IVxaLtXw/daw1f6d2jdvv4rYD6nwpGaD3NvvuUb9B7XXX3FbefT+VBMZWl112+5G+4rep5jDonRvvW3n0/lCkMv6mndpb7rua1Bpv1dLSu+3DitvPp/Kmk1ry667w0eO3I2VeO/8eFvlGS+4sqMeTNU2PHnZW4w9oQ4iyv4R/myHBj9oVZgHMWUeAMypsGT2myg4Sfiw8SqLGPtNlTjyZ20OE73I8DZX8I8zZBgx+0KswHZjxgkcCtN/Ue6pWtdCC5oJvO8oxx9Dey1UfQ3stXHefob2Wqj6G9kALhuCrfpjbdu+pab+o91TsY6FhLQTzIVQxjYXlrQDzAWm/qPdEk8TZpv6j3VH9bn6W/d9961UfQ3spHOEjwHEAOKpSXTNDjeN+4rVR9DeyDWi8BoRa247gtVH0N7IMYCbmgK4cgjxKosY+1XDkEI2HixvZVDGCF5DADlYHOHAkIPff5irhyCrgA2PM2ab+oouceLj/Rp6mOOINdfejWw8nLbYeTltsN/By22Hk5NP0jceCqY3ysa1o+962ObkO6ZUMhYI3A3t4qSoZMwxsBvdwvWxzch3Ukbo3aLuN1tD5n5K88ipcR/uKpMduRV55FPqY43lrgb0KuJxDQHXkq88ipJ2REaQO8LbYeTlskx3i7eqaCSKS9wHBXnkUD+yma58Tmgbytjm5DupInRuudxuvQ4hXnkVXcI8zaxjpHBreJWxzch3Ukbo3FruP8AUb5RkvuLKjHkzVNjx52VuMPaLaDzPyslxZPcVSY7cjZV47vwosWP3Cyv8zMjYzyNyCPEWD/so2V2MPahxFlfwjzNtJjs/NlZjuyHhpmNfKGuF4WyQdHyVUMayVzWi4C62khjkD9IX3FbJB0fJTRuGSu3jerv3KNNC4lxbeSeaFNCwhzW3EHmrv3KrcYe0IcQtkg6PkpkMcbvoF14V37lbLC7eW7z+6miZAzTjFzgeK2qfr+AoYmTM05Be4nin08LGOe1txaLxvW1T9fwE+V8l2kb7rGD6G5BVT3xsaWuuOktqn6/gKAl0TXE7yiFd+5Vbij2ocQrv3KkiZJcHC9bJB0fJQpIOn5KbTxMcHNbcc1d+5VXjnIeGlc1swLjcLitoh9QKdjpJXOY0uabt4Wom9N3Zaib03dlSkRB4k+m+669bRD6gQnhuH6gW0Q34gW0Q+oEKiH1AtdE64B4JvV4VXG98oLWEjR5IQyggmN3ZbRD6gTZY3u+l19wV4QIuVYf0DmLKM/ojMqXfE8AG8tK1E3pu7LUTem7stRN6buyafpbkqxrnxtDWknSWom9N3ZQSxsia17gHDiCtdE64B4JvV4Vbij2ocQrwnSMaRpG7NbRD6gQqIfUCE0TiA14JV4VXjnIeOjwBmUbK/zsy8VNjx52DiU/yOyNlB5n5WDgFWYBzFlHgDMo8LPubBwCPEWVOPJmqfHjzsrsYe1DiLK/hHmbaTHZ+bKzHdkPDBGJJA0m5bAzrKij1bdEHgUb1v5hTU4lcL3XXBbAzrKFCwgfWVUUzYmghxN5sipGvja4uIvTqcQDWhxJatuk6WqnldKwuNw33J9+g7I2UPmfkt/MJ1ZI1zm6LdxIUtU+RmiWiyKqfGzRDQm1kjnNbot3kBb+YVRO+FzbgDeFt0nS1NvLRkjfeFv5hPpGyOc4uO8plI1jmuDzuK38wpaYSvvLiLgthYN+mVv5hTQiXRBddctgZ1lPbovc3kSFSY7Pyt/MKrx3ZDw0eO3I2Dic0bPubG8Bkq7Db7rKbAZkqrAfZQ4Tvcn+R2RsofM/KyXFf7j4IsWP3Cyu8zMjYzyNyCPEWD/so2fco8DZ9xZNiye4qkx2fmysx3ZD/wAKhwne5PA0HZGyh8z8lcEALlWAag5iyjA1AzKmA1MntPgYBoNyCrsJvu8NDhO9yIFxVwVfwjzNkAGpj9oRA3K4Ksx3ZDwxRmR4aCFsMnU1bDJ1NWwydTVsMnU1bDJ1NWwydTVsMnU1bDJ1NWwydTVsMnU1SUj42Fxc24WUN+qd7k+/QduHA2UN+k/Jb+QRrWNJaWHcblPVNljLQ0iyjv1IzKkDnRubu3ghbDJ1NWwydTVsMnU1NvDRuHBV1+qb7rI6R8jA4ObcVJSPYwuLm3Cyhv1bvcjfcdwW/kFUwvl0QCBdethk6mptW2ICMtJLd3ZR1TZHtaGlb+QVXjnIeGjx25H+nVYD7KHCd7k/yOyNlB5n5WS4snuNtHgDMo8LPubBwCrsJvuspcBiqcB+VlDhO9yPA2fcWTYsnuKpMdn5srMd2Q8NHjtyNlTLI2ZwDyBuWvm9Ry183qOWvm9Ry183qOWvm9Ry183qOWvm9RypyXQsJN5VVgPsbJIwXNcQtfN6jrGvezyuIWvm9RyjhidGxzmAkgElVUMTIiWsAN4sbLI0XNeQFr5vUctfN6jlRvc8P0nE8FcgNwVcP0m+6wTStAAeQEZpXAgvJFlCP03e5EbirldvCuWohN5LBeSqiNkUZcxui4HiFr5vUcnOc43uN58NHjtyNlXjv/Ca0ucGjiVsc/SO62OfpHdbHP0jutjn6R3UlPLG3ScN1lNgMyVVgP8ABss/QnxSR3aTbr7IT+lH7Qqw/oHMWMgleL2tvCNPM0Elm4WUk0cYfpuuvuW10/X8FNO4ZKrY6SNoaLzpLZZ+hbNP0LZZ+hbLP0KkY+Njg4XG9E7ir1JKyMguNy2un6/gprgWgjgVUtc+ItaLySFss/Qnscx1zhcfDR47cjZV47/wqfGjz8Nbg/5CymwGZKqwH2jiLK/hH+bIcGP2hVmAcxZR4AzKmwZPafAzyNyCPEWD/so2fco8DZX8I8zZBgx+0I/aysx3ZDw0eO3I2VeO/wDCp8aPPw1uD/kLKbAZkqrAfZTU8crCXE8bkaOIAkF25bbN/HspZ3y3aV26xtXK1oaLrgFJUySN0XXXWUeCN/3Ke3Sa4Em4hbDDzcqmFkRaG37xYKyYADcqeoklkuddwvVx5lS1UrJHNF1wK2yb+K22b+PZU0j5WOc4/e5EG47yrjzKlhbLohxO5bDDzcmN0WgAm4IjhvKuPMqrxzkPDR47cjZV47/wqfGjz8Nbg/5CymwGZKqwH2UTmiJ17gPqTpGaLvrbw5rQf0laDukrQf0nwUj2CEAuA3lGRnWO6vHMKuILmZGzQd0lUYIlJIu+lXjmFUY787NB/SVRbo3X7vqRIuO9XjmEXNBF7gtZH1t7oSR9be602Ei5w7q8cwqvHOQ8NHjtyNlXjv8AwqfGjz8Nbg/5CymwGZKqwH2jiLPuMrJcWT3HwRYsfuFlf5mZGxnkbkEeIsqceTNU+PHnZ9yjwNlfwjzNtJjs/NlZjuyHho8duRsq8d/4Ub9CRruRW3t6Ctvb0Fbe3oK29vQVPVNlZohpG+ymwGZKqwH2QUxlaXaV1xuWwkb9Z8Lep5zDonRvvv8Autv/AOP5TnaTnO5klRR6x4bfctgPqfC2E+p8JtEWua7T4EHgt6rvMzI2Mv0G5BTymJodo377uK2//j+VI/Te51116jfoPa66+4rb/wDj+VBMZWl2jdvu4p19xyW3/wDH8qeo1waNG662GTVyB919y2//AI/lTSa15ddd4aPHbkbKvHf+P6FNgMyVVgPsocJ3uR4Gyv4R/m2kx25GwfdHhZX+ZmRsZ5G5BV2E33eGhwne5O8py/qUeO3I2GOMm8saTktVF6bey1UXpt7LVRem3stVF6bey1UXpt7LVRem3stVF6beyAAFwFwVVgPsoQDE73IgXHcFcOQVcABH+baTHbkVcOQQA37gpgBFIR0layTrd3Rc48STYwDQbuHAJzGG69oK1UXpt7IRRem3sqiOMQvIY0HKyhAMbvcnAaJ3Dh4IY4zFGSxvlH2Rii3fpt7LVRem3sqoATEAAC4eGnkbHKHO4LbYf5LbYf5LbYf5LbYf5LbYf5LbYf5LbYf5LbYf5LbYf5LbYf5KeqifE5ovvNlNURxMIdfxRrYbj5ltsP8AJVU7JQzRv3X208jY5Q53BbbD/JbbDv8AMpKuJ0b2i+8gjwNrIQ0D6uC2yH+S22H+SFZD/JTVUT4nNF95spqiOJhDr+KNZCQfN4I6uJsbGm+8BbbDu8y22H+SqJGySlzeH/2Y/8QANhEAAQMCBQMCBQQBAgcAAAAAAQACAxAyERITMVEgUnEhYQQiM2KBMEFCUAVAsRUjJHBzgIL/2gAIAQMBAT8A/wBKJmFxbjgQf614+d3kpkrm+4TJGu2/qp/i4IL3+vA9SgI5m6kTwQVlIOBCCZKRcgQdv6f/ACPxk0TxFH6YtxLv3QYXHEkklfDtma8aWOb2TWucxuoBmw9cE6IjakR+f8f0/wDkW4/EA/YEGgL4Sf4fKGABrv8AdE4AlPlJRcvh8S8+P6f4n4USnMHYOwUsckRwe3BEqD4+WLAH5m8FMfB8SMY3YO4TPhv3efwgABgB/UOa14IcAQviP8bu6E//ACU8PY4tcCDwV8M7/qYf/I3/AH/rJoIpm4SNBX/C5Y/iInxuzMDwTjuAD/2flsKzO5KzO5KzO5KzO5KzO5KzO5KzO5KzO5KzO5KzO5KjJzj1PW9xzO9TuszuSszuSszuSmOOZvqd6TkjLgVmdyUXO5KhJLjif2pITnPqVmdyVmdyVmdyVmdyVmdyVmdyVmdyVmdyVmdyVmdyVFYOmaw0bE5wxGC0H8haD+QtB/IWg/kLQfyFoP5C0H8hOBaSCor20dI1pwK1me61me6a9rscKPvd5TWlxwC0H8haL/ZNhcHA+m9J/wCNCoLj4pLe5NBJAWg/kLQfyFoP5C0H8haD+QtB/IWg/kJ0TmjE4UhsHTNYaRWD9CW9yivbSe4eEN6Qbuo+93lQ39M/8aHdQXHxSW9yjvb+hL9M0hsHTNYaRWBPJDCQtR/ctR/ctR/ctR/conuLsCf2pLe5RXtpPcPCG4WkztUn/LAy+mK1ZOUSSVDf0z/xoVBcfFJb3KO9tJXuDsAVqP7lqP7lqP7lqP7kwksCl+maQ2DpmsNIrApLHdMN/wCKS3uUV7aStcXDAfshG/EfLSZpIGAWm/tRBxUN/TP/ABppv7VE1wccR+1Jb3KO9tJr/wAdMdjfCl+maQ2DpmsNIrApLHdMN/4pLe5RXt633u8qG/pn/jQbVlvco720mv8Ax0x2N8KX6ZpDYOmaw0isCksd0w3/AIpLe5RXtpJIWEDBCY47CkjywBa7uAicSSob6PlLXYYJsxLgMBSf+NNY8BRyF5IwpLe5R3tpNf8Ajpjsb4Uv0zSGwdM1hpFYFJY7phv/ABSW9yivbSe4eENxSfZtYb6TXpl7fNJ/40KguPikt7lHe2k1/wCOmOxvhS/TNIbB0zWGkVgpgFgFgFgKy3uUV7aT3DwhuKT7Noy1vjqn/jQ7qC4+KS3uUd7a4BYBYBYCkv0zSGwdM1hoyUNaBgVrt4K128Fa7eCtdvBWu3grXbwVrt4KecziVFe2k9w8Ibik+zaNtb4TnZRitdvBTXZhiicAStdvBRGrt6YLQPIR3KguPikt7kw5XArXbwVrt4K128Fa7eCtdvBWu3grXbwU+UOaRgaQ2DpmsP6cV7aT3DwhuKT7Noy1vgKaw0hsCda7xSDZ1DuVBcfFJb3fpw2DpIB3WRnaFkZ2hZGdoWRnaFkZ2hZGdoWRnaFkZ2hZGdoWRnaEGtGwFJ7h4QPqtR/cVEc+Ob1WRnaE57g4gHYqNxc7BxxCyM7QgANqZGdoUpyYZfRaj+4on1UFx8ULWncBZGdoWRnaFkZ2hZGdoWRnaFkZ2hZGdoWRnaFkZ2hZGdoQAG3SSAMStWPuWqzlCRhOANHPa3crVj7ugyMBwJWqzlasfcngyEFvqFpP4pBu6j73eVDfQvYDgStVnK1Y+5PGphl9cFpP4R3UFx8UMjAcCVqs7lqx9y1Wdy1Wc0c5rdytWPuWqzlB7CcAeuaw1Ze3zSfdvTLe5CkNn5R2pBu6j73eVDfSa9CkGzqHcqC4+KS3u6BuKT7ChUN463NDhgVosUgDXYBMvb5o5jXbrRYtZ/stZ/stZ/sgxrwHHcp8TWtJFIbPyjtSDd1DEwklNja04ik16bgXAe60WJrA3ah3KguPikt7qxsa5uJ5Wixaz/ZNOriHfstFi0WJzBGC4brWf7KNxc3E9crSXnAFMaQ5vod1mHIWYchZhyEWux2Kyu4Kyu7SmEBgBKeQWEArK7tKi9G+vp6okchYFQ+hdisw5Fcw5ClBL8QMU1rg5vod1mHIWINCDiVBcfFJGuLz6FZXcFYFQkBpx5WYchYFQ+hdisw5FJbCsCobB+g+13g9ct7lFe2k9w8Ib9DLW+AprDSGwJ1rvFINnUO5UFx8VksdUbjoZY3wFL9M0hsHS92VuK1/tTHZmgojEELQ+5aH3LQ+5a/2rX+1a/2rTz/NjhitPJ82OOC1/tWXV+bZaH3UjZnx9VofctXL8uG3os+p8uGC0PuWfT+XDFaub5cu60PuX0vfFa/2rQx9cyy6XzbrX+1NOZoKcMQQtD7k9mQgYobijGZ8fVaH3LVy/Lhss+p8uGC0PuTG5W4dM1hpFYOk7msdjVJY6kNn5R2pBu6j73eVDfSa9Mvb5pP/ABoNlNZ+aR2NrPcPCG4pBu6j73eVDeP0MBwFKSHkAoOdyVmdyVmdyVmdyUScVD6uOPCwHAUhIeQCoyS8AlYDgVwHAU3oBh6LM7kpoGVvp+yl9GEhZnclEnlAnFZnclEnlYlDZTWflYlZnclRuOdvqaYBYDgLEqDd1MBwsBx+jJG5zsQtF/stF/stF/stF/sjuo3BpJK1mJ0bnkuGxTY3MOY7BazE1wcMRWfZtG2t8KWw0EbnAEYLScPX0o1hcPRaL/ZarApHtc3AVYQHArWYmuDhiKwbuq5waMStZia4OGI/UO5rHY1SWOpDZ+az7Noy1vgKaw0hsCda7xSDZ1DuamsFh81g3dWX6ZpDYOmQlrSQtWTlRklgJrK9zcMCtWTlHeokeBgCjI8jAmkNn5pqycpz3OHrTVePTFMcXnK71C0o+1PcWOyt9AmyPJAJ9CtKPtTWtbsKHcqIBziCP2WlH2qQAPIFYLD5q1xbjgtWTlar+UZHOBBNIbB0yglhAWm/tKjIa0AnArOzuCzs7gpRnwy+q039pRjf2lab+0rTf2lab+0rI4bikTmhvqRus7O4LTf2lFrgPUVhvpNemXN8rOzuCzs7gs7O4I7lQkBxxP7LOzuCe1znEgYhZHDcUgsPmoaTsFpv7StN/aVkcAcRSGwdc15QpBafPVJY6o3FJ9m1hvpNeh0HesdjVJY6kFh81g3dWX6ZpDYOl7srcVrngJzsxxqyTIPQLXPAWueAo5C8kYUfKWuIwQkLzlI3Wg3kqRoaQENxSfZtBC0gHEpsQacQTR0QccSSjC0AnE0jYHgrQbyUcMTUSloAwRmLgRhRkhaMAFrngUY/JjgFrngJpxAKlsNIbB0zWGo6CoLj4pLe5RXtpPcPCG4pPs2jLW+Oh1rvFINnUO5qegbjoZY3wFL9M0hsH+inuHhDcUn2bWG+k16Ze3z0HcqC4+Ome4eENxSDd1H3u8rmkNg6XODRitdvBWu3grXbwVrt4K128Fa7eCtdvBWu3grXbwVrt4KbK1xAwNJ7h4Q3FJ9m0EJIBxTIi12ONJr00gOBWu3grXbwVrt4KOGJUFx8UdK1pIwKbK1xAwNJ7h4Q3FI3hmK128FGIuObHdOiLWkk0hsHTNYf04r20nuHhDcUn2bRlrfArNeh0HdQXHxSW9yjvbSe4eENx0Msb4Cl+maQ2DpmsNImtLASAsjO0LIztCyM7QsjO0LIztCyM7QsjO0KQAPICivbQtadwsjO0UIB3CyM7QnPcHEA7FRPcX4E0LWncBZGdoWRnaFMAMuAoVBcfFCxp3AQY0bAUnuHhDcdGd4/dRuLnYOOIWRnaEABt0zWGkVgRIAxK1mcrWZytZnK1mcpsjXHAUlvcor29GqzuTXtdsaPvd5UN9C9oOBKEjCd6Ssc7DALSk4R3URDXEk/stVnctVnctVnctVncpSHOBBQ3FGtc7HBaUnCIIKjIDsStVncgQRiOmaw0isCksd0w3/ikt7lFe2p2pBu6j73eVDfSa9Mvb56DuanoG4pBu6j73eVzSGwdM1hpFYFJY7phv8AxSW9yivbSSRzSAMNkJnnhaLPdNY1uOFDEwklNja04ik16BwIOC138BRPLgcaaLFJG1rcRRkTXNBK0We60We6kaGkAIbijXluOAC138BE4klc0isHTNYaRWBSWO6Yb/xSW9yivbSYEuGA/ZBrsR6FYjlYjlYjnolBL9isruCsCoNjTEcqY4s/KwKjsbTEcqb1cPCAOIWBWB4WV3BWV3BWBwPoVgVDYOmaw0isCksd0w3/AIpLe5RXtqduhlrfA6HWu8Ug2dQ7msdjVJY6o3FIN3Vl+maQ2DpmsNIrAnDFpC0D3LQPctA9y0D3JkRa7HGkt7lFe2j5MhwwWv8AbRjM+PqtD7kBgAE92VuK1x2rX+1GbEEZaQbOocMSmMzEjFaH3JoytAThiCFofcnsyEDFDcLQ+5MjyY+tXtzNIWh9yY3K3DpmsNIrB+hLe5RXtpPcPCG9IN3VmsNRSDZ1DuVBcfHTPcPCG4/UmsNA5w2JWZ3cVmd3FZndxWZ3cVmd3FZndxWZ3caRXtpPcPCBKxKg3dWWwrErEplzfKyt4CAAoScSgTyVmd3FZndxUbnF49TSe4eECcR0Pc7O71O6zO7iszu4qIksHTI0ubgFov8AZaL/AGWi/wBlov8AZaL/AGWi/wBlov8AZaL/AGWi/wBlov8AZMic1wJpLG5zgRwtF/stF/somObjjWRpc0gLRf7LRf7JsTw4H036DC/E7LRf7LRf7LRf7JkTg4E0ljc4gjhCF+I26HRPLiVov9lov9lG0tbgf/Zj/8QATRAAAAMDBQoMBQMEAgEDBAMAAQIDAAQFEBEVM5ESExQhNFFTcXKxIDAxMlJUYnOSoaLBIiNBQoEGQGE1YIKDQ1AkNnDhRGTR8FV0wv/aAAgBAQABPwL/AKSHwJZ5ADqjcE8xZCFOCHNQARzmxsAAHIHGiADygy8KcF+cgADnLiaIQJZ2ATpDdk8w/siBQsFf/JWD4QH4Az8Nd5VTeDTDiD6Mi+JqYh+EeLjsLBL/AMlEPhEfjDN/YyCQrLJpBymMAMkmVJMiZQxFCYOG95QpIi+KJ4uUMzJPCSvIOPNxKqZVUzpmDEYJhZdIUVlEh5SmEP7FgJANEk/4AR4h7yhTgIv5y4lMYZ/qxFCKBOU0/ER4gFiSn8gA/wBi/p3+of6x4h8dlLsygBOA8EpzEGcozCyL+HIrawCAhOA8L9Rf1D/WH9i/p3+of6x4RjFKE4ix3wZ/hBknoh8Q4hZZ0TVx8hs7LO6iXKGLPwUllEh+EWRfUz4jfCPB/UX9Q/1h/Yv6d/qH+seCq9gGIlrGOYwziMqT0cmIcYMmcipcX5ZZwKbGniHN9GOmdMZjBNwXEf8Axw18D9Rf1D/WH9i/p3+of6x4D3U/ngpO6inJyZ2RRKkWYJDkKcJjBOzw5XACYg4s3AcMnDWPA/UX9Q/1h/Yv6d/qH+seA+VP54Du7EuQObH/ABwFV00g+Ifwy72ori5C5uA4ZOGseB+ov6h/rD+xf07/AFD/AFjwHyo/PATWUT5o/hkntM+IcQyPaiiac5A1jmYRERnEeAACIzAzomZNEANy8D9Rf1D/AFh/Yv6d/qH+seA8JiokIBysYpijMYJuCk9KJ4uUGTWTVDEP4ZdxIfGT4R8mOmdMZjBNIi5qKYx+EGSQTSD4Q/PB/UX9Q/1h/Yv6d/qH+seCdMhwmMDKuRgxkxhm4IYmSfBDEfH/AC3ylifQwMm6IpjOAT6+H+ov6h/rD+xf07/UP9Y8NVBNTlDHnZV1UT/kOC6iILF4j9Rf1D/WH9i/p3+of6x4lV1TPjDELKInT5Q/MrtXE4j9Rf1D/WH9i/p3+of6x4tVzKOMmL+GMQxBmMDO9cTiP1F/UP8AWH9i/p3+of6x4wxQMEwgxHYpD3QD+OI/UX9Q/wBYf9OkgurVpHNqCdiwaJm/+mG0Aag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1Fag4p1f1FaDQx9dny+KpXJbgfqH7WMwx9eXy+JJXRbgPqDUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orUHFOr+orGg0TL/APTDaAsqgulWJHLrCbhuUPeXw8yZcX1MPIDOkBc0JhOF9P8AzyWMAAATAEwf2iIAITCE4M9wFzXnEgXo/wDHJYz7D3lzPMoXF9DByDwIVCzPp5zYki8o5/4Bkkk0iARMoFKH0/tVVJNUgkUKBij9GisLM5HnLjSNyDm/gZHR2O8vBEifcNjIIJu6JEkwmKUP7XXQTeETpKBOUwM9ux3Z4Okf7Rtb9NusyajwPKb4S6v7Z/UjrOmm8Byl+E2poelenF3J2A88f9sxBK+uLwTsD5Y2AJgAODF3hdJZMCKGL8H0bDnzTntbDnzTntbDnzTntbDnzTntbDnzTntbDnzTntbDnzTntbDnzTntbDnzTntbDnzTntbDnzTntbDnzTntbDnzTntbDnzTntbDnzTntbDnzTntbDnzTntbDnzTntbDnzTntbDnzTntbDnzTntaDrrKnVvigmmAOXjYk9PCb4cpFTAGLF+Gw58057Ww58057Ww17vZRv5+Ufq2HPmnPa2HPmnPa2Gvd7MN/Pyh9Ww58057Ww58057Whr08KPhCnVMIY8X4lU5h9Qthz5pz2thz5pz2thz5pz2so+vYHOF/Pyj9Ww58057Ww58057Wh5zHc0jGGcRnx/mWMLrJHSvaglnAeRsOfNOe1sOfNOe1sOfNOe1sOfNOe1sOfNOe1sOfNOe1sOfNOe1sOfNOe1sOfNOe1sOfNOe1sOfNOe1sOfNOe1sOfNOe1sOfNOe1sOfNOe1sOfNOe1sOfNOe1sOfNOe1sOfNOe1sOfNOe1sOfNOe1oQ8LqrKAdQxvg+vBEJwEOFHK9LY/bQKsX1BxsWy5TUG6Uaou0PtKFUbaD3lhOXJ6h3SqVZ9keArWH2hlhmQo/nfLHaxDUP7aB16uxxccr0tj9tAqxfUHGxbLlNQbpRqi7Q+0oVRtoPeWE5cnqHdKpVn2R4CtYfaGWGZCj+d8sdrENQ/toHXq7HFxyvS2JYU6ovAqgoWeaaZqJcegNrUS49AbWolx6A2tRLj0BtaiXHoDa1EuPQG1qJcegNrUS49AbWolx6A2tRLj0BtaiXHoDa1EuPQG1qJcegNrUS49AbWolx6A2tFHZF3UTBMJpyywKsX1BK+qnRdlFC8oTNTL52LGpl87FjEi72Jyh8GMczUy+dixqZfOxY1MvnYsYgzkKP8SxQwA+qfAA8mfM12XRl82uy6Mvm0NdHd5QMJych/oItRLj0BtaiXHoDa1FOU01wNrUS49AbWolx6A2sjD3VFQDkKM4fzKpVn2Ra7Loy+bXZdGXza7Loy+bKGLfD/LLzhztdl0ZfNrsujL5tDciRxZ98sdrENQywt2ReFFAUCeYrUS49AbWolx6A2tRLj0BtaiXHoDa1EuPQG1qJcegNrUS49AbWolx6A2tRLj0BtaiXHoDa1EuPQG1qJcegNrUS49AbWolx6A2tRLj0BtaKuqLuKQJlmnnnlgderscXHK9LYlgXPX1B+wjlclsSwKsX1BLE8hW/G+VKsJtBwE6smyEsWy5TUG6WCZMp3ntxKlWfZHgK1h9oZYZkKP53yx2sQ1DLA65XY/YR3noahlgderscXHK9LYlgXPX1B+wjlclsSwKsX1BLE8hW/G+VKsJtBwE6smyEsWy5TUG6WCZMp3ntxKlWfZHgK1h9oZYZkKP53yx2sQ1DLA65XY/YR3noahlgderscXHK9LYlgXPX1BLEHo7siByAAjdTY2pt50afm1NvOjT82pt50afm1NvOjT82pt50afm1NvOjT82pt50afm1NvOjT82pt50afmzg8neUL4YAAZ/pLHK5LYlgVYvqCWJTYEt+N7fL6JrW+X0TWsgCZlkgmHGcPq1Bp6Y1jUGnpjWNQaemNYxozejCneJ7j4Z7rM1O/wD2/qanf/t/Uz2uRdYVBIIXQB9W+X0TWt8vomtaCzYOpNpPbiVKs+yLfL6JrW+X0TWt8vomtZS93w+IecP1b5fRNa3y+ia1obNgSP53yx2sQ1DLA65XYlf3k7shfCgAjP8AVqbedGn5tTbzo0/NqbedGn5tTbzo0/NqbedGn5tTbzo0/NqbedGn5tTbzo0/NqbedGn5tD3o7yiJzgADdTYpY7z0NQywOvV2OLjlelsSwLnr6gljWSF7wOKg+R/5jLHK5LYlgVYvqCWJ5Ct+N8rrlKHeF38B5yhbvDb5T/bshLBMmU7z24lSrPsjwFaw+0MsMyFH875Y7WIahlgdcrsSxjI/8w4qC5IbvBljvPQ1DLA69XY4uOV6WxLAuevqCWNZIXvA4qD5H/mMscrktiWBVi+oJYnkK343yuuUod4XfwHnKFu8NvlP9uyEsEyZTvPbiVKs+yPAVrD7QywzIUfzvljtYhqGWB1yuxLGMj/zDioLkhu8GWO89DUMsDr1dji45XpbEsC56+oJY1khe8DioPkf+YyxyuS2JYFWL6glfETLuyiZZpxztQj100/NqEeumn5sjB3giyZxOn8JgH68BWDvJ1VDAdPGYR+rUI9dNPzahHrpp+bPKF5VvZjlnAAztcl0gebXJdIHm0FD/wAdTHP8z24lSrPsi1yXSB5tcl0gebXJdIHm1DvCnxgdOY2P6/VqEeumn5tQj100/NnNEyDsmmaacM0sdrENQywOuV2JYxkf+YcVBckN3gyx3noahlgderscXHK9LYlgXPX1BLGskL3gcVB8j/zGWOVyWxLAqxfUHGxbLlNQbpYJkynee3EqVZ9keAjVJ7IcKO1iGoZYHXK7EsYyP/MOKguSG7wZY7z0NQywOvV2OLjlelsSwLnr6gljWSF7wOKg+R/5jLHK5LYlgVYvqDjYtlymoN0sEyZTvPbiVKs+yPARqk9kOFHaxDUMsDrldiWMZH/mHFQXJDd4Msd56GoZYHXq7HFxyvS2JYFz19QSxrJC94HFQfI/8xljlclsSwKsX1BKc5SFExhmDO2HOenJa2HOenJawPjqIgALEnH+eAL66AIgK5LWw5z05LWw5z05LWiMyr2c5DFEBAPqGZr2bOXxA17NnL4gaChM7qbftKoqmkE5zgUP5bDnPTktbDnPTktYj07qGuSKlEc0qlWfZFr2bOXxA17NnL4ga9mzl8QMm+OpUyAKxJwAPq2HOenJa2HOenJaxDlOUDFGcM8sdrENQywOuV2JYxkf+YcVBckN3gyx3noahlgderscXHK9LYlgXPX1BLGskL3gcVB8j/zGWOVyWxLAqxfUEsTyFb8b5XXKUO8Lv4DzlC3eG3yn+3ZCWCZMp3ntLG8mT7z2lhOXJ6h3SqVZ9keArWH2hlhmQo/nfLHaxDUMsDrldiWMZH/mHFQXJDd4Msd56GoZYHXq7HFxyvS2JYFz19QSxrJC94HFQfI/8xljlclsSwKsX1BLE8hW/G+V1ylDvC7+A85Qt3ht8p/t2QlgmTKd57SxvJk+89pYTlyeod0qlWfZHgK1h9oZYZkKP53yx2sQ1DLA65XYljGR/wCYcVBckN3gyx3noahlgderscXHK9LYlgXPX1BLGskL3gcVB8j/AMxljlclsSwKsX1BLE8hW/G9r2fojY17P0RsZ2IfCUPhGsLv4DwQ+ELfCPPNva9n6I2Nez9EbGOQ/wAPwjyNez9EbGvZ+iNjQUBB3UnD/k9pY0Ai7pzB/wAns17P0Rsa9n6I2NCimB9TnKP13SqVZ9kWvZ+iNjXs/RGxr2fojYyhD3w/wjzha9n6I2Nez9EbGhmQo/nfLHaxDUMsDrldiWMZH/mHFQXJDd4Msd56GoZYHXq7HFxyvS2JYFz19QSmKU3KAC15R0ZLGvKOjJY15R0ZLGvKOjJY15R0ZLGvKOjJY15R0ZLGvKOjJY15R0ZLGKUpeQACWOVyWxLAqxfUEsTyFb8b2nFpxZ1ylDvC7+A85Qt3ht7Ti04tDchR1e/GKVZ9kWnFpxacWVrD7QtOLTi0MyFH875Y7WIahlgdcrsSmKU3KAC15R0ZLGvKOjJY15R0ZLGvKOjJY15R0ZLGvKOjJY15R0ZLGvKOjJY15R0ZLGKUpeQACWO89DUMsDr1dji45XpbEsC56+oP2EcrktiWBVi+oJYnkK343yuuUod4XfwHnKFu8NvlhuQo6vfjFKs+yPAVrD7QywzIUfzvljtYhqGWB1yux+wjvPQ1DLA69XY4uOV6WxLAuevqD9hHK5LYlgVYvqCWJ5Ct+N8rrlKHeF38B5yhbvDb5YbkKOr34xSrPsjwFaw+0MsMyFH875Y7WIahlgdcrsfsI7z0NQywOvV2OLjlelsSpLrIz3s4lnzNh75pzth75pzth75pzth75pzth75pzth75pzth75pzth75pzth75pzth75pzth75pzth75pzth75pzth75pzth75pzsqsqrNfDiaaWBVi+oJYliclvxva+G7NgNfDdmwGdjjhKHJWF+gZ+A8HHCFuTnm+gZ2vhuzYDXw3ZsBodkSOr3li7wukole1BLOVsPfNOdsPfNOdoQ8LqqK3xQTTFlfzmI6KmKMwh9Ww98052w98052RfXoyyRTLGEBOAC2COvV0/CDYI69XT8INgjr1dPwgzycQeFgAC8830DO18N2bAa+G7NgNDcbkj+d8sdrENQypLKpT3s4lnbD3zTnbD3zTnbD3zTnbD3zTnbD3zTnbD3zTnbD3zTnbD3zTnbD3zTnbD3zTnbD3zTnbD3zTnbD3zTnbD3zTnbD3zTnZVdZaa+HE02eWB16uxxccr0tj9tAqxfUEsTyFb8b5XXKUO8Lv4DzlC3eG3yw3IUdXvLHK1HZGWB1q2yEsSyFbV7yu2UI94XfwHrKV+8NvlhmQo/nfLHaxDUP7aB16uxxccr0tj9tAqxfUEsTyFb8b5XXKUO8Lv4DzlC3eG3yw3IUdXvLHK1HZGWB1q2yEsSyFbV7yu2UI94XfwHrKV+8NvlhmQo/nfLHaxDUP7aB16uxxbw5IPBgMoA4gztRDl0RtaiHLoja1EOXRG1qIcuiNrUQ5dEbWohy6I2tRDl0RtaiHLoja1EOXRG1qIcuiNrUQ5dEbWohy6I2tRDl0RtaiHLoja1EOXRG1qIcuiNrUQ5dEbWohy6I2tRDl0RtaiHLoja1EOXRG1ndyQdxEUwHHLEsiWxZt7XZdGXza7Loy+bIqACqYgmXnBnamXvMSxqZe8xLGpl7zEsai3RT4zFGc2McedqIcuiNrUQ5dEbWeX1VyVF3SAtwXknamXvMSxqZe8xLGdiFiSYqPAYymmCbE1EOXRG1qIcuiNrO7kg7iIpgOOVVIiqZiG5BaiHLoja1EOXRG1qLdE/jKUZy4wx5mpl7zEsamXvMSxqZe8xLGWUAVVBFMvOHO12XRl82uy6Mvm0NyJHFn3yvDkg8CAqAOJqIcuiNrUQ5dEbWohy6I2tRDl0RtaiHLoja1EOXRG1qIcuiNrUQ5dEbWohy6I2tRDl0RtaiHLoja1EOXRG1qIcuiNrUQ5dEbWohy6I2tRDl0RtaiHLoja1EOXRG1qIcuiNrUQ5dEbWohy6I2s7uSDuYTJgOMM/8A0kTyFb8b5Uqwm0HATqybISxbLlNQbpYJkynee3EqVZ9keArWH2hlhmQo/nf/AN7E8hW/G+VKsJtBwE6smyEsWy5TUG6WCZMp3ntxKlWfZHgK1h9oZYZkKP53/wDSPsRwU5S3u6nCflanQ6v6mp0Or+pqbC5Ebx9ek1Oh1f1NTodX9TOkUwlYE71N/M8pzXJDGzBO1Oh1f1NTodX9TU6HV/UwDOADwn2I4Icpb3dThPytTodX9TU6HV/U1NhciN4+vSanQ6v6mp0Or+pgfgiE7te7i6+6efkxtQRNONjUETTjY1DFT+O/D8OPkzN8vtN8vtN8vtMnVk2Qlitxhqk8/wBNzfL7TfL7TQWbB1JtJ7Svr3gqZT3F1OaZqdDq/qanQ6v6mCOAM/yPU1Oh1f1NTodX9TFjIKiCd4mu/hnnztQRNONjUETTjY1BE042MuCZVlQx4ji3y+03y+00MyFH875X6IYIYgXu6ugztTodX9TU6HV/U1OBciN49TU6HV/U1Oh1f1MEcAf+D6dJqdDq/qanQ6v6mJGwOcpbxyjNzuArGQTVOS8T3JhDnNTodX9TU6HV/UwxwAm+Ryh0mp0Or+pqdDq/qZyfMLIY1xczDNy8dHK9LYlCqNtF95YRlpdkZV6lXYHgE5hdXCjlclsShVG2i+8sIy0moZVqpTZHgJ1ZNkJYtlymoN0sEyZTvPaWN5Mn3ntKT7tkZXbKEe8Lv4D1lK/eG3ywzIUfzvljtYhqGUKs20EpOUdkZXevS2w4D5lbx3ht8p+RPZ95YHUK7fHRyvS2JQqjbRfeWEZaXZGVepV2B4BOYXVwo5XJbEoVRtovvLCMtJqGVaqU2R4CdWTZCWLZcpqDdLBMmU7z2ljeTJ957Sk+7ZGV2yhHvC7+A9ZSv3ht8sMyFH875Y7WIahlCrNtBKTlHZGV3r0tsOA+ZW8d4bfKfkT2feWB1Cu3x0ScFnlQhiCXEX6tQr30k7RahXvpJ2izw4KuyXzDk+IwZ2uC6Qvm1wXSF82hIAD4X4gHEMqhbpM5c5RahXvpJ2i1CvfSTtFqFe+knaLUq6E+ARNOXEOLM1MOec1jUw55zWMMXcw6VjUw55zWNTDnnNYzyiMSuVUBC5L8I3WJqFe+knaLUK99JO0WXcFXZL5hyYzBna4LpC+bXBdIXzaFFAH0nxgOIZVqpTZFrgukL5tcF0hfNrgukL5snVk2QlfoY8LvJ1CiSYZuVqFe+knaLUK99JO0Whzqo7JGKebGafFLGgnd08c3x+zXBdIXza4LpC+bO6AqqXBTlnEBztQr30k7RahXvpJ2iyUHeiKpmExJgMA8vAeShhK/xlrDZ87XBdIXza4LpC+bQ3IkceffLGwAVEfiAMQtcF0hfNrgukL5sBQvZvjLyhna4LpC+bXBdIXzZ3QvqtwU5ZxAc+ZqFe+knaLUK99JO0WJCHlM5TiYkxRn5czUw55zWNTDnnNY1MOec1jKwp4WUOqUxJjjdBP/AC1CvfSTtFqFe+knaLGgz1MX4k8QZ2oV76SdotQr30k7RZ3EsMIJFxxnGcLnG1MOec1jUw55zWM7PyDyYSpz4gn46OVCW3LCMtLsjw3ivV2xlPyhshLBMlP3g7gljmTp7csIy0moZVqpTZHgJ1ZNkOJjeTJ957SwnLk9Q7uG9ZSv3ht8sMyFH875Y7WIahlCrNtBLCsuS/O6U/MNq4CFSlsBwo7z0NQywOvV2OOjlQltywjLS7I8N4r1dsZT8obISwTJT94O4JY5k6e3LCMtJqGVaqU2R4CdWTZDiY3kyfee0sJy5PUO7hvWUr94bfLDMhR/O+WO1iGoZQqzbQSwrLkvzulPzDauAhUpbAcKO89DUMsDr1djjosiqskmCZBMN01HPugM1HPugMzg7rOzwCixLggAPxC2GumnTtbDXTTp2thjppyWthrpp07Ww1006drYa6adO1lXF7MqoYERmEwiDUc+6AzUc+6AzHcHwZvkm5Aajn3QGajn3QGaHCDogJFxBMwnnABFsNdNOna2GumnTtaJTPaRCu4goIGnGZqOfdAZqOfdAZnB3Wd3kqixLggAM4i2GumnTtbDXTTp2so9upkzgC5JxAfq17NnL4ga9mzl8QNezZy+IGI+OoEKArknmzthrpp07Ww1006drFMU5QMUZwzyqLopDMdQpdbYa6adO1sNdNOna0SEHtEpXcQUEDziANRz7oDNRz7oDM4Oy7u8lVWJcECecRbDXTTp2thrpp07WB8dRGYFyW8B5THCV+bWG+4M7Xs2cviBr2bOXxA0NCZyR/O+WLuy6x0r2mJpgFqOfdAZqOfdAZjujwmmN2S5+IOVr2bOXxA17NnL4gaHfLe0znMUACf7gzNhrpp07Ww1006drGfHUSiALk5M7Xs2cviBr2bOXxA17NnL4gZJ7dSpEAViTgUPq2GumnTtbDXTTp2sQ5TlAxTAIZ5Y2UROjycg/WZr2bOXxA17NnL4gaClEF1OTmZ/2MUyBb8b5U6wmvgE5hdXCjlclsSwKsX1BLE8hW/G+VKsJtBwFa1TaGWG5Cjq95Y5Wo7IywOtW2QliWQraveV2yhHvC7+A9ZSv3ht8sMyFH87+FG8lJ3gbhlJyjsjKlWp7QcBSsPrlheQI/nfLHeehqGWB16ux+ximQLfjfKnWE18AnMLq4UcrktiWBVi+oJYnkK343ypVhNoOArWqbQyw3IUdXvLHK1HZGWB1q2yEsSyFbV7yu2UI94XfwHrKV+8NvlhmQo/nfwo3kpO8DcMpOUdkZUq1PaDgKVh9csLyBH875Y7z0NQywOvV2P2MUyFb8b2uTdEWuTdEWTKa7LiHla5N0Ra5N0Ra5N0RYnMLq4UbARWSxfY1yboi1yboi0DAQUWxfQJYnkK343tcm6Itcm6IsmU18JiHnA1yboi1yboi1yboiypTX0+IecLXJuiLXJuiLQ3IkdQ75Y2Aiqji+1rk3RFrk3RFoIAgqti+2WJZEtqDe1yboi1yboizuU2EI4h55d/AeimwlfENYbe1yboi1yboi0MyFH87+FGgEXUneBua5N0Ra5N0RYhTTjiHmi1yboi1yboiyRTX0mIecDXJuiLXJuiLXJuiLKFNdmxDytcm6Itcm6ItC8hR/O+WOAInQxfQWuTdEWuTdEWggCC6uL7OLjYjf0thro2cWujZxaBiN2vqDilzDf1cf3i10bOLXRs4scRnDH9oNdGzi10bOLQXJT94O6WN1Ce210bOLXRs4tCRHDSY/oMq1Upsi10bOLXRs4tdGziydWTZCWKiOHKY825ro2cWujZxaCZMp3ntLG8mT7z2a6NnFro2cWhQjhyePPulUqz7ItdGzi10bOLXRs4sjVJ7ISxYRw0+P6A10bOLXRs4tBKhTb4URyJbU10bOLXRs4skYb6nj+4GujZxa6NnFro2cWQqUtgJYuI4abH9Aa6NnFro2cWglSrt8dHK9LYlgXPX1BxTxXq7Yyn5Q2QlgmSn7wdwSxzJ09uWEZaTUMq1UpsjwE6smyEsWy5TUG6WCZMp3ntLG8mT7z2lhOXJ6h3SqVZ9keAjVJ7ISxfLT6glgeTqbfCiORL6pUq1PaDgIVKWwEsXy02yEsDqFdvjo5XpbEsC56+oOKeK9XbGU/KGyEsEyU/eDuCWOZOntywjLSahlWqlNkeAnVk2Qli2XKag3SwTJlO89pY3kyfee0sJy5PUO6VSrPsjwEapPZCWL5afUEsDydTb4URyJfVKlWp7QcBCpS2Ali+Wm2QlgdQrt8cogioM50ym1g2BunV07GwN06unY0S/wDESIZ3AExE2O5akH3TmakH3TmYr++TH+ebkakH3TmakH3TmYj++CcoX83K1IPunM1IPunM1IPunMyqhr6fk5w/QGvhsxfCDXw2YvhBnJ3d1HVIx0SCIhyzNgbp1dOxsDdOrp2NE1Dup0yoDewEJxArUg+6czUg+6czQw5nsygPHzAAAmumwN06unY2BunV07GI7O5DXREiAOcAl5WwN06unY2BunV07GwN06unYyz89kWUKVYwABhAGpB905mpB905mc0kl3ZNRVMpziGMwg2BunV07GwN06unY0TOZ0OmVAb2AhjArUg+6czUg+6czHel1Ehuz3Uxg5WvhsxfCDXw2YvhBkllCmESiACADjAAakH3TmakH3TmYj89mOUorGmEcbXw2YvhBr4bMXwg18NmL4QZGqT2QlipxB9PycgfQGvhsxfCDXw2YvhBivS6aQXB7mcw8mJqQfdOZqQfdOZoQ8rrKqAooJpiymKUwCUwThmbA3Tq6djYG6dXTsYzo6gURBAnJma+GzF8INfDZi+EGvhsxfCDIVKWwEp3Z3Oa6OkQRziDYG6dXTsbA3Tq6djJpJp4iEAur9jHKhLblJyKbPvKnWE18BWtU2hlh2RIapY5XJbEsCrF9QcU85Qt3ht8sNyFHV7yxytR2RlCqNtB7yk+7ZGVKtT2g4CNUnshLF8tPqCUaou0b2lgdcrscI/MNq4CFSlsB+3jlQltyk5FNn3lTrCa+ArWqbQyw7IkNUscrktiWBVi+oOKecoW7w2+WG5Cjq95Y5Wo7IyhVG2g95SfdsjKlWp7QcBGqT2Qli+Wn1BKNUXaN7SwOuV2OEfmG1cBCpS2A/bvDqk8gAKTzA1DuWY1rUO5ZjWtRDnjxGtah3LMa1qHcsxrWCEOYDPMa1qHcsxrWodyzGtah3LMa1ljFBZQL2HOHO12XRl82uy6MvmxIo8IEImQpJgBqae+inY1NPfRTsZ2TJEk76uGMprkLnE1DuWY1rUO5ZjWs8lLDSAd3DGYZhusbU099FOxqae+inYzjEnhd5KmcCTY+ThvBgv63yy88c7XZdGXza7Loy+bQ7IkdXvLGxAFUvhAfha7Loy+bXZdGXzaGoIvRlCnLiAAHE1DuWY1rUO5ZjWs9w52Qd1VCFGcA+otdl0ZfNrsujL5sgJRWSC4DGcM7UO5ZjWtQ7lmNa1DuWY1rKRV5SUOmUCTEEShizNTT30U7Gpp76KdjPDwKp74chZxD+Wuy6Mvm12XRl82EwXsvyy84c7XZdGXza7Loy+bOz2d3uzpkLPiD6tTT30U7Gpp76KdjOMTeF3kiZgJMM/JqlPzDamuy6Mvm12XRl82uy6MvmyFSlsBwok/LOpk7gC/EA8rU099FOxqae+inY0Nf1nlQ5TgXEX6fuHivV2xlPyhshLBMlP3g7gljmTp7csIy0moeG85Qt3ht8sNyFHV7yxytR2RlgdatshLEshW1e8rtlCPeF38B6ylfvDb5T/ZsyjVF2je0oVZtoJYVlyX53Sn5htXAQqUtgOFHeehqGWB16ux+4eK9XbGU/KGyEsEyU/eDuCWOZOntywjLSah4bzlC3eG3yw3IUdXvLHK1HZGWB1q2yEsSyFbV7yu2UI94XfwHrKV+8NvlP8AZsyjVF2je0oVZtoJYVlyX53Sn5htXAQqUtgOFHeehqGWB16uxxb7EQdTlLe7qcJ+VqdLoBtanS6AbWcn8HsThe7m5/nhHNckMbME7U6XQDa1Ol0A2tTpdANrLXu+qcvOFvl9pvl9pj3E4cvIDfL7TfL7TOcQI6oXN7E05xHlanS6AbWp0ugG1n1/I9ogF7EtybO3y+03y+00KuMNJNPyDulMNyUw5ganS6AbWp0ugG1qdLoBtZYUxWVHHzxb5fab5faZCKld0U070IzByztTpdANrU6XQDa16LFQBScU7j4ZuVqCLpx8LUEXTj4WvRYUAqTipd/DNyNTpdANrU6XQDawPxX/AP8AGuLi7+7l5MbUEXTj4WoIunHwsnBQIoQ1/wCQQHk4Dze8JX5aw29vl9pvl9pneFFeEE1L6IThyTNQRdOPhagi6cfCz86Edb2QTiaeceRvl9pvl9pgvd7Ny8oN8vtN8vtNC7jDkpp/rulPzDam+X2m+X2m+X2mCMlTACXkfhCblanS6AbWp0ugG1hjZQm+QOP+Wp0ugG1qdLoBtZ+eyPV7NcCWacG+X2m+X2mgtzf1Jp+Zxccr0tiWBc9fUHCXqVdgeArWqbQyn5Q2QlGrLtDKFUbaL7ywjLSahlWqlNkeArWqbQyn+3ZCWCZMp3ntLG8mT7z2lhOXJ6h3cN6ylfvDb5YZkKP53yx2sQ1DKFWbaCWFZcl+d0p+YbVwFKw+uU/Ins+8o1Rdo3tLA69XY4uOV6WxLAuevqDhL1KuwPAVrVNoZT8obISjVl2hlCqNtF95YRlpNQyrVSmyPAVrVNoZT/bshLBMmU7z2ljeTJ957SwnLk9Q7uG9ZSv3ht8sMyFH875Y7WIahlCrNtBLCsuS/O6U/MNq4ClYfXKfkT2feUaou0b2lgderscXEnBZ5UIYlziL9WoV7zktahXvOS1nUlG3ZngQmPiC5xtS7l0jWNS7l0jWNSznjxmsal3LpGsal3LpGsYYk6rAKRRG6P8ACGLO1CveclrUK95yWtQr3nJax4O9mOYZyYxztQr3nJa1CveclrGg72M2MnIH1ahXvOS1qFe85LWod7uQCcnKP1ahXvOS1qFe85LWXcFXZL5hiYzA1wXSF82uC6QvmzgdNB4BQxwmAB5J2pdy6RrGpdy6RrGGJuivyymGc2IMWdqFe85LWoV7zktahXvOS1liBfVPmF5w52uC6Qvm1wXSF82OUvw/MLyfy1wXSF82uC6Qvm0FCZ3Uxz/H7SxoJ3dPHN8fs1wXSF82uC6QvmzgdNF5KoY4TAA8k7Uu5dI1jUu5dI1jBFnMRAAE1jUu5dI1jUu5dI1jUu5dI1jLgUy6o3wMZxztcF0hfNrgukL5s6RB2QdkkzmGcA+gfy1LuXSNY1LuXSNYz0mMSuDu4hMTEM+JqFe85LWoV7zktZeHrO6M6hiTCYGuC6Qvm1wXSF82hZQw5L4wHlz5pT8w2prgukL5tcF0hfNrgukL5tRL0p8YCSY2PlahXvOS1qFe85LWGDvYgXGTEGdqFe85LWoV7zktZ5czu5SFUMUMYj9WuC6Qvm1wXSF82goAC6nxAPwcdHKhLblJyKbPvK55W794XfxscydPblJ9+zK65Sh3hd/AecoW7w2+U/27ISwTJlO89pY3kyfee0pPu2RlSrU9oOArWH2hlP8AZsywPJ1NuWN5KTvA3DLCsuS/O6U/MNq4CFSlsBwo7z0NQywOvV2OOjlQltyk5FNn3lc8rd+8Lv42OZOntyk+/ZldcpQ7wu/gPOULd4bfKf7dkJYJkynee0sbyZPvPaUn3bIypVqe0HAVrD7Qyn+zZlgeTqbcsbyUneBuGWFZcl+d0p+YbVwEKlLYDhR3noahlgderscWddFMZjqFLrFsMdOsJ+IGwx06wn4gaLKJLIp3tQhpjZwa9m7PiBr2bs+IGKQZj83kzhna9m7PiBr2bs+IGdS3LygIiWYDl+oNhjp1hPxA2GOnWE/EDYY6dYT8QNhbrp0/E2GOnWE/EDYY6dYT8QMUxTAAlEBDPKddFMZjqFLrFsMdOsJ+IGwx06wn4gaJzPSRCoCCggacbkZ2o980Bmo980BmwN5IU4nSEAm5Ra9m7PiBr2bs+IGdiDhKHNrC/UM/AeCDhC3N55vqGdr2bs+IGvZuz4gbA3k4FMRIRCblBqPfNAZqPfNAZoSiqkgcFCCUbuWLIqqoEBMgmG7aj3zQGaj3zQGbA3kgGMdIQCblFr2bs+IGvZuz4gZJM19Jyc4PqDUe+aAzUe+aAzUe+aAzKpmvh+TnD9Qa9m7PiBr2bs+IGMQfh5vJnBr2bs+IGvZuz4gaEqpIoHBRQhZz5wbDHTrCfiBsMdOsJ+IGiyqSzsUE1SG+YH3Bma9m7PiBr2bs+IGhvy3xMxjFAAn+oZmwx06wn4gbDHTrCfiBjPbqJRAF0+TO17N2fEDXs3Z8QNezdnxAyT07FSTAVyAIFD6thjp1hPxA2GOnWE/EDFMU5bopgEM4SxsoidDk5B+rXs3Z8QNezdnxA0FKILqcnMz8XHK9LYlCqNtF95Scimz7yp1hNfAVrVNoZYdkSGqWOVyWxLAqxfUEsTyFb8b5XXKUO8Lv4DzlC3eG3yw3IUdXvxMSyFbV7yu2UI94XfwHrKV+8NvlP9mzKNUXaN7ShVm2glJyjsjKlWp7QcBSsPrlheQI/nfLHeehqGWB16uxxccr0tiUKo20X3lJyKbPvKnWE18BWtU2hlh2RIapY5XJbEsCrF9QSxPIVvxvldcpQ7wu/gPOULd4bfLDchR1e/ExLIVtXvK7ZQj3hd/AespX7w2+U/2bMo1Rdo3tKFWbaCUnKOyMqVantBwFKw+uWF5Aj+d8sd56GoZYHXq7HFxuvS2GmHM0w5mABvRsX3B7tMOZphzMUBmPi+33aYczTDmZMBvhcX1aYczTDmaYczKgN9UxfcLTDmaYczQ7IkdUscrkthphzNMOZoHWLaglieQrfje0w5mmHMzqA4Shi/5C7+A8gOELYvvNvaYczTDmaG5Cjq9+JiWQravdphzNMOZnYBwhHF95d/AegHCV8X/Ibe0w5mmHMxwH4NlphzNMOZhAb0XF9w+zTDmaYczAA3s2L7gaYczTDmYgDOOL7RaYczTDmZIBvqeL7gaYczTDmaYczKAN8Ni+rTDmaYczQvIUfzvljnPQ1C0w5mmHM0Er1dj/AKSJ5Ct+N7XZ+kLXZ+kLOxzYSh8Q1hd/AeDmwhb4h55t7XZ+kLXZ+kLHMb4fiHka7P0ha7P0haCiIu6k+k9pY0Ig7pzaT2a7P0ha7P0haFGML6njH67uG9HNhK/xDWG3tdn6Qtdn6QtDMhR/O/iYjkS2prs/SFrs/SFkjmvpPiHnA12fpC12fpC12fpCyFSlsBLFjGB9NMP0Brs/SFrs/SFhOa9F+IecPs12fpC12fpC0EERXUnH7P8ApInkK343yuuUod4XfwHnKFu8NvlP9uyEsEyZTvPaWN5Mn3ntLCcuT1Du4b1lK/eG3ywzIUfzv4mI5EvqlSrU9oOAhUpbASxfLTbISjVF2je0sDr1dj/pInkK343yuuUod4XfwHnKFu8NvlP9uyEsEyZTvPaWN5Mn3ntLCcuT1Du4b1lK/eG3ywzIUfzv4mI5EvqlSrU9oOAhUpbASxfLTbISjVF2je0sDr1dji4s9LorJgmoJZytSL7pxakX3Ti1IvunFqRfdOLUi+6cWpF904tSL7pxakX3Ti1IvunFqRfdOLUi+6cWpF904tSL7pxakX3Ti1IvunFqRfdOLUi+6cWpF904tSL7pxakX3Ti1IvunFoQ8rrHVvhxNMASxIZnJb8b2vhsxfCDXw2YvhBnZQ2Eoc2sL9oZ+A8KDf1ubzx+0GvhsxfCDXw2YvhBnF2d1XRI50iCIhmbAnTQEsbAnTQEsZNJNIJiEAofxLGhmd09v2a+GzF8INfDZi+EGSXUKYTFEAEAHGAA1IvunFqRfdOLJxB8E5AFY3KDUi+6cWpF904tSL7pxZVU19PzecP2g18NmL4Qa+GzF8INDRnckfzvli7yuidK9nEs4C1IvunFqRfdOLQl5XWVUBRQTTFliGRLamvhsxfCDXw2YvhBk1BFQnN5wfQGvhsxfCDXw2YvhBr4bMXwgxn97KYSgsMwcjUi+6cWpF904s5JJPDsmqsQpzjPOIh/LYE6aAljYE6aAljRYhEDIgmQoTz/AEa+GzF8INfDZi+EGgphFdTk5mabi45XpbH7aBVi+oJYnkK343yuuUod4XfwHnKFu8NvlhuQo6vfhRvJk+89pSfdsjKlWp7QcBWsPtDLDMhR/O+WO1iGoZYHXK7EsRyJfVKlWp7QcBSsPrlheQI/nfLHeehqGWB16uxxccr0tj9tAqxfUEsTyFb8b5XXKUO8Lv4DzlC3eG3yw3IUdXvwo3kyfee0pPu2RlSrU9oOArWH2hlhmQo/nfLHaxDUMsDrldiWI5EvqlSrU9oOApWH1ywvIEfzvljvPQ1DLA69XY4uOV6WxLDHRF5FUFJ8UzUO59u1qHc+3a1Dufbtah3Pt2tQ7n27Wodz7drUO59u1qHc+3a1Dufbtah3Pt2tQ7n27Wodz7drUO59u1qHc+3a1DufbtaJuqTsdMqc+MJYFWL6glWSIsmZM3ILUO59u1qHc+3axIS6EOUwXU4DPy8A0JdDmMYbqcRn5Wodz7drUO59u1l35VxUwdIpbgvJPy42pt66CdgtTb10E7BaHPSj0kY5wAJjTYpXl2SeSgVSeYBnah3Pt2tQ7n27Woh0Dp2tQ7n27Wodz7drDCXQgCYLqcMfK10XRl82ui6Mvm10XRl82UMF8P8AAHOHO10XRl82ui6Mvm0NyJH875XlyReRKKk+JqHc+3a1DufbtZ2cUHYwmTnxhLEciW1NdF0ZfNroujL5skYL4T4A5wZ2ui6Mvm10XRl82ui6MvmyhguzfAHL/LXRdGXza6Loy+bJRRdBJMhCEmm/nO1NvXQTsFqbeugnYLO4FiZBOuGMgzBc4modz7drUO59u1nZxQdjCZOfGE3FxyvS2JYFz19QfsI5XJbEsCrF9QcbFsuU1BulgmTKd57cSpVn2R4CtYfaGWGZCj+d/ExHIl9UqVantBwFKw+uU/Ins+8sDqFdvjo5XpbEsC56+oP2EcrktiWBVi+oONi2XKag3SwTJlO89uJUqz7I8BWsPtDLDMhR/O/iYjkS+qVKtT2g4ClYfXKfkT2feWB1Cu3x0cr0tiWBc9fUEr+9GdUQOUoD8UzU4toiNTi2iI1OLaIjU4toiNTi2iI1OLaIjU4toiNTi2iI1OLaIjOLyZ5QvhgAMcscrktiWBVi+oOEYbkphzA1Ok0A2tTpNANrU6TQDaxRnKA5wlitxhqk4j9NzfLzmsb5ec1jQWbB1JtJ7Svj2DqmU4lupxmanSaAbWp0mgG1nWKleFipgkIT/wAymCcohnBqCDrHpagg6x6WoIOsellyplWVCccRx+jfLzmsb5ec1jO8UI7oJp3sRmDlanSaAbWp0mgG1qbJcgN5HlztTpNANrU6TQDa1NkmEbyNrU6TQDa1Ok0A2svFSPCKiV6EJw5Z2+XnNY3y85rGSvd8JjHnA3y85rG+XnNY3y85rGCDXwAPf5rrHzc7UEHWPS1BB1j0s+IEQVvQnEZg5Zm+XnNY3y85rGcn4jokPwCa6NqanSaAbWp0mgG1nOIg9HMUE5pgn5eLjlelsSwLnr6gljWSF7wOKg+R/wCYyxyuS2JYFWL6g4S1UpsjwE6smyEsWy5TUG6WCZMp3ntLG8mT7z2lhOXJ6h3cN6ylfvDb5T/ZsyjVF2je0oVZtoJSco7IypVqe0HAQqUtgJYvlptkJRqi7RvaWB16uxxccr0tiWBc9fUEsayQveBxUHyP/MZY5XJbEsCrF9QcJaqU2R4CdWTZCWLZcpqDdLBMmU7z2ljeTJ957SwnLk9Q7uG9ZSv3ht8p/s2ZRqi7RvaUKs20EpOUdkZUq1PaDgIVKWwEsXy02yEo1Rdo3tLA69XY4uOV6WxLAuevqCWNZIXvA4qD5H/mMscrktiWBVi+oJVVSIpmOfkBqXcumNjUu5dMbGGJuioXsphnNiDFnahnzsWtQz52LWoZ87FrECYhQ/iV+hrwu8nUJczDN9WoZ87FrUM+di1oa6qOyJynmnE0+KWNBO7p45vj9muC6Qvm1wXSF82cDpovJVDKBMADyTtS7l0xsal3LpjYxYq5mMBQMM4jNycBaEvR1lThcTCcR5WoZ87FrUM+di1nh3FI4EOcoCAfy1wXSF82uC6QvmyDiq8JfLEozGFqGfOxa1DPnYtah3u5EPg5Q+rUM+di1qGfOxaxoY8IkMc4kmAM7XBdIXza4LpC+bJlC+E+YXnBna4LpC+bXBdIXza4LpC+bEijmQhSCcZwAAHE1LuXTGxqXcumNjRA6a7xfCnCYQDlna4LpC+bXBdIXzYShey/MLzhztcF0hfNrgukL5tBQAF1PiAfg4uOV6WxLAuevqCWNZIXvA4qD5H/AJjLHK5LYlgVYvqCWJ5Ct+N8rrlKHeF38bG8mT7z2lJ92yMrtlCPeF38OL5afUEsDydTb4URyJfVKlWp7QcBSsPrlPyJ7PvKNUXaN7SwOvV2OLjlelsSwLnr6gljWSF7wOKg+R/5jLHK5LYlgVYvqCWJ5Ct+N8rrlKHeF38bG8mT7z2lJ92yMrtlCPeF38OL5afUEsDydTb4URyJfVKlWp7QcBSsPrlPyJ7PvKNUXaN7SwOvV2OLjlelsSwLnr6gljWSF7wOKg+R/wCYyxyuS2JYFWL6gliBDHc1SlCcRmxflsAfNAexsAfNAexkHN6IukYyJgADgIi2FOunT8QNhTrp0/EDYU66dPxA2FO2nT8QNhTrp0/EDYU66dPxAxTFME5RAQzhwoukoqgQCEEw3f0bAHzQHsbAHzQHsbBHkgGEyRgCblFr2b+LQa9m/i0GdyGwhHk55fr/ADwBeXYBmFZPxA2FOunT8QNhTrp0/EDROZR7MYhiiEwY5wa9m/i0GvZv4tBoKEyCm3Kc5CBOcwFD+cTYU66dPxA2FOunT8QM/LoHdFSlVIIiHJdA17N/FoNezfxaDJENfCcnOD6tezfxaDXs38Wg17N/FoMZyejGEQRNMLYA+aA9jYA+aA9jGcnuYnyD8mZsAfNAexsAfNAexlHdYhCAclyM48uJr2b+LQa9m/i0GgpRBdTY4uOV6WxLAuevqCWNZIXvA4qD5H/mMscrktiWBVi+oOEtVKbI8BWtU2hlhuQo6vfiYlkK2r3ldsoR7wu/gPWUr94bfKf7NmWB5OptyxvJSd4G4ZSco7IypVqe0HAQqUtgOFHeehqGWB16uxxccr0tiWBc9fUEsayQveBxUHyP/MZY5XJbEsCrF9QcJaqU2R4CtaptDLDchR1e/ExLIVtXvK7ZQj3hd/AespX7w2+U/wBmzLA8nU25Y3kpO8DcMpOUdkZUq1PaDgIVKWwHCjvPQ1DLA69XY4uOV6WxLAuevqCWNZIXvA4qD5H/AJjLHK5LYlgVYvqDhLVSmyPAVrVNoZYbkKOr34mJZCtq95XbKEdsu/gPWUr94bfKf7NmWB1Cm3LG8lJ3gbhlJyjsjKlWp7QcBCpS2A4Ud56GoZYHXq7HFxyvS2JYFz19QSnIQ4THKBg/lsFdtAn4QbBXbQJ+EGwV20CfhBsFdtAn4QbBXbQJ+EGwV20CfhBsFdtAn4QbBXbQJ+EGwV20CfhBikIQJilAA/iWOVyWxLAqxfUEsSGZxW/G9r4p0zWtfFOma1k1D3wnxDzg+rXxTpmta+KdM1rXxTpmtZOrJshwo2YwKpTCIfC18U6ZrWvinTNawKHvZviHnA18U6ZrWvinTNaxDn+L4h5GvinTNa18U6ZrWd1D4Qj8Q88u/gPKh8JX+Iaw29r4p0zWtfFOma1oaM7ij+d/ExHIltTXxTpmta+KdM1rIKHv6XxDzw+v7iOV6WxLAuevqD9hHK5LYlgVYvqCWJ5Ct+N8qVYTaDgJ1ZNkOFHK1HZGUKo20HvKT7tkZXbKEe8Lv4D1lK/eG3ywzIUfzv4mI5Evqld69LbD9xHK9LYlgXPX1B+wjlclsSwKsX1BLE8hW/G+VKsJtBwE6smyHCjlajsjKFUbaD3lJ92yMrtlCPeF38B6ylfvDb5YZkKP538TEciX1Su9elth+4jlelsSovCyE97Pcz8rUk/aYfJqSftMPk1JP2mHyakn7TD5NST9ph8mpJ+0w+TUk/aYfJqSftMPk1JP2mHyakn7TD5NST9ph8mpJ+0w+TUk/aYfJqSftMPk1JP2mHyZZ4WWEBUPPNLAqxfUEsSGZyW/G9r4bMXwg18NmL4QZNQ18JzecH2g18NmL4Qa+GzF8INfDZi+EGTqybIcKNGEFUuTm5p2vhsxfCDXw2YvhBgUNezc3nB9oNfDZi+EGvhsxfCDQ6ZV7IQ5SiAgP0DM2AuegJY2AuegJYwOToAgIIln4DyobCV+bWG+0M7Xw2YvhBr4bMXwg2HPSZSFIpME3JMDUk/aYfJqSftMPk1IvtwUb8PKLUk/aYfJqSftMPk0Jel1lVAUPPMWWIZEtqa+GzF8INfDZi+EGQUEVkubzw+gcOJPjyk9GKRQQCYGpJ+0w+TUk/aYfJqRfbgo34eUWpJ+0w+TUk/aYfJoS9PCyygKKTzF4uOV6Wx+2gVYvqCWJ5Ct+N8qVYTaDgJ1ZNkOFHK1HZGUKo20HvLCcuT1Du4b1lK/eG3yn+zZlGqLtG9pYHXK7EsRyJfVK716W2HDi+Wm2QlGqLtG9pYHXq7HFxyvS2P20CrF9QSxPIVvxvlSrCbQcBOrJshwo5Wo7IyhVG2g95YTlyeod3DespX7w2+U/wBmzKNUXaN7SwOuV2JYjkS+qV3r0tsOHF8tNshKNUXaN7SwOvV2OEge7RSP0iANvBeXBB5MBj3WIJsTUM59u1qGc+3a1DOfbtahnPt2tQzn27WoZz7drUM59u1qGc+3a1DOfbtahnPt2tQzn27WoZz7drUM59u1qGc+3a1DOfbtahnPt2tQzn27WoZz7drUM59u1qGc+3a1DOfbtZ2cUXYTCndY88qyJVkjJm5BahnPt2tQzn27WCDugCA/Ha1DOfbtahnPt2tQzn27WAJgAOE8uKLyYoqXWLM1DOfbtahnPt2tQ7pNN8drUM59u1qGc+3ayENd0FQUJdTh/PDPCXU5zGG7nEZ+VqGc+3a1DOfbtah3Tt2tQzn27WoZz7drUO6TTfHa1DOfbtahnPt2s7OKLsYTJ3WMPrKskVZMyZuQWoZz7drUM59u1iwh0KYDBd4hn5eGvDXddQVD3U+tqGc+3a1DOfbtah3Sab47WoZz7drUM59u1nZwQdjCYl1jCbHwVz3CKp+iQRsaBr32Hph9SfCP9sxxe9Q9QPqf4QaAvuDvV7MPwK4vz9P7Zjz7hD1eyj8CWL8/WSCxQHlO9KD80vqD+141FAdk70mPzTekJSHMQwGKMwhyC0Njya0ybyIEP0voP9qxKPJozpuwgc/S+gMc5jmExhnEeUeC6RV8dcRFJy9E2MGR/UyQ1yBg/kuNix6GD/yiH+ItTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TNTkL6x6TMaPQwP+UR/wARZb9TJBUoGH+TYme4q+PWI6kxeiXEH/u+5JIKvKZFlLgg/Vn4rmq7GPhZTHSG4IAFmnAP/wB5ZQxiz9D1XO9XYlG7LPi/tPB1rwK9x8uea6/lnLLHbvSb2j39SV1F3NE3BJ0B2uDGG7JOM7PqV3D4QQMV2IBazzE04atgqDsS5IAXU/1aOu6JFUVkizAsSeZos5ldhdplDmuk/uYkThRgBNSHFAvSCadn6FFKlhLopdoeYSREAoeHf/v0ZEyUNhiLwCRTrKjyj9GWMlEoYs8ikUiyQ8ofVjrpwlzdb0iUyipboTCz/EBfb3OiQgl5RL9f7LUIYf06hcfRURP5tDUzKPzsBQ/5AH8Az8MDO+KYQJwULNPyzDYy77BH0wX4VC3GIur8NFIkiqZ2I6hMRHmsd5gj9cqPF2mrNMM0/s0RLCQB1B6Ob4S/AGPk/ll36Cvxvn3wlxiKP8fhrv8ATqOMCKKj+f8A4Z7i51khQSRIkjmCQ+A0U4kfJwAS/CLGfoIZAroa7FIOQ03IxF4CR1UdyvBrg4zjiNPuZZ5gCqKKR1TCCfNxGnZ7VgwIHK7Invg/cP0/suHxVdyuigAHIPKUWN+oRAo3h0TTMP1YxjGMJjDOIjOMqUWQRKW9w9K7AOez09LPSoqKmnHgOTyk7qCY7uVXFiAc7P7+s+qAY8wAXmlD6f8AvUlCkRSTUWf0k7sJwDlFn2FGd0QXIsVVIfuBnSEnWQv6qxUUukZl4OIICu7vBFyByzM5OAPJTmM8JpFLy3TUIVQhhdn1NYxft5GcnBd8VEhMU3OEfo1CJHExEYgkdQPtZNxeVHkXYCfMDlAWf4OLm7FWFcDTmuZgBnCHrPpxAkwFLzjD9GoRNS6B3fklTh9rHIYhhKYJhAZhCR2d1XlUqSYTmFn2DC6Ol+FcDDPNMAe8jigV4e0kTCIAYfoy0PNSJ3RCcZhxT+7UIiB70MRSvvQmZ6dVnVYUlQx75BcEghJXu6Ndiaab6crOv6eWVKBlVipzhOAc4WKmY6gEKE4iMwMMETTuQXf0kzj9rP0PWcjgB5hAeaYOQWKUxjAUoTiPIDPkFO6OYLnV+LFOSbOzjC1Xsp1LsE0i8pxYYLdpmM6vZF7nlKHLLC3Mj49Xo5hALkRxMuQE1lSByFOIWMACIzA1DESAuEvqaRh+3lZ+hyrncCJgOQ/NODOcKUeEhWOoVJIPvMzxDnciJ1En9JS5+3kGVCFpHQIqq/JJgbkDlFnqECi74QkuVZP6iDOsMBVAF1XpNIg8k/Ky8GEruZdB4IsQvLMznDsISMqd4TSTAZpzMaCXSRlHZ6Ivc8oBK4w1Z8nEolKQvOMLRJwwFYid8u5yT8kzOUCWeCFOdUqZTB8P1EWvEz3eJ/8AluJ/zM0Vc03N5BIgmELgBxyOcKUeEhWOoVJLpGZSCzomUdnki9zygHLIgmCi6SY8hjgFrRR0I6PQpEERC5DlZwcVX1a4LiD7jZmfXAHV8KgK04DN8c0007UVD/8A+WT8P/y0QhZHNBJUHm+XY4vhmZSGQ51SRwtdS7OE8xGPc3Zrnmz4tX7hzd0FzGBZ5BEADlEJ52fiA7wgEnf5qQmnMrO17CJQl3SQUKCiU05B/hoK5mdVViKKkExiVYY7WEhMJEl1clvk0+YJ2hzs7u19VdV8JVuJrkPhaCLk/wDMQUNcHV5BZCErur0koqsmQCnCYZ8Y6m/UE6cRAxBmEUgnmsZ9/wDTznth7tBVElHR7dL4BDqc0fwzlDF3R9ROsqQnxzAADOJp2igJkjVRfZwCcmcZmSRUOcoKQVIqY8o4pwaJIYE/nIkYQDlL/E7Lf+m0Nv3FoQ6O5knh6eC3REvtZwfnRd+RLgJExuvhMT3ZJ4SQ/UDzfBmAwXM9jPEGeAXOoK6YJiae+CZo6kC1HTD8R/hn1zM+qOEOMV3I5EVNc/EY7PZkjQAhkiXBRU5ubG36bOYzytdGEflADOCxEH9FQ/NA+NojClnl5O8JKpimebGJuRoiQlBIfMu7gwAB8/0ZzSJDnbDVg+aapJ7s9qHV/T6RzjOYyk4+IWcbh8g53MigFVAeQfrjnaEuCrm+lvqpAEwCAEAZxFjgQkYeSg63/wCIZifyyLsKp7h4hCSZB+4s04WNCUbxGlkuiBwY8QcUnlQguBDFvg3RjYzcrRRzK6PiB3cMR5jEL/LRJzdXpRMyjwCC4kD4DDO0bTUSdXREpZ0SBWZxaIou4ObkRVe9olLyBjEwtRbk8uyijkucTE5SnZwdXVJxO/PJLvHMQjKxF0VTOWjkiiIfCYuKZnRFFZW5VXBIJucITsumV1hChHUb8Q4/GpmZBBd4OCaRBMLBe4Q4rJnUAy6ocwPoySaqpgImUTCP0BnUhYMiooucL8cPhTBoO4JLJrvKqYqXHNTD6iyDuD0YyS8KBEohiOUJpmADovIo3QzArMP83It+pcsS7r3aAHOZ/KAmEZkjTMf+qm//ALP/APpow9uzu+fE6FVOJAxn5Jmf3d1Xh5H5BO945jl+jR35bo4Il5lzub9PHMWIAUOQxRnZ2h7urE34VKpEwjMyT+4rPSJMAIQL4W5MXEblaMoqLxe9kCcxilYyybid2cEB+IVSX4+fHyN+ov6h/rBoa6YW9pp/bym1A0QiJTRIDXsp00ZylIPILRh9IgZC6dEVZyfcHIw8v7gIbD1ClEkSIGLGB8TLLOblDFHVJcFjqDjEORnRydV0ZzPpEjz802ZiKuULd1b0uCy5wmnDkBnN1c10jXx8BJSfkHkmZyScIcoZc7+RQbmYCkZIqD2+KiqsCIHExgH+RZ3c4a6KAuq/pqXGMClzsc4RN/OZRYqICGITfQAZZFzVhqLpSCHwDPdXQMg6Ox3hZJR7KQC80/KBmdneGuCmEKPpFRLzSkzs4xFMYsLyviA8/wDixwdk3vCTxS7LfLoCFGcdTRJB1e30pyvyIAcM/JMDHRczQxNzpBCco866DO0PXdUMLcVlQvZ+RQORnR1cXR8SUNEEz/FiAvuz7eF4spOsAJmPzwx/RiQyHFMBlIkkYgfQOUWiETv74komHwIiFx+GfU3CImK8EfSJGufiKdnpR0LBCoJLgcSqfkceZoSi6ORjKC/oDdk5LoAmZ9c0UBTuXtNW6HHc/a1FuAjOEUSuPNoq/IHTRdXaqS+ucWH9QvZuVB3H/Ef/AMseMAELTVDB77PjSzY8zOjs7vN8vr0VE0+KfkZ2o+F3a2FFXVmmKBWgz8kR6eDLnuTKhz/5Z2wV0eyKqxO+48QAM/L0mRM7JRoy2FJCVQphnuuT+GFxh6651aQIBBOIiUcRmfIqgMSdTkCdJDzZ8dXF9XF4JEUi3XKBmfnp0ShxHFFW+jPjN9M7FXdIi4pIrrgkqlyGHkFklHKFuy9w8lWWUCb4eRnB6dVXE7i8nuMc5DsrDnRJM5qRSMIB8JS452ThzgqkQxYiQppviA+LGwqOThDnhAjyCyis/N5GcRdk4WUiT4iksfGYwiE7HhTv8RqVQMOsMfm0IF2ScDiDyimuefGYQxMeFoHMJjxdARH6iIf/AJaEvyKJF3VVQSAccShfoLXo4Yxj/wAP8HER3s5OqTwYyqj6mQQP944zfzjaMIur2a/EfkPgS5t0GObG0HQdXc5Hgz8jjJzJwAQnZ7dkEnoi5XxJS6eJxAB5JxnaJpOL69zlf0yiBQDHzbWf3h1Qh5HFBS+Y5zm+jEeHSIOKbu8LXpVLmnHkZ2o+F3a2FFXVmmKBWhMQTTeHjCOavzh/liOTg7vCatIEMUDgIAHL+Wf4jeIqZd3FM/ywDOHkyMeXMumB0XcAE4Tjc/8Ay0diAKHFBO9GJMA3YYxtZ0WRcoWsoVQgrq4gABxlCSPrIqmdr2oU0xMcwz/+4P8A/8QALBAAAQIEBAYCAwEBAQAAAAAAAQAREFFh8CEx0fEgMEFxobFAwYGR4WBQcP/aAAgBAQABPyH/AIhIh8lCR+aXyg7AAoG5o9gEVDoSfzS+ESIPP/ERcOcY9Q68YYyyjJM3YTkex5ZcscI9R6/4b7/UJmkKDtx+cPUGsjXfSGZczPku0jQd19fqP8KZCNPbkecPUQSCCCxTQBQ3cHIMgGnt/hcnkJfWWbMYcIqbMCOYTU/aGgCD1HFm/wCFcnicFILpEJnqmD6cp+ZSfaL50nLhcDcx0KbfpTw5v+FcngSQA5LBOQHP6J9IlEp039jOY7I9OMdBT0ZQ8eXCQunIuDN/wrk8CWLsRKdPAy4NORE6SczODFoVRX0HElmOQLN/wrk8Dn9ieJpx5DjoHA8sToGZTh+E++QLN/wrk8DndnAZ6H6Jp7GcoDmaMxD4gk5k8AQAknoEA5nEt34M3/CuTwLUeIFPolXhaC7Z+l1xdSzTg3J6k+eSZNndTmewTExepZnhzf8ACuTwrBJCeS+YiCCxDHgIkCCxmm4LP2RGKc+E8AXQ4m483/CuTxoH9Rmngjvj74WDObv+uRm/4VyeSuvcwi3Skyj5R9cjN/wrk8pIBDEJwI79E+ACvMPrkZv+FcnmLERCCTWGXIZv/HSrd5/RAMPy+wVf1lf1lf1lf1lf1lf1lf1lf1lf1lf1lf1lf1lf1lf1lf1lf1lf1lf1lf1lf1lf1lf1lf1lf1lf1lf1lf1lf1llVi7/AKPxcqsXb9lX9ZX9ZX9ZX9ZX9ZX9ZX9ZX9ZX9ZX9ZX9ZX9ZX9ZX9ZX9ZX9ZX9ZX9ZX9ZX9ZX9ZX9ZX9ZX9ZX9ZX9ZX9ZX9ZAMfw+gUVbvP7ceQtK0Lqx60HggZAYD/InwRMwcQhdWPemYtPBrH8d3yA/QwD/ACofoYksfx3fQMzbEMnUrDggK1Pf/L4cEDSo7LM2wDJ0KGP4n4Gf+ZGP4n5GSFKjHvie/wDMinRh3wPSEE6BuERMOIE3X41rWta1rWta1rWta1rWD+BJz80UnhoHCK1jmAI/wAjawzAAf5AxtY0nh5HCIiDA4/VwWtYJGAIflG1jaxnFnmiH8STm+Na1rWta1rWta1rWta1hEwYAT9eERTqG4rGvxrFP4BVllFZZcQq+S4LZOPj+yNin8axry7GvxrFP4BVllFZZcQq+S4LZOPj+yNin8axry7GsS+mcwjNb1W9VvVb1W9VvVb1W9VvVb1W9VvVb1W9VvVHTgQnEnrGxTiy62x8sS0REucAR+XAIiQlmRJiKjhsZ+grc9a3PWs3PAADoFvVb1WMwJIOfot6reqCnPMXHON8ktz1rc9a3PWhsQ6jzd1uetbnrRgmADDAO6NinE6cAEYkdVvVb1W9VvVb1W9VvVb1W9VvVb1W9VvVb1W9UX0zmE5Rsa8uxrGy1+B5r3GxTj4/ojbJ8F8lxFeY9OTfJcFsnHx/ZGxTj4r38Cy0jY15djWNlr8DzXuNinHx/RG2T4L5LiK8x6cm+S4LZOPj+yNinHxXv4FlpGxry7GsbLWJvsFmTEFbbqW26ltupbbqW26ltupbbqW26ltupYhUhsmHePmvcbFOOdAs3oT/ydE/8nRAKEguw5nstqLai2oupcOQfJJX7VftRikUwy4NJP/J0T/ydFk0gOzL9HJvkk/8AJ0T/AMnRP/J0R4h+Qn2T/wAnRP8AydFlQLN7I2KcfFe44BUhsmPZbbqW26ltupbbqW26ltupbbqW26ltupC+w2ZMAI2WkbGvLsaxstY3KR5WXF817jYpx8f0c1xiPMenJvkuC2Tj4/sjYpx8V7jn8puUhGy0jY15djWNlrG5SPKy4vmvcbFOPj+jmuMR5j05N8lwWycfH9kbFOPivcc/lNykI2WkbGvLsaxstY3KR5WXF817jYpxLEDLHJgXW96FvehM6BZj0F5cDYUMc9R7Le9C3vQi4DcWcMnktp0LadCAGhxMuzk3yS2nQtp0LadCJRyAucmKS3vQt70IsROucmJeNinHxXuOfym5SEbLSNjXl2NY2WsblI8rLi+a9xsU/gFeY9OTfJcFvlxWKcfFe45/KblIRstI2NeXY1jZaxuUjysuL5r3GxT+AV5j05N8lwW+XFYpx8V7jn8puUhGy0jY15djWNlrG5SPKy4vmvcbFOIMY8yyETGP3EYAZieACAQWIOQxMbCApLXkrl+1cv2iiFu0g9EojhwLAk2MTGHCfkBcxvklcv2rl+1cv2gxwIg5CBExgYz5BkY2KcfFe45/KblIRstI2NeXY1jZaxuUjysuL5r3GxTj4/o5rjEeY9I+I9uIq+S4LZOPj+yNinHxXuOfym5SEbLSNjXl2NY2WsblI8rLi+a9xsU4+P6Oa4xHmPSPiPbiKvkuC2Tj4/sjYpx8V7jn8puUhGy0jY15djWNlrG5SPKy4vmvcbFOIEgAct6Fu5buQxD2zgHEHbk3ct3IjBl+i3ct3IfEGLPsiPiHBl3Ldy3ci2AGziqN8kt3Ldy3cjiDtlVu5buQEAIYt7I2KcfFe45/KblIRstI2NeXY1jZaxAMMkQ62qtqraq2qtqraq2qtqraqAMMkA0fNe42KcfH9SqFVCiOfwQjnoVCqhXmvbmXySqFVCqhRHP3FUKqFeP7o2KcfFe4gGGSIdbVW1VtVbVW1VtVbVW1VtVAGGSAaNlpGxry7GsbLX4HmvcbFOPj+jlOMea9uZfJcFsnHx/ZGxTj4r38Cy0jY15djWNlr8DzXuNinHx/RynGPNe3MvkuC2Tj4/sjYpx8V7+BZaRsa8uxrGoUTMt+W/Lflvy35b8t+W/Lflvy35b8t+W/LfkXIhkJjYpxN1SroVC1RULVEeBrky4BwNemSoWqKhaojc9VOqI2BEdjVb8t+Q2BAZzWJv4wYO635b8hcLQnME8CyyzDgBD+RULVFQtURuqUdUbFOJciGYhb8t+W/Lflvy35b8t+W/Lflvy35b8t+W/KgUSPGxry7GvxrFOPj+jlOMea9o3CcbhOPivTlMOeP7I2KfxrGvLsa/GsU4+P6OU4x5r2jcJxuE4+K9OUw54/sjYp/Gsa8sukWAzFv9b/AFv9b/W/1v8AW/1v9b/W/wBb/W/1v9b/AFv9b/W/1v8AW/1v9b/QnRrFy8TAMQOGA9i3PWtz1oBgQYHu7rfWq31qt9aoBCc1zxLf63+mYRGAScQ631qt9ap6CdjQZnW/1v8AQvwgxcvESZOe2FVv9b/RCM5rniW+tVvrVb61RDAkxPd3W561uetGCYAMMA7omdGsGLLf63+t/rf63+t/rf63+t/rf63+t/rf63+t/rf63+t/rf63+t/oOkWC7v8AieP6I2yfBfJcRXmPTk3yXBbJx8f2f93x/RG2T4L5LiK8x6cm+S4LZOPj+z/iCP8AW2D6Vdbsq63ZAz3gA/J6Kut2VdbsghTeCc3L8Rwqd9nZV1uyrrdlXW7KsgfiES62wfSrrdlXW7IGe8AH5PRV1uyrrdljSZoKGERjIxfdHrzLt/YLt/YLt/YK+SjkZ7ZTQu39gu39gurWdn2RGc6Adujqut2Vdbss4cA9mVdbsq63ZOPODMtklwDGMpXkF8OhXb+wXb+wTMDJvdEBDGD0ZfhV1uyrrdkMQ8CB+X4Vdbsq63ZGTjzH8Pwq63ZV1uyePDbqvxwPrYh6mLSVdbsq63ZADfmeklXW7Kut2QgXS2LnWNY2aUV9lG0y4PF8XmvcbNKK3yjb5cF8lxFeY9I+I9ubDDnj+yNinG2yMbrKNvnxiWlUbKnOsaxs0or7KNplweL4vNe42aUVvlG3y4L5LiK8x6R8R7c2GHPH9kbFONtkY3WUbfPjEtKo2VOcHnDReR17K7PpXZ9LAEwRBLIGi2LQti0Jk5beVREwDMAfkK7PpXZ9K7PpfZQGCO95gcr/AJx3s2LuYgnzqrs+ldn0niAGzEsgaLYtC2LQmhkl5VEbfJbFoWxaFsWhXyUQJwswvgGkrs+ldn0jPmc0cZARA6HBzeaS2LQti0J9+OGTp2V2fSuz6TySxi6HtwH4F0P4LYtC2LQhAEAOGId0XQmJ/pbFoWxaFbLA0WxaFsWhHAfHjJ6K7PpXZ9Ju9JsTtilwb3sHye4LtjxwV2fSuz6RMkM03krs+ldn0p4MrJhSO9lse4cNzrKkb7Ljt843WXFos6GNvlG3y4L5Lk+I9uaU54/sjYpxtsjHx/fHzfBaZcVlpGxrzrKkb7Ljt843WXFos6GNvlG3y4L5Lk+I9uaU54/sjYpxtsjHx/fHzfBaZcVlpGxrzhzA8tJlYBWARywEWGDrZq2agYsH+1bNWzVs1HxSxQlWAVgEWZlX6CsArAI9uIEHDAOtmrZqJiBwwWDKwCsAi5MAJg4ZbNWzUcNBAAcSQrl+1cv2rl+0JRAQQRcFbNWzUOGfIMQYhhYRg5ls1bNQDpiILBiFYBWARDIOBMHDLZq2agQiSWAA48BpHxWAq5ftXL9owRbLIX6pRI+MJlYBWARHOBYJADIq5ftXL9oQMKeaiq2atmo2iSQAA4q5ftXL9q5ftBHwBBHAgLZq2aiYnkBcRYU4M8PZXL9q5ftPqewB60+Dd0x8TweL4vNe42KcfH9EbZPguU4+a9o3CcbhOPivTlMOeP7OTouso3KfB5mN3XGy0jY1+Dd0x8TweL4vNe42KcfH9EbZPguU4+a9o3CcbhOPivTlMOeP7OTouso3KfB5mN3XGy0jY1+CBIgLitsW2IR/KdFti2xbYvF8TYkcXtbYtsTokNaIEsS9C2xbYhv1xVbYtsW2Ir9MVW2LbFgvMUWwI4va2xbYnwIYPccV5gW2LbEN+muAV+iE2xbYgIcl7OJogTrFti2xCfoii2xbYgv0xVbYtsW2IxvOdFti2xAQIi5xZAj/ABW2LbE6BD++WIwSP7W5LckY4Sf68rOvu1W5Lclnx3aLcluSMl47SJkNlv5K3JbkinyOjG3yW5LcluSvkojMkMPUtyW5IiXD1ekSIYPR7LcluSOdI4e6N8ktyW5Lclb5RCbIaK3JbkjJfL/yOLx/tbktyWdPcqtyW5LclaZRCZIaa3JbkjJeL/xzrGsbLXlW+cbrLi0WdDG3yjb5cF8lxFeY9I+I9uIq+S4LfKNvlGzoOK9rG5T4LTKN9lGypzrGsbLXlW+cbrLi0WdDG3yjb5cF8lxFeY9I+I9uIq+S4LfKNvlGzoOK9rG5T4LTKN9lGypzg4uAYEBW2VtlNYgRAA4aMQQ5gPH7EYgwGCHBEQBg1huvZXD9K4fpY7zpDNbZW2U62cAwJnGILc5ABwCtsrbKAgX0AMSABBDg5rbK2ytsoQw8kAYxBf0mIksWW2VtlOwnIDAmMQ7ngLQRiDNXD9K4fpNpGgRH6EYg8sCAoVcP0rh+lcP0rdKItArTdKq4fpXD9J7fEWhzASjEAEWCD3iNiTMsQVtlbZQ1EgiCBwVw/SuH6Vw/StMokUiwStsrbKDkKJxAN8GypG0oj4ngvU43tY+a9xsU+ax5r2jcJxssuJFynwW+UbfKNmlF4r3xeb4LTL49lSNpRHxPBepxvax817jYp81jzXtG4TjZZcSLlPgt8o2+UbNKLxXvi83wWmXxxHERwxaJSgGDEDGMpQAHBwSlK4JYbkzd1uWtblrTBDWcE54zW8NVvDVEOLmQMwP3EpaPVw2a3hqt4aoaEYLAXwHGGJzr93dblrW5a0bkYDFgO6Lo4jm86Lcta3LWmR+IJGOXV4lLM6INiWW5a1uWtMt2Lg4HPfgKUuOl0E7G01vDVbw1QmTHfJlhNblrW5a07qD2Cq3LWty1oIAk67sDjOi3hqt4aoP9jmF8HTj5tblrW5a1uWtWmXEITMQx8lvDVbw1QeUOBhHX5FvnG6y4tFnQxt8uUx5r2jcJxuE4+K9OUw5kszjZpRW2Rj4/vj5vgtMuKy0jY1+Rb5xusuLRZ0MbfLlMea9o3CcbhOPivTlMOZLM42aUVtkY+P74+b4LTListI2NeWRp5tgVt0Vt0QzEwD1Z8WFTvs7K26K26K26IiOcZlzV2CuwWafrSV2CuwR0ATxg6BW3RW3RFAEGZ3BV2CuwU5urFhq7hbsrborborbojIxkvSauwV2C7TaOZdW3RW3RHE2DM9aKyaqyaoYmwJHrVW3RW3ROomx1YKGCsmqsmqdyOGUnvwZxjoJdgrsFiLoM3Imqsmqsmq6rEgyQV2CuwVA05FXYK7BTBn74+bV2CuwV2CM8zD+tsJK26K26IIeQf1krborbogp8kneRV2CuwXub35djWNlrxWmXBepxuso22QjZpRW+UbfLguU+KPMekfEe3NKc8f2RsU422Rj4/vj5vg8zG0qjZpRWNeXY1jZa8VplwXqcbrKNtkI2aUVvlG3y4LlPijzHpHxHtzSnPH9kbFONtkY+P74+b4PMxtKo2aUVjXlk5AMFzdVu7Rbu0RcqiYBbxW8UD4MIOV3it4pmHMUhjhC3dot3aLd2iGNkpzdfwt3aLd2iOsyTN0HZbu0W7tEel0mbq1Fu7Rbu0WFcGxBJyBotj0rY9KLdPzHYhpLeK3igh6rxZ4At3aLd2i3doghEBxh3dlselbHpXZD00LY9K2PSgBAZoeScQBEZpeaS2PStj0omE+sdk0lvFbxRUIksF3it4reKFMLliOo9lselbHpT/FMxsSW8VvFFcRWNxHFbu0W7tERDgwIJPQ0Wx6VselAkEtFWYj5v0tj0rY9K2PSiZ0cYsj+Fu7Rbu0Qx6Jmm8lu7Rbu0RJ8QmdISWx6VselNjSHnUc6ypG0o+AJZ0MclmfNcYjzHpHxHtxRcp8FsnHJZnGzoOLR4/vj5vgtMuKy0jY151lSNpR8ASzoY5LM+a4xHmPSPiPbii5T4LZOOSzONnQcWjx/fHzfBaZcVlpGxryxYuIcAA9xEEGGaLSlUsVVSxVZ/0ZVVLFVUsVRQqJGke/AIIIRkgiI6MiIIVqMgLgxFi4jAAHuIgmBmcAwMtlWyrs6aDNVLFVUsVQ5HsTPgPI9qZqpYqqliqweP6gwWyrZUZ4HgGTCIngeQJMVsq2VYvH9AYqpYqqliqzDSG691sq2VbKui/QIjn3VSxVVLFUeMdtNVLFVUsVRhJgPKERBCxAELTCqWKqpYqgAGp5rIiCGcCSAAHFVLFVUsVVSxVDjREEcCBEQQcKeRHBi0hqQHtVLFVUsVTynsAetOXY1jZpRWlEfE8F6nG9rHzXuNinHx/RynGPNe3J8V6cphzJZnGzSitsjG6yjcp8HmY3dcbLSNjXl2NY2aUVpRHxPBepxvax817jYpx8f0cpxjzXtyfFenKYcyWZxs0orbIxuso3KfB5mN3XGy0jY15YksC5Vcq5ZhfxSuVcs5thVyrlnFlVcq5Vyzg/sq5Vy8/wC4gSyOr2q5VyEh0b0fH9SrlXLMTgGYylcq5ea9uT4r0Vcq5ZjcEzEQrlXJhgO5VyrlmF/FK5VyzA/iVXKuWcH8VXKuWcH9FXKuVcs4s6rlXK9riJLAtCrlXISHBc/8QiCA9PQtzW5o0B7hwBQDuSbmtzQeDI9Vua3NPEJxekXiEYPZbmtzQDJsOurjBAO4Jua3NESQnp7OSTFEvtbmtzRIT3Cq3NbmtzVplF4USzRbmtzTl/I0Tc1uadkP9/8AE8f0c1xiPMekfEe3NKc8f2cm9rG5T4LTKN9lGzSisa/8Tx/RzXGI8x6R8R7c0pzx/Zyb2sblPgtMo32UbNKKxryxYB0gd1ehXoV6FehXoV6FehXoV6FehXoV6FehXoV6FehXoV6FehXoV6EBsMT1iYoNlmD9E1cv0rl+kYBsVgHACJsHXOvZXL9K5fpEFsckZrb62+jwqFyAbGJTA3eAeqauX6Vy/SawNAj4CvQr0JjiIjl1KvQr0K9CxKC6hIc+yuX6Vy/SMUWyyBuqUQNjiaivQr0IeodAPeJsWmvVXL9K5fpCsjFkC69lcv0rl+lcv0hapGDDABXoV6FguRMSWILb62+hw8DIaZTVy/SuX6T6jsB1U5djX41inHx/RynGPNe3F4j24ouU+C2Tj4/sjYpx8V7je1jcp8HmY3dcbLSNjXl2NfjWKcfH9HKcY817cXiPbii5T4LZOPj+yNinHxXuN7WNynweZjd1xstI2NeXY1iNjBYxbNU00000000000000000000000000000hoYUly8bFOL7OG7ULqmmmkAbWFQ4BkPRdyppppODYRgk9ToQr8+1fn2imbqsgerxyTgMWxyVNNNIfNmDJTTTSItqyoLeNS3jUt41IfE/sd1vGpbxqRuZgMMH5RyaNgxZU0004olguXjgwXw+1vGpbxqReH/Y7reNS3jUt41IHH8VsVvGpbxqTD3I4gsyqr8+1fn2goxmSGOPV1TTTTimXDl+XY1jZa/A817jYp/AK8x6cm+S4LZOPj+zk3tY3KfB5mNpVGypzrGsbLX4HmvcbFP4BXmPTk3yXBbJx8f2cm9rG5T4PMxtKo2VOdY1jZaxMcSLDUFb0VvRW9Fb0VvRW9Fb0VvRW9FPAjwwpHzXuNinxYau4W7cC1rwbyD+49TLZRQm/mapv5mqzaWdn2RPhyIFujxWsnRdiXZB44t5g/arb91W37qtv3RCvg5Oh7pv5mqb+Zqsd/DibMkxWs9Q5D8d4rXKuQPzitfcA8yxTfzNU38zVBg3ZAn3TfzNU38zVN/M1Q8tgb0Zpqtv3VbfugtheDM+M038zVN/M1Q7Zl7GAitZumfF3LsaxstY3KR5WXF817jYp8VvlwXyXEV5j0j4j25pTmSzONmlFbZGN1lG5T4LTKN9lGzSisa8uxrGy1jcpHlZcXzXuNinxW+XBfJcRXmPSPiPbmlOZLM42aUVtkY3WUblPgtMo32UbNKKxry7GsbLWNykeVlxfNe42KcThENuc8yy3Wt1ogLDz+eAK7/Cu/wrv8IhDMCDHD4zHxYBld/hXf4WVGJz9AIgAIzS80lselbHpRMB9Y7JpLda3WjK4QY8zwYeJVBLq7/Cu/wgNLuMVegWx6VselYO58XIzAmFd/hXf4Qm8T8HV3+Fd/hC2DXII54SWx6VselDnBOgM2PZbHpWx6VselZzoxzAW61utFg5uY7DCS2PStj0pnVHsFFselbHpTY0h51A5djWNlrG5SPKy4vmvcbFOPj+j4DniPbmwxb5Rs6DivaxuU+DzMbSqNmlFY15djWNlrG5SPKy4vmvcbFOPj+j4DniPbmwxb5Rs6DivaxuU+DzMbSqNmlFY15djWNlrG5SPKy4vmvcbFOJt4zAzyRIQ4y0DAAHPguuuISQXIl1wGaMiODxB/B5EjGJCBz9cBhirOsrOshifpOAVAiCxBcBjdc4w2QayVnWVnWRxy35v0iHOYzkAf8AMbrsNX0CHNWdZWdZBH/QTVnWVnWVnWRt8jgtmDEhC2MBp/IxIQjRzZuBhNWdZWdZPK35A9eXY1jZaxuUjysuL5r3GxT4rfLguU4+a9uT4r05TDmSzONnQcWi6yjcp8FplxWWkbGvLsaxstY3KR5WXF817jYp8VvlwXKcfNe3J8V6cphzJZnGzoOLRdZRuU+C0y4rLSNjXl2NY2WsblI8rLi+a9xsU+K3yTJkyuU0yZea9uT4r0TJuJxxkyyWZpkyt6DgUMmV1kmTK5TTJkytMuKy0TJlY15djWNlrHFxjsAIf88pRRRRRRRRSkNgYeI+a9xsU4mIBYt6FvBbwRoC3MTW8FvBbwV8lxZi4yLdVvBbwTmx5pkVvBbwReLP9St4LeCNAW5x4AoA3MKbwW8EYgly3s5JEFBxb7W8FvBEgLc1P5FjWNlr8DzXuNinHx/RG2T4L5LiuE42WXNQw54/s5N7WNvn8ixrGy1+B5r3GxTj4/ojbJ8F8lxXCcbLLmoYc8f2cm9rG3z+RY1ji2wcAHTutq0LatC2rQtq0LatC2rQtq0LatC2rQtq0LatC2rQtq0LatC2rQiIjBgS31GxTiYoNlmD9E1cv0rl+kYBvsHZXL9K5fpXL9K+S4mlGZmHsrl+lcv0nA30Q0Vy/SuX6WMASGvCNKBQwLgtkeAQDYLAFcv0rl+kC49OYzW1aFtWhHMuRZDoBqtq0LatCLrFwZTibFpr1Vy/SuX6QKbF0br243+7mYSW1aFtWhHMuRZDoBqtq0LatCKmF0DCfLsa/GsU4+P6I2yfBfJcVwnGyy5opzJZnGzSi8V7je1jb58d9lGzSisa8uxr8axTj4/ojbJ8F8lxXCcbLLminMlmcbNKLxXuN7WNvnx32UbNKKxrxAGZfoj8JjXMHN8aqqqqqqqqqqqqqrK4WLnyi9jhu2eBeNUJhcC4sOCqoQzIBv1xY2QWDmjVYlzCQfwjVFkxzO4YhuPH3MqjGqJGc4QwsI1WBewEn8o1R9HMFzxdobYtnGqM44AdnGbh8AYMGEarAvYCT+UaoxrnDn4QHNCOhvmOfxZf5kb5jj82aBgpgqdb/MgxU4FetADw/wDo6/5cjw/+zrEn89wYEFAsoItsVn/k8kCygm25RP57kxJPC12mKIUARmM/RZBMe7+h1f0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0lf0kEw7P7GQogjMZ+g6e7TFf/AAZj/mX24x+lE3eIarTZ+EQIAOpXR2B2VP8AJg4Bsf6EAEJuFAAIDbqUgV8MgNonPsATmx45iIdAUPkcnQkxsxOzdBRdfMwF6AovEzjjBEbAxTstxJYyIWSCGiqu7HqYdf8AiyYDj9oBO9GLoVyUcDiDciO5U1uFj+xEAYsiGxGX6ZZbQZYm7CgonT8WDoCFKAzj+xHDcdDqQxpZjxLQbZckDuCBREmx05YvandZ4gmHt0j9I1Ywz7Yscz/iwBW39sIDhTrf0AjqCxD1JiybHDscR1yTlRwEgJDgA+8OTDs8igqBmyAf+1MEZ6UP5CL6xpLo66SdT0qHgcj2ibTAIscU3UDkA72UJsZuSFAOBHK3olN8iFwzN1RXKEsKHB6uiqBHySAEKbtDfZRP5YjoRAJLIOWyQ43k8K/5QZUHJzZOi8tUpWcliLaHkftNqRxBGQTEKZx/WCyeAPA/YRpzaDqU1ub4X+ws680gigoAGZJQlJIgDKanRiJNGXLIG9iiCCxhnxeZ8O6KSWG+bEyAgOSWARbf74XewmxalSrtNAWC1TgMwthiYiHa5tQJqOmj9oqjyCNyamCchocsgD9rHkHNi+eSlNxsfZifMgxeSrxWuRMp/wCC6Z2cIgYngOZKixWaLXcvKAS//MiA/kvsYGUIKyJEyD3pHa+PZPvYDsOBQVjiSYA5P0WxlGCBsOizvmUwjw4DDwUAgMlx5zkf5D1GA/AOi6R7MQC8gsxwEZ2MnqxiXCAc/wBk+I1XkH/CZcGQN5qEotvHLuGOIIRt5QH4uQVRF2+hMevorbJSFcTnV2JtbA6XgYBOksGh6zEefIAS2PVBBWYgOIDk8Om8jwmLOgOd2UIw/ZF8bUPoSCR13ZQS/wC01HysPqMwoWyAcccUTi6gi7nuHRNYQHL4ArPrTpPg6fqcwgwMsqGhSE4Ex2QsT2RTpAiHAelxlDFPLtXMgFiwUndi6HhTON9whhC4EGjpi7nHBzEJ22fMMJyCer6AAjYQWZ8FZ7SA4IGYIAM9xg/hk1diQSRjlkYkc8kdPXPUJdFiHpGQ34hSTHHTRVi/Awtiivawxke/ZlugBAiJDdH75x0SwJzGCwJhyF4/3QiQIJLsF5FQHF7yGLABDtngNTIjhV092BvaLYWMewdDEchnck/oIZOm2DkJWGOABPEyAupkCnZcy4UGcl8JiUPcQhj/AIInIsznL5Dz/Bg5/wBhOzSZE6xd7kfkWWGv4n6OZhxd2CFkhYhn2JRBxADhxwEJ0ln5IdiVj1KUNkB0TYsj6iz1ThKBnIHPshDF3jvYrINgHp0BN9VQtwTHJNPXks75Ns3PejNGTc5FPZMbbVDdgFhuo+FaRkduTltr9lCb9onq53RtkAYY4Lrw4EDGEmhNW0GMeSKw4zjB/JiUBvejD3WKp+rYJs/MIPSDpMSd092aIjifNAN1Tycfp0K8QYsgRcoQicYJB0OWKyPe4z+oqozopiBqiJsI9WZCa1MZMhg3Vk0ygPTYpgzGypksLhAZSauzIJoxyycSKWBRFOFtgodkFBoSHDIQHcFqNB2knrEh7a5uEYDAlZvViRQz9j6hmESWV2gI+Tf+QzAmrRIA8JumTr/jkYTYoEeGDOOIOKc0+OBIUAods8BqdClVFAYJq8h5OP06dbh9nFqi+be5z4UVKK/O9f3kBT6+DAnNyjvH6pZMKw0p9NYIYpuhmz9f+g//xAAsEAABAgQFAwQCAwEAAAAAAAABABEQIVHwIDAxofFBYbFAcZHBYIFQ0eFw/9oACAEBAAE/EP4ScOZXtmYB17eeAGb2c8AF2zMAazhzfhFkEW0a0ADEP4+AMOQIFPZ7rlAQCpBFtH+Dbp8t7OmULEOCgY7zTD3OtmPcum4nLHJFiPBQFr8t7ukfwXTPdkV5pifMAuCCxBTqlNo/tDnUBtR7jI1z3fhsmUaBCdlmmEQLaEU9HT8EDEzgjg/iKUnAXeRrBhNUo9gUDsFNR2Xr7EX67Kaf9YXbQ6s/eCkC7x+I/hyUlQANSZAL3QohBUowSs9Nc+Qi0DSCmOxCbCrdX9It7k6H2KZMmg5gWI/DUpahqVKOgqptL9VRYiDn1KBcUegeE0NvRSBKf8PQlLyjwDO+yFUoAAAAMBHVjjqlNqe5a+5P+KISm77K4zKZp5PeJvYw1dAGZCK+ZyHJiyMhZgByU5BCKPw0lOjmAGTsi8Q9AwvhNWmPcpUJeiBV7A3GRr3J0PcFBGZdkQNpS9R+HyUkXeLUexTmlRp/tFRACxBDERZFrALgCxCe2o9P9puB8gXkFG70uSP0fiaUlUtkpQJkfYpj2JkyZAIIFAaCod+LJS0jtEj7hNft5hIBAIGvJvxdKSIAgiYMwUwlXa/6RL5K9iha4m/GUpLiF0KJQuODQmWv8el11VHQP62occccccccccccccccccccccccccccP9K07l/rWnccccccccccccccccccccccccccccd0Hqp11x0IGYQkE/EbskD2GDAB2A/EQPYYMEHcFfMbskAdlCYwJKdp9ZE07MOwH4q07MO4KBTtPrQKQs06IZlQgHcAuvc/FwgHcAuncSYs06JZhUyrfn/xnIq359RrDH2//jKOsOfb+loIDD2AbC6qMRAl65KuSrkq5KuSrkq5KuSrkq5KuSrkq5KuSrkq5KuSrkq5KuSrkqCJyBKxzml3JEwDguSrkqHAfoX6I8lXJUeQ3Qv0R5KuSou5ImSYokYADAiRBCclXJVyVA5ww/QJyVclTteGuTCiMTkCVzFclXJVyVclXJVyVclXJVyVclXJVyVclXJVyVclXJVyVclXJVyVOqjEQBbh0EDl+w2LfvP+DGvNOSMGXmuNwqwW+r1k4bbvHL37z/gxrzTkjBl5rjcKsFvq9ZOG27xy9+84gZBbGs3oL777777777777773TpnO4g08vDbyMXcfQCNq2Du43LlTuRE4i12hQjx4zFYeice+8AFegOrFfeIYwE0xo3CrBx48QmTgAk6ai0fHiFwn/UsQzJ0znfQL77777777777777wMgtz2SO3eOXv3nG519SZGnX+jBcKI3mnM83CrBb6vUzhmbnWLbvHL37zjc6+pMjTr/RguFEbzTmebhVgt9XqZwzNzrFt3jl795xudYiMI4SWEdCMqLFixYsWLFiipYbpDPcOSyMYPyZALGNp0gO6SABCHZmDrroDg70XOytXau1XRQhgxdOkz6DAWSLhVg06dM1uYIEHi6dJk3JEEucmGZNQw3SWe4MqLFixYsWLFigYRwkMI6kxu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"
-};
-
-/* ======= حالة التطبيق ======= */
-let products = [];
-let storeSettings = {};
+// ==================== DATA ====================
+let currentUser = null;
+let currentRole = 'admin';
+let currentBranchId = null;
 let cart = [];
-let currentCategory = 'all';
-let currentImageBase64 = null;
-let currentHeaderImageBase64 = null;
+let currentStore = null;
 
-/* ======= تهيئة ======= */
-function init(){
-  loadData();
-  renderStore();
-  renderAdminProducts();
-  updateCartUI();
+let currency = { symbol: '$', name: 'دولار', iso: 'USD', position: 'before' };
 
-  // event listeners that require DOM nodes
-  document.getElementById('passwordEnterBtn').addEventListener('click', checkPassword);
-  document.getElementById('passwordInput').addEventListener('keypress', function(e){ if(e.key==='Enter') checkPassword(); });
-}
-function loadData(){
-  // لا نحذف أي شيء من localStorage لكي لا تُفقد البيانات
-  products = JSON.parse(JSON.stringify(defaultProducts));
-  storeSettings = JSON.parse(JSON.stringify(defaultStore));
-  const savedCart = localStorage.getItem('shop_cart_v1');
-  cart = savedCart ? JSON.parse(savedCart) : [];
-  updateStoreDisplay();
-  if(storeSettings.headerImage) applyHeaderImage(storeSettings.headerImage);
-}
+let branches = [
+    { id: 1, name: 'متجر الأناقة', owner: 'أحمد محمد', email: 'ahmed@store.com', slug: 'a1', whatsapp: '+966501234567', phone: '+966501234567', active: true, plan: 'pro', expiry: '2026-12-31', products: 50, orders: 520, customers: 320, sales: 12500, color: '#6366f1', desc: 'أفضل المنتجات بأجود الخامات' },
+    { id: 2, name: 'متجر التقنية', owner: 'خالد العلي', email: 'khaled@store.com', slug: 'b2', whatsapp: '+966502345678', phone: '+966502345678', active: true, plan: 'basic', expiry: '2026-08-15', products: 120, orders: 410, customers: 280, sales: 8200, color: '#10b981', desc: 'أحدث الأجهزة الإلكترونية' },
+    { id: 3, name: 'متجر البيت', owner: 'سارة أحمد', email: 'sara@store.com', slug: 'c3', whatsapp: '+966503456789', phone: '+966503456789', active: false, plan: 'free', expiry: '2026-07-10', products: 35, orders: 310, customers: 256, sales: 3800, color: '#f59e0b', desc: 'كل ما يحتاجه بيتك' }
+];
 
-/* ======= واجهة المتجر ======= */
-function updateStoreDisplay(){
-  document.getElementById('storeName').textContent = storeSettings.name;
-  document.getElementById('storeDesc').textContent = storeSettings.desc;
-  document.getElementById('whatsappText').textContent = '+' + storeSettings.whatsapp;
-  document.getElementById('adminStoreName').value = storeSettings.name;
-  document.getElementById('adminStoreDesc').value = storeSettings.desc;
-  document.getElementById('adminWhatsapp').value = storeSettings.whatsapp;
-}
+let products = [
+    { id: 1, branchId: 1, name: 'تيشيرت قطني فاخر', price: 75, qty: 100, desc: 'تيشيرت 100% قطن', emoji: '👕' },
+    { id: 2, branchId: 1, name: 'بنطلون جينز كلاسيكي', price: 120, qty: 80, desc: 'جينز عالي الجودة', emoji: '👖' },
+    { id: 3, branchId: 1, name: 'حذاء رياضي أنيق', price: 199, qty: 50, desc: 'مريح للمشي', emoji: '👟' },
+    { id: 4, branchId: 1, name: 'جاكيت جلد فاخر', price: 350, qty: 30, desc: 'جلد طبيعي', emoji: '🧥' },
+    { id: 5, branchId: 1, name: 'قميص رسمي أنيق', price: 110, qty: 60, desc: 'قميص أكسفورد', emoji: '👔' },
+    { id: 6, branchId: 1, name: 'كاب رياضي عصري', price: 45, qty: 200, desc: 'تصميم عصري', emoji: '🧢' },
+    { id: 7, branchId: 2, name: 'سماعات لاسلكية', price: 299, qty: 40, desc: 'صوت نقي', emoji: '🎧' },
+    { id: 8, branchId: 2, name: 'شاحن سريع', price: 89, qty: 150, desc: '65 واط', emoji: '🔌' }
+];
 
-function renderStore(){
-  const container = document.getElementById('productsContainer');
-  const filtered = currentCategory==='all' ? products : products.filter(p=>p.category===currentCategory);
-  if(filtered.length===0){ container.innerHTML = '<div style="padding:30px;text-align:center;color:#999">لا توجد منتجات</div>'; return; }
-  container.innerHTML = filtered.map(p=>`
-    <div class="product-card">
-      <img src="${p.image}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/400x300/e74c3c/ffffff?text=لا+صورة'">
-      <div class="product-info">
-        <div style="font-weight:bold;margin-bottom:6px">${p.name}</div>
-        <div style="color:#666;font-size:13px;margin-bottom:8px">${p.desc||''}</div>
-        <div style="font-weight:bold;color:#e74c3c">${p.price.toLocaleString()} ل.س</div>
-      </div>
-      <button class="add-cart-btn" onclick="addToCart(${p.id})">🛒 أضف للسلة</button>
-    </div>
-  `).join('');
-}
+let messages = [
+    { id: 1, from: 'أحمد محمد', fromRole: 'branch', to: 'admin', subject: 'طلب تفعيل خاصية جديدة', body: 'أرغب في تفعيل خاصية الدفع الإلكتروني في متجري', date: '2026-07-01', read: false },
+    { id: 2, from: 'admin', fromRole: 'admin', to: 'أحمد محمد', subject: 'رد: طلب تفعيل', body: 'تم الموافقة على طلبك، سيتم التفعيل خلال 24 ساعة', date: '2026-07-01', read: true },
+    { id: 3, from: 'سارة أحمد', fromRole: 'branch', to: 'admin', subject: 'استفسار عن الاشتراك', body: 'هل يمكن ترقية حسابي من مجاني إلى أساسي؟', date: '2026-06-30', read: false }
+];
 
-/* ======= الفلترة ======= */
-function filterCategory(cat, ev){
-  currentCategory = cat;
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  if(ev && ev.currentTarget) ev.currentTarget.classList.add('active');
-  renderStore();
-}
+let customers = [
+    { id: 1, name: 'محمد أحمد', phone: '+966501111111', orders: 12, total: 1250, lastOrder: '2026-07-01', branchId: 1 },
+    { id: 2, name: 'سارة خالد', phone: '+966502222222', orders: 8, total: 890, lastOrder: '2026-06-28', branchId: 1 },
+    { id: 3, name: 'عبدالله فهد', phone: '+966503333333', orders: 5, total: 620, lastOrder: '2026-06-25', branchId: 1 },
+    { id: 4, name: 'نورة سعد', phone: '+966504444444', orders: 15, total: 2100, lastOrder: '2026-07-02', branchId: 2 },
+    { id: 5, name: 'فهد محمد', phone: '+966505555555', orders: 3, total: 450, lastOrder: '2026-06-20', branchId: 2 }
+];
 
-/* ======= السلة ======= */
-function saveCartData(){ localStorage.setItem('shop_cart_v1', JSON.stringify(cart)); }
-function addToCart(id){
-  const p = products.find(x=>x.id==id); if(!p) return;
-  const item = cart.find(i=>i.id==id);
-  if(item) item.qty++;
-  else cart.push({id:p.id,name:p.name,price:p.price,image:p.image,qty:1});
-  saveCartData(); updateCartUI(); showToast('✅ أضيف للسلّة: '+p.name);
-}
-function changeQty(id, delta){
-  const it = cart.find(i=>i.id==id); if(!it) return;
-  it.qty += delta;
-  if(it.qty<=0) cart = cart.filter(i=>i.id!=id);
-  saveCartData(); renderCartModal(); updateCartUI();
-}
-function removeFromCart(id){
-  cart = cart.filter(i=>i.id!=id); saveCartData(); renderCartModal(); updateCartUI(); showToast('🗑️ تمت إزالة المنتج');
-}
-function updateCartUI(){
-  const totalItems = cart.reduce((s,i)=>s+i.qty,0);
-  const totalPrice = cart.reduce((s,i)=>s+i.qty*i.price,0);
-  document.getElementById('cartCount').textContent = totalItems;
-  document.getElementById('cartTotal').textContent = totalPrice.toLocaleString() + ' ل.س';
-  document.getElementById('cartBar').style.display = totalItems>0 ? 'flex' : 'none';
-}
-function openCartModal(){ renderCartModal(); document.getElementById('cartModal').style.display = 'flex'; }
-function closeCartModal(){ document.getElementById('cartModal').style.display = 'none'; }
+let customerOrders = [
+    { id: 101, store: 'متجر الأناقة', items: 'تيشيرت قطني × 2', total: 150, date: '2026-07-01', status: 'تم التوصيل' },
+    { id: 102, store: 'متجر التقنية', items: 'سماعات لاسلكية', total: 299, date: '2026-06-28', status: 'قيد التجهيز' },
+    { id: 103, store: 'متجر الأناقة', items: 'بنطلون جينز + كاب', total: 165, date: '2026-06-20', status: 'تم التوصيل' }
+];
 
-function renderCartModal(){
-  const container = document.getElementById('cartItems');
-  const summary = document.getElementById('cartSummary');
-  if(cart.length===0){
-    container.innerHTML = '<div style="padding:30px;text-align:center;color:#999">السلة فارغة</div>';
-    summary.innerHTML = ''; return;
-  }
-  container.innerHTML = cart.map(i=>`
-    <div class="cart-item">
-      <img src="${i.image}" onerror="this.src='https://via.placeholder.com/60/e74c3c/ffffff?text=?'">
-      <div style="flex:1;text-align:right">
-        <div style="font-weight:bold">${i.name}</div>
-        <div style="color:#e74c3c">${(i.price*i.qty).toLocaleString()} ل.س</div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:6px;align-items:center">
-        <div style="display:flex;gap:6px">
-          <button class="qty-btn" onclick="changeQty(${i.id},-1)">−</button>
-          <div style="min-width:26px;text-align:center;font-weight:bold">${i.qty}</div>
-          <button class="qty-btn" onclick="changeQty(${i.id},1)">+</button>
-        </div>
-        <button style="background:#e74c3c;color:#fff;padding:6px;border-radius:6px;border:0;cursor:pointer" onclick="removeFromCart(${i.id})">حذف</button>
-      </div>
-    </div>
-  `).join('');
-  const subtotal = cart.reduce((s,i)=>s+i.qty*i.price,0);
-  summary.innerHTML = `<div style="text-align:right">
-    <div style="margin-bottom:6px">المجموع: <strong>${subtotal.toLocaleString()} ل.س</strong></div>
-    <div style="margin-bottom:6px">التوصيل: <strong>مجاني</strong></div>
-    <div style="font-size:18px;font-weight:bold;color:#e74c3c">الإجمالي: ${subtotal.toLocaleString()} ل.س</div>
-  </div>`;
-}
-
-/* ======= إرسال الطلب عبر واتساب ======= */
-function sendCartOrder(){
-  if(cart.length===0){ showToast('السلة فارغة'); return; }
-  const note = document.getElementById('cartNote').value.trim();
-  const phone = storeSettings.whatsapp;
-  let message = `🛒 *طلب جديد من ${storeSettings.name}*%0A%0A`;
-  message += `📋 *المنتجات:*%0A`;
-  let total = 0;
-  cart.forEach((item,idx)=>{
-    const line = item.price*item.qty;
-    total += line;
-    message += `${idx+1}. ${item.name} × ${item.qty} = ${line.toLocaleString()} ل.س%0A`;
-  });
-  message += `%0A💰 *الإجمالي: ${total.toLocaleString()} ل.س*%0A`;
-  if(note) message += `%0A📝 *ملاحظة:* ${note}%0A`;
-  message += `%0A⏰ ${new Date().toLocaleString('ar-SY')}`;
-  window.open(`https://wa.me/${phone}?text=${message}`,'_blank');
-  cart = []; saveCartData(); updateCartUI(); closeCartModal(); showToast('📱 تم فتح الواتساب لإرسال الطلب!');
-}
-
-/* ======= صورة الهيدر ======= */
-function previewHeaderImage(input){
-  if(input.files && input.files[0]){
-    const file = input.files[0];
-    const reader = new FileReader();
-    reader.onload = function(e){
-      currentHeaderImageBase64 = e.target.result;
-      const img = document.getElementById('headerImagePreview');
-      img.src = currentHeaderImageBase64;
-      img.style.display = 'block';
-    };
-    reader.readAsDataURL(file);
-  }
-}
-function applyHeaderImage(base64){
-  const header = document.getElementById('storeHeader');
-  if(base64){
-    header.style.backgroundImage = 'url('+base64+')';
-    header.style.backgroundColor = 'transparent';
-  } else {
-    header.style.backgroundImage = 'none';
-    header.style.backgroundColor = '#e74c3c';
-  }
-}
-function saveHeaderImage(){
-  if(currentHeaderImageBase64){
-    storeSettings.headerImage = currentHeaderImageBase64;
-    applyHeaderImage(currentHeaderImageBase64);
-    showToast('✅ تم حفظ صورة الهيدر في الإعدادات');
-  } else {
-    showToast('⚠️ اختر صورة أولاً');
-  }
-}
-function removeHeaderImage(){
-  storeSettings.headerImage = '';
-  currentHeaderImageBase64 = null;
-  document.getElementById('headerImageFile').value = '';
-  document.getElementById('headerImagePreview').style.display = 'none';
-  applyHeaderImage(null);
-  showToast('🗑️ تمت إزالة صورة الهيدر');
-}
-
-/* ======= إدارة المنتجات (صورة من المعرض) ======= */
-function previewImageFile(input){
-  if(input.files && input.files[0]){
-    const file = input.files[0];
-    const reader = new FileReader();
-    reader.onload = function(e){
-      currentImageBase64 = e.target.result;
-      const img = document.getElementById('imagePreview');
-      img.src = currentImageBase64;
-      img.style.display = 'block';
-    };
-    // قراءة بصيغة DataURL
-    reader.readAsDataURL(file);
-  }
-}
-
-function saveProduct(){
-  const name = document.getElementById('productName').value.trim();
-  const desc = document.getElementById('productDesc').value.trim();
-  const price = parseInt(document.getElementById('productPrice').value) || 0;
-  const category = document.getElementById('productCategory').value;
-  const editId = document.getElementById('editProductId').value;
-  if(!name || !price){ alert('ادخل اسم وسعر المنتج'); return; }
-  let image = currentImageBase64;
-  if(editId){
-    const idx = products.findIndex(p=>p.id==editId);
-    if(idx!==-1){
-      if(!image) image = products[idx].image;
-      products[idx] = {...products[idx], name, desc, price, category, image};
-    }
-  } else {
-    if(!image) image = 'https://via.placeholder.com/400x300/e74c3c/ffffff?text='+encodeURIComponent(name);
-    const newId = products.length ? Math.max(...products.map(p=>p.id))+1 : 1;
-    products.push({id:newId,name,desc,price,category,image});
-  }
-  // تنظيف نموذج
-  document.getElementById('productName').value='';document.getElementById('productDesc').value='';document.getElementById('productPrice').value='';document.getElementById('editProductId').value='';document.getElementById('productImageFile').value='';document.getElementById('imagePreview').style.display='none';
-  currentImageBase64 = null;
-  renderAdminProducts(); renderStore(); showToast('✅ تم حفظ المنتج محلياً');
-}
-
-function editProduct(id){
-  const p = products.find(x=>x.id==id); if(!p) return;
-  document.getElementById('productName').value = p.name; document.getElementById('productDesc').value = p.desc||''; document.getElementById('productPrice').value = p.price; document.getElementById('productCategory').value = p.category; document.getElementById('editProductId').value = p.id;
-  if(p.image && p.image.startsWith('data:')){ currentImageBase64 = p.image; document.getElementById('imagePreview').src = p.image; document.getElementById('imagePreview').style.display='block'; } else { currentImageBase64 = null; document.getElementById('imagePreview').style.display='none'; }
-  window.scrollTo(0,150);
-}
-
-function deleteProduct(id){
-  if(!confirm('تأكيد حذف المنتج؟')) return;
-  products = products.filter(p=>p.id!=id); renderAdminProducts(); renderStore(); showToast('🗑️ حُذف المنتج');
-}
-
-function renderAdminProducts(){
-  const container = document.getElementById('adminProductsList');
-  if(products.length===0){ container.innerHTML = '<p style="text-align:center;color:#999">لا توجد منتجات</p>'; return; }
-  container.innerHTML = products.map(p=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:8px;border-bottom:1px solid #eee">
-      <img src="${p.image}" style="width:56px;height:56px;border-radius:8px;object-fit:cover" onerror="this.src='https://via.placeholder.com/60/e74c3c/ffffff?text=?'">
-      <div style="flex:1;text-align:right">
-        <div style="font-weight:bold">${p.name}</div>
-        <div style="color:#e74c3c">${p.price.toLocaleString()} ل.س</div>
-      </div>
-      <div style="display:flex;gap:6px">
-        <button onclick="editProduct(${p.id})" style="background:#f39c12;color:#fff;border:0;padding:6px;border-radius:6px;cursor:pointer">تعديل</button>
-        <button onclick="deleteProduct(${p.id})" style="background:#e74c3c;color:#fff;border:0;padding:6px;border-radius:6px;cursor:pointer">حذف</button>
-      </div>
-    </div>
-  `).join('');
-}
-
-/* ======= إعداد المتجر ======= */
-function saveStoreSettings(){ storeSettings.name = document.getElementById('adminStoreName').value.trim() || storeSettings.name; storeSettings.desc = document.getElementById('adminStoreDesc').value.trim() || storeSettings.desc; storeSettings.whatsapp = document.getElementById('adminWhatsapp').value.replace(/[^0-9]/g,'') || storeSettings.whatsapp; updateStoreDisplay(); showToast('✅ تم تحديث الإعدادات مؤقتاً'); }
-
-/* ======= حماية الدخول ======= */
-function showStore(){
-  document.getElementById('storeView').style.display = 'block';
-  document.getElementById('adminPanel').style.display = 'none';
-}
-function showAdmin(){ document.getElementById('passwordInput').value=''; document.getElementById('passwordError').style.display='none'; document.getElementById('passwordModal').style.display='flex'; setTimeout(()=>document.getElementById('passwordInput').focus(),120); }
-function checkPassword(){ const v = document.getElementById('passwordInput').value; if(v===ADMIN_PASSWORD){ document.getElementById('passwordModal').style.display='none'; document.getElementById('storeView').style.display='none'; document.getElementById('adminPanel').style.display='block'; renderAdminProducts(); } else { document.getElementById('passwordError').style.display='block'; } }
-function closePasswordModal(){ document.getElementById('passwordModal').style.display='none'; }
-
-/* ======= حفظ إلى GitHub (تفاصيل وتصحيح) ======= */
-async function startSaveToGitHub(){
-  try{
-    showSavingModal(true,'جاري تجهيز الكود...');
-    const productsJSON = JSON.stringify(products, null, 4);
-    const storeJSON = JSON.stringify(storeSettings, null, 4);
-
-    // جلب الصفحة الحالية كنص
-    const pageHtml = await fetch(window.location.href, {cache:'no-store'}).then(r=>r.text());
-    // استبدال الكتل المعرفة للبيانات
-    let updatedHtml = pageHtml.replace(/const defaultProducts = \[[\s\S]*?\];/, `const defaultProducts = ${productsJSON};`);
-    updatedHtml = updatedHtml.replace(/const defaultStore = \{[\s\S]*?\};/, `const defaultStore = ${storeJSON};`);
-
-    // البيانات المطلوبة من المستخدم
-    const owner = prompt('ادخل owner (اسم الحساب أو المنظمة على GitHub):', localStorage.getItem('gh_owner')||'');
-    if(owner===null){ showSavingModal(false); showToast('⛔ تم الإلغاء'); return; }
-    const repo = prompt('ادخل repo (اسم المستودع):', localStorage.getItem('gh_repo')||'');
-    if(repo===null){ showSavingModal(false); showToast('⛔ تم الإلغاء'); return; }
-    const path = prompt('ادخل مسار الملف داخل المستودع (مثل index.html):', localStorage.getItem('gh_path')||'index.html');
-    if(path===null){ showSavingModal(false); showToast('⛔ تم الإلغاء'); return; }
-    const message = prompt('ادخل رسالة الـ commit:', 'Update store content from admin panel');
-    if(message===null){ showSavingModal(false); showToast('⛔ تم الإلغاء'); return; }
-    const branch = prompt('اسم الفرع (branch) لحفظ التغييرات، اتركه فارغاً للحفظ على الفرع الافتراضي:', localStorage.getItem('gh_branch')||'') || null;
-
-    // حفظ تفضيلات غير حساسة
-    localStorage.setItem('gh_owner', owner); localStorage.setItem('gh_repo', repo); localStorage.setItem('gh_path', path);
-    if(branch) localStorage.setItem('gh_branch', branch);
-
-    // PAT مؤقت في sessionStorage
-    let token = sessionStorage.getItem('gh_token') || '';
-    if(!token){
-      token = prompt('أدخل Personal Access Token (PAT) بصلاحية repo (سيُخزن مؤقتاً في هذه الجلسة فقط):');
-      if(!token){ showSavingModal(false); showToast('⛔ تم الإلغاء'); return; }
-      sessionStorage.setItem('gh_token', token);
-    }
-
-    showSavingModal(true,'جاري حفظ الملف على GitHub...');
-
-    const apiBase = 'https://api.github.com';
-    const safePath = encodeURIComponent(path).replace(/%2F/g, '/');
-    const fileUrl = `${apiBase}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${safePath}`;
-    const headers = {'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json'};
-
-    console.info('DEBUG: GET', fileUrl, branch ? ('branch=' + branch) : '(default branch)');
-    const getUrl = branch ? (fileUrl + '?ref=' + encodeURIComponent(branch)) : fileUrl;
-    let getResp = await fetch(getUrl, {headers});
-    console.info('DEBUG GET status', getResp.status);
-    const getText = await getResp.text();
-    let getJson = null;
-    try { getJson = JSON.parse(getText); } catch(e){ getJson = getText; }
-    console.debug('DEBUG GET response', getJson);
-
-    let sha = null;
-    if(getResp.status === 200){
-      sha = getJson.sha;
-    } else if(getResp.status === 404){
-      sha = null;
+// ==================== LOGIN ====================
+function switchLoginTab(role) {
+    document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    if(role === 'customer') {
+        document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('customerLoginForm').classList.remove('hidden');
     } else {
-      if(getResp.status === 401 || getResp.status === 403) sessionStorage.removeItem('gh_token');
-      showSavingModal(false);
-      alert('فشل التحقق من الملف على GitHub: ' + getResp.status + '\n' + (typeof getJson === 'string' ? getJson : JSON.stringify(getJson, null, 2)));
-      return;
+        document.getElementById('loginForm').classList.remove('hidden');
+        document.getElementById('customerLoginForm').classList.add('hidden');
     }
+    currentRole = role;
+}
 
-    const putBody = {
-      message: message,
-      content: btoa(unescape(encodeURIComponent(updatedHtml))),
-      committer: { name: 'site-admin', email: 'admin@example.com' }
-    };
-    if(sha) putBody.sha = sha;
-    if(branch) putBody.branch = branch;
+function doLogin() {
+    const email = document.getElementById('loginEmail').value;
+    const pass = document.getElementById('loginPass').value;
+    if(!email || !pass) { showToast('❌ يرجى إدخال البريد وكلمة المرور'); return; }
 
-    console.info('DEBUG: PUT', fileUrl, { sha: sha, branch: branch });
-    const putResp = await fetch(fileUrl, {
-      method: 'PUT',
-      headers: { ...headers, 'Content-Type': 'application/json' },
-      body: JSON.stringify(putBody)
+    if(currentRole === 'admin') {
+        currentUser = { name: 'الأدمن', email: email, role: 'admin' };
+        document.getElementById('roleBadge').textContent = 'أدمن رئيسي';
+        document.getElementById('adminNav').classList.remove('hidden');
+        document.getElementById('branchNav').classList.add('hidden');
+        document.getElementById('customerNav').classList.add('hidden');
+        showPage('adminDashboard');
+    } else {
+        const branch = branches.find(b => b.email === email);
+        if(!branch) { showToast('❌ الفرع غير موجود'); return; }
+        if(!branch.active) { showToast('❌ حسابك معلق، تواصل مع الأدمن'); return; }
+        currentUser = { name: branch.owner, email: email, role: 'branch' };
+        currentBranchId = branch.id;
+        document.getElementById('roleBadge').textContent = 'صاحب فرع: ' + branch.name;
+        document.getElementById('adminNav').classList.add('hidden');
+        document.getElementById('branchNav').classList.remove('hidden');
+        document.getElementById('customerNav').classList.add('hidden');
+        document.getElementById('branchLinkDisplay').value = 'store.com/' + branch.slug;
+        document.getElementById('myStoreLink').value = 'store.com/' + branch.slug;
+        showPage('branchDashboard');
+    }
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('appLayout').classList.remove('hidden');
+    showToast('✅ مرحباً ' + currentUser.name + '!');
+    updateAllCurrencyDisplays();
+}
+
+function doCustomerLogin() {
+    const phone = document.getElementById('customerPhone').value;
+    if(!phone) { showToast('❌ يرجى إدخال رقم الهاتف'); return; }
+    currentUser = { name: 'زبون', phone: phone, role: 'customer' };
+    document.getElementById('roleBadge').textContent = 'زبون';
+    document.getElementById('adminNav').classList.add('hidden');
+    document.getElementById('branchNav').classList.add('hidden');
+    document.getElementById('customerNav').classList.remove('hidden');
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('appLayout').classList.remove('hidden');
+    showPage('browseStores');
+    showToast('✅ مرحباً بك!');
+}
+
+function browseAsGuest() {
+    currentUser = { name: 'زائر', role: 'guest' };
+    document.getElementById('roleBadge').textContent = 'زائر';
+    document.getElementById('adminNav').classList.add('hidden');
+    document.getElementById('branchNav').classList.add('hidden');
+    document.getElementById('customerNav').classList.remove('hidden');
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('appLayout').classList.remove('hidden');
+    showPage('browseStores');
+}
+
+function logout() {
+    currentUser = null;
+    currentRole = 'admin';
+    currentBranchId = null;
+    cart = [];
+    document.getElementById('appLayout').classList.add('hidden');
+    document.getElementById('loginPage').classList.remove('hidden');
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPass').value = '';
+    showToast('👋 تم تسجيل الخروج');
+}
+
+// ==================== NAVIGATION ====================
+function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+    document.getElementById(pageId).classList.remove('hidden');
+
+    document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+    event.target.classList.add('active');
+
+    if(pageId === 'adminDashboard' || pageId === 'branches') renderBranchesList();
+    if(pageId === 'subscriptions') renderSubscriptionsTable();
+    if(pageId === 'messages') { renderInbox(); renderSent(); populateMsgRecipients(); }
+    if(pageId === 'customers') renderCustomersTable();
+    if(pageId === 'myProducts') renderBranchProducts();
+    if(pageId === 'branchMessages') renderBranchInbox();
+    if(pageId === 'browseStores') renderStoresList();
+    if(pageId === 'myOrders') renderCustomerOrders();
+
+    window.scrollTo(0, 0);
+}
+
+// ==================== MODALS ====================
+function openModal(id) {
+    document.getElementById(id).classList.add('active');
+    if(id === 'editBranchModal') {
+        document.getElementById('editBranchActive').addEventListener('change', function() {
+            document.getElementById('branchStatusText').textContent = this.checked ? 'نشط' : 'معلق';
+        });
+    }
+}
+
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', function(e) {
+        if(e.target === this) this.classList.remove('active');
+    });
+});
+
+// ==================== TOAST ====================
+function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ==================== CURRENCY ====================
+function formatPrice(price) {
+    if(currency.position === 'before') {
+        return currency.symbol + price;
+    }
+    return price + currency.symbol;
+}
+
+function updateAllCurrencyDisplays() {
+    document.querySelectorAll('.currencySymbol').forEach(el => {
+        el.textContent = currency.symbol;
+    });
+    document.getElementById('currencyPreview').textContent = 'سعر المنتج: ' + formatPrice(100);
+}
+
+function saveCurrencySettings() {
+    currency.symbol = document.getElementById('currencySymbolInput').value || '$';
+    currency.name = document.getElementById('currencyNameInput').value || 'دولار';
+    currency.iso = document.getElementById('currencyISOInput').value || 'USD';
+    currency.position = document.getElementById('currencyPosition').value;
+    updateAllCurrencyDisplays();
+    showToast('✅ تم حفظ إعدادات العملة: ' + currency.symbol);
+}
+
+// ==================== BRANCHES ====================
+function renderBranchesList() {
+    const list = document.getElementById('adminBranchesList');
+    const allList = document.getElementById('allBranchesList');
+    let html = '';
+
+    branches.forEach(b => {
+        const statusBadge = b.active ? '<span class="badge badge-green">نشط</span>' : '<span class="badge badge-red">معلق</span>';
+        const planBadge = '<span class="badge badge-blue">' + getPlanName(b.plan) + '</span>';
+
+        html += `
+            <div class="branch-row" data-name="${b.name}">
+                <div class="branch-avatar" style="background:${b.color};">${b.name.charAt(0)}</div>
+                <div class="branch-info">
+                    <h4>${b.name} ${statusBadge} ${planBadge}</h4>
+                    <p>${b.owner} • ${b.products} منتج • ${b.orders} طلب</p>
+                </div>
+                <div class="branch-link">store.com/${b.slug}</div>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-sm btn-primary" onclick="openEditBranch(${b.id})">تعديل</button>
+                    ${!b.active ? `<button class="btn btn-sm btn-success" onclick="activateBranch(${b.id})">تفعيل</button>` : ''}
+                </div>
+            </div>
+        `;
     });
 
-    console.info('DEBUG PUT status', putResp.status);
-    const putText = await putResp.text();
-    let putJson = null;
-    try { putJson = JSON.parse(putText); } catch(e){ putJson = putText; }
-    console.debug('DEBUG PUT response', putJson);
-
-    if(!putResp.ok){
-      if(putResp.status === 401 || putResp.status === 403) sessionStorage.removeItem('gh_token');
-      showSavingModal(false);
-      alert('فشل الحفظ على GitHub: ' + putResp.status + '\n' + (typeof putJson === 'string' ? putJson : JSON.stringify(putJson, null, 2)));
-      return;
-    }
-
-    showSavingModal(false);
-    showToast('✅ تم الحفظ في المستودع بنجاح!');
-    console.log('Commit response:', putJson);
-    const commitUrl = putJson && putJson.commit && putJson.commit.html_url ? putJson.commit.html_url : null;
-    if(commitUrl){
-      if(confirm('فتح صفحة commit على GitHub؟')) window.open(commitUrl, '_blank');
-    } else {
-      alert('تم الحفظ بنجاح، ولكن لم يعُد رابط commit في الرد. تفقد الريبو والفرع الذي اخترته.');
-    }
-  }catch(err){
-    console.error('Save error', err);
-    showSavingModal(false);
-    alert('حدث خطأ أثناء الحفظ: ' + (err && err.message ? err.message : err));
-  }
+    if(list) list.innerHTML = html;
+    if(allList) allList.innerHTML = html;
 }
 
-function showSavingModal(show, text){
-  const m = document.getElementById('savingModal'); const c = document.getElementById('savingContent');
-  if(show){ c.innerHTML = `<p>${text||'جارٍ...'}</p>`; m.style.display='flex'; } else m.style.display='none';
+function getPlanName(plan) {
+    const plans = { free: 'مجاني', basic: 'أساسي', pro: 'احترافي', yearly: 'سنوي' };
+    return plans[plan] || plan;
 }
 
-/* ======= مساعدة وعرض رسائل ======= */
-function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; setTimeout(()=>t.style.display='none',3000); }
+function searchBranches() {
+    const term = document.getElementById('branchSearch').value.toLowerCase();
+    document.querySelectorAll('#allBranchesList .branch-row').forEach(row => {
+        row.style.display = row.getAttribute('data-name').toLowerCase().includes(term) ? 'flex' : 'none';
+    });
+}
 
-/* ======= بدء ======= */
-window.addEventListener('load', init);
-</script>
+function createBranch() {
+    const name = document.getElementById('newBranchName').value;
+    const owner = document.getElementById('newBranchOwner').value;
+    const email = document.getElementById('newBranchEmail').value;
+    const slug = document.getElementById('newBranchSlug').value;
+    const plan = document.getElementById('newBranchPlan').value;
 
-</body>
-  </html>
+    if(!name || !owner || !email || !slug) {
+        showToast('❌ يرجى ملء جميع الحقول المطلوبة');
+        return;
+    }
+
+    const newBranch = {
+        id: branches.length + 1,
+        name, owner, email, slug,
+        whatsapp: document.getElementById('newBranchWhatsApp').value,
+        phone: document.getElementById('newBranchWhatsApp').value,
+        active: true, plan, expiry: '2027-07-02',
+        products: 0, orders: 0, customers: 0, sales: 0,
+        color: '#6366f1', desc: ''
+    };
+
+    branches.push(newBranch);
+    closeModal('addBranchModal');
+    renderBranchesList();
+    showToast('✅ تم إنشاء الفرع بنجاح!');
+
+    // Clear form
+    document.getElementById('newBranchName').value = '';
+    document.getElementById('newBranchOwner').value = '';
+    document.getElementById('newBranchEmail').value = '';
+    document.getElementById('newBranchPass').value = '';
+    document.getElementById('newBranchWhatsApp').value = '';
+    document.getElementById('newBranchSlug').value = '';
+}
+
+let editingBranchId = null;
+
+function openEditBranch(id) {
+    editingBranchId = id;
+    const b = branches.find(x => x.id === id);
+    if(!b) return;
+
+    document.getElementById('editBranchId').value = id;
+    document.getElementById('editBranchName').value = b.name;
+    document.getElementById('editBranchOwner').value = b.owner;
+    document.getElementById('editBranchWhatsApp').value = b.whatsapp;
+    document.getElementById('editBranchPlan').value = b.plan;
+    document.getElementById('editBranchActive').checked = b.active;
+    document.getElementById('editBranchExpiry').value = b.expiry;
+    document.getElementById('branchStatusText').textCon
