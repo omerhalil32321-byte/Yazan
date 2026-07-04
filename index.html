@@ -238,13 +238,6 @@
                 <label>كلمة المرور</label>
                 <input type="password" id="regPassword" placeholder="••••••••">
             </div>
-            <div class="input-group">
-                <label>نوع الحساب</label>
-                <select id="regType">
-                    <option value="client">عميل</option>
-                    <option value="admin">مدير</option>
-                </select>
-            </div>
             <button class="btn btn-success" onclick="register()">
                 <i class="fas fa-check"></i> إنشاء حساب
             </button>
@@ -387,7 +380,7 @@
                         </div>
                         <div class="visa-status"><span class="status-badge status-active" id="cardStatus">نشطة</span></div>
                     </div>
-                    <div class="card-actions">
+                    <div class="card-actions" id="visaActions">
                         <button class="btn btn-primary" onclick="generateVisa()"><i class="fas fa-plus"></i> إصدار بطاقة جديدة</button>
                         <button class="btn btn-warning" onclick="toggleFreeze()" id="freezeBtn"><i class="fas fa-snowflake"></i> تجميد البطاقة</button>
                         <button class="btn btn-danger" onclick="showCVV()"><i class="fas fa-eye"></i> عرض CVV</button>
@@ -627,7 +620,6 @@
             currentUser = user;
             localStorage.setItem('bank_currentUser', JSON.stringify(currentUser));
 
-            // Update status
             updateUserStatus(user.id, 'online');
             sessions[user.id] = { loginTime: new Date().toISOString(), active: true };
             saveSessions();
@@ -641,7 +633,6 @@
             const name = document.getElementById('regName').value;
             const email = document.getElementById('regEmail').value;
             const password = document.getElementById('regPassword').value;
-            const type = document.getElementById('regType').value;
 
             if (!name || !email || !password) {
                 showNotification('يرجى ملء جميع الحقول!', 'error');
@@ -655,7 +646,8 @@
 
             const newUser = {
                 id: Date.now(),
-                name, email, password, type,
+                name, email, password,
+                type: 'client', // دائماً عميل
                 balance: 0,
                 status: 'offline',
                 lastActive: null,
@@ -709,6 +701,7 @@
             loadBankAccounts();
             updateChart();
             updateBankAccountSelects();
+            setupVisaPermissions();
 
             showPage('home');
         }
@@ -739,10 +732,36 @@
             document.getElementById('statTransactions').textContent = userTx.length;
         }
 
+        // ===== VISA PERMISSIONS =====
+        function setupVisaPermissions() {
+            const visaActions = document.getElementById('visaActions');
+            if (currentUser.type === 'client') {
+                // العميل لا يمكنه تغيير الفيزا - إخفاء أزرار التحكم
+                visaActions.innerHTML = `
+                    <button class="btn btn-danger" onclick="showCVV()"><i class="fas fa-eye"></i> عرض CVV</button>
+                `;
+            } else {
+                // الإدمن يمكنه التحكم الكامل
+                visaActions.innerHTML = `
+                    <button class="btn btn-primary" onclick="generateVisa()"><i class="fas fa-plus"></i> إصدار بطاقة جديدة</button>
+                    <button class="btn btn-warning" onclick="toggleFreeze()" id="freezeBtn"><i class="fas fa-snowflake"></i> تجميد البطاقة</button>
+                    <button class="btn btn-danger" onclick="showCVV()"><i class="fas fa-eye"></i> عرض CVV</button>
+                `;
+            }
+        }
+
         // ===== VISA CARD =====
         function generateVisa() {
+            if (currentUser.type === 'client') {
+                showNotification('لا يمكنك إصدار بطاقة جديدة! تواصل مع الإدارة.', 'error');
+                return;
+            }
+
             const cardNum = '4' + Array(15).fill(0).map(() => Math.floor(Math.random() * 10)).join('');
-            const expiry = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0') + '/' + String(Math.floor(Math.random() * 5) + 26);
+            // تاريخ انتهاء من 2030 إلى 2035
+            const year = Math.floor(Math.random() * 6) + 30; // 30-35 (2030-2035)
+            const month = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
+            const expiry = month + '/' + year;
             const cvv = String(Math.floor(Math.random() * 900) + 100);
 
             cards[currentUser.id] = {
@@ -752,7 +771,7 @@
             saveCards();
             loadCard();
             logActivity(currentUser.id, 'visa_created', 'إصدار بطاقة فيزا افتراضية');
-            showNotification('تم إصدار البطاقة الافتراضية بنجاح!', 'success');
+            showNotification('تم إصدار البطاقة الافتراضية بنجاح! تنتهي: 20' + year, 'success');
         }
 
         function loadCard() {
@@ -766,16 +785,23 @@
                 if (card.frozen) {
                     statusEl.textContent = 'مجمدة';
                     statusEl.className = 'status-badge status-frozen';
-                    document.getElementById('freezeBtn').innerHTML = '<i class="fas fa-snowflake"></i> فك التجميد';
+                    const freezeBtn = document.getElementById('freezeBtn');
+                    if (freezeBtn) freezeBtn.innerHTML = '<i class="fas fa-snowflake"></i> فك التجميد';
                 } else {
                     statusEl.textContent = 'نشطة';
                     statusEl.className = 'status-badge status-active';
-                    document.getElementById('freezeBtn').innerHTML = '<i class="fas fa-snowflake"></i> تجميد البطاقة';
+                    const freezeBtn = document.getElementById('freezeBtn');
+                    if (freezeBtn) freezeBtn.innerHTML = '<i class="fas fa-snowflake"></i> تجميد البطاقة';
                 }
             }
         }
 
         function toggleFreeze() {
+            if (currentUser.type === 'client') {
+                showNotification('لا يمكنك تجميد البطاقة! تواصل مع الإدارة.', 'error');
+                return;
+            }
+
             const card = cards[currentUser.id];
             if (!card) { showNotification('لا توجد بطاقة! قم بإصدار واحدة أولاً.', 'error'); return; }
             card.frozen = !card.frozen;
