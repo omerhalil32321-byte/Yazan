@@ -2,687 +2,357 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chicken Road - لعبة الدجاجة</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Chicken Road - طريق الدجاجة</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Titan+One&family=Inter:wght@400;600;700&display=swap');
 
 * { margin:0; padding:0; box-sizing:border-box; }
-body { 
+html, body { 
+  width:100%; height:100%; overflow:hidden;
   font-family:'Inter',sans-serif; 
-  background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%); 
+  background:#1a1a2e; 
   color:#fff; 
-  min-height:100vh; 
-  overflow-x:hidden;
 }
 
 /* ===== شريط علوي ===== */
 .top-bar { 
-  display:flex; 
-  justify-content:space-between; 
-  align-items:center; 
-  padding:10px 20px; 
-  background:#0d0d1a; 
+  display:flex; justify-content:space-between; align-items:center; 
+  padding:8px 16px; background:#0d0d1a; 
   border-bottom:2px solid #e94560; 
-  position:sticky; 
-  top:0; 
-  z-index:100;
+  position:fixed; top:0; left:0; right:0; z-index:1000;
+  height:50px;
 }
 .logo { 
-  font-family:'Titan One',cursive; 
-  font-size:24px; 
-  color:#ffd700; 
-  text-shadow:2px 2px 0 #e94560,4px 4px 0 rgba(0,0,0,.3); 
-  letter-spacing:2px;
+  font-family:'Titan One',cursive; font-size:20px; color:#ffd700;
+  text-shadow:2px 2px 0 #e94560;
 }
 .logo span { color:#e94560; }
-.user-info { display:flex; gap:10px; align-items:center; font-size:13px; }
+.user-info { display:flex; gap:8px; align-items:center; font-size:12px; }
 .balance-box { 
   background:linear-gradient(135deg,#ffd700,#ffaa00); 
-  padding:6px 14px; 
-  border-radius:20px; 
-  color:#1a1a2e; 
-  font-weight:bold; 
-  border:2px solid #fff;
-  box-shadow:0 2px 8px rgba(255,215,0,.3);
+  padding:5px 12px; border-radius:15px; 
+  color:#1a1a2e; font-weight:bold; font-size:13px;
 }
 .top-btn { 
-  background:#e94560; 
-  color:#fff; 
-  border:none; 
-  padding:8px 14px; 
-  border-radius:8px; 
-  cursor:pointer; 
-  font-size:12px; 
-  font-weight:600;
-  transition:.2s; 
+  background:#e94560; color:#fff; border:none; 
+  padding:6px 12px; border-radius:6px; cursor:pointer; 
+  font-size:11px; font-weight:600;
 }
-.top-btn:hover { background:#ff6b81; transform:translateY(-1px); }
+.top-btn:hover { background:#ff6b81; }
 .top-btn.admin { 
   background:linear-gradient(135deg,#ffd700,#ffaa00); 
-  color:#1a1a2e; 
-  display:none; 
-  font-weight:bold;
+  color:#1a1a2e; display:none; font-weight:bold;
 }
 
-.page { display:none; padding:15px; max-width:1000px; margin:0 auto; }
-.page.active { display:block; animation:fadeIn .4s; }
-@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+/* ===== الصفحات ===== */
+.page { display:none; width:100%; height:100%; padding-top:50px; }
+.page.active { display:block; }
 
 /* ===== تسجيل الدخول ===== */
 .auth-box { 
-  max-width:380px; 
-  margin:40px auto; 
+  max-width:360px; margin:60px auto; 
   background:linear-gradient(180deg,#1a1a3e,#0d0d1a); 
-  padding:35px; 
-  border-radius:20px; 
-  text-align:center; 
-  border:2px solid #ffd700; 
-  box-shadow:0 10px 40px rgba(0,0,0,.5),0 0 20px rgba(255,215,0,.1);
+  padding:30px; border-radius:16px; text-align:center; 
+  border:2px solid #ffd700;
+  box-shadow:0 10px 40px rgba(0,0,0,.5);
 }
 .auth-box .game-logo { 
-  font-family:'Titan One',cursive; 
-  font-size:36px; 
-  color:#ffd700; 
-  text-shadow:3px 3px 0 #e94560; 
-  margin-bottom:5px;
+  font-family:'Titan One',cursive; font-size:32px; color:#ffd700;
+  text-shadow:3px 3px 0 #e94560; margin-bottom:5px;
 }
 .auth-box .game-logo span { color:#e94560; }
-.auth-box p { color:#aaa; margin-bottom:25px; font-size:13px; }
-.tabs { 
-  display:flex; 
-  margin-bottom:20px; 
-  background:#0d0d1a; 
-  border-radius:10px; 
-  overflow:hidden; 
-  border:1px solid #2a3050;
-}
-.tab { 
-  flex:1; 
-  padding:12px; 
-  background:transparent; 
-  border:none; 
-  color:#aaa; 
-  cursor:pointer; 
-  font-size:14px; 
-  font-weight:600;
-  transition:.2s; 
-}
-.tab.active { 
-  background:linear-gradient(135deg,#e94560,#ff6b81); 
-  color:#fff; 
-}
-.auth-box input { 
-  width:100%; 
-  padding:14px; 
-  margin:8px 0; 
-  border:none; 
-  border-radius:10px; 
-  background:#0d0d1a; 
-  color:#fff; 
-  font-size:15px; 
-  border:2px solid #2a3050; 
-  transition:.2s; 
-}
+.auth-box p { color:#aaa; margin-bottom:20px; font-size:12px; }
+.tabs { display:flex; margin-bottom:15px; background:#0d0d1a; border-radius:8px; overflow:hidden; border:1px solid #2a3050; }
+.tab { flex:1; padding:10px; background:transparent; border:none; color:#aaa; cursor:pointer; font-size:13px; font-weight:600; }
+.tab.active { background:linear-gradient(135deg,#e94560,#ff6b81); color:#fff; }
+.auth-box input { width:100%; padding:12px; margin:6px 0; border:none; border-radius:8px; background:#0d0d1a; color:#fff; font-size:14px; border:2px solid #2a3050; }
 .auth-box input:focus { outline:none; border-color:#ffd700; }
 .auth-box button[type="button"] { 
-  width:100%; 
-  padding:14px; 
-  margin-top:12px; 
-  border:none; 
-  border-radius:10px; 
-  background:linear-gradient(135deg,#e94560,#ff6b81); 
-  color:#fff; 
-  font-size:16px; 
-  cursor:pointer; 
-  font-weight:bold; 
-  transition:.2s; 
-  box-shadow:0 4px 15px rgba(233,69,96,.3);
-}
-.auth-box button[type="button"]:hover { 
-  transform:translateY(-2px); 
-  box-shadow:0 6px 20px rgba(233,69,96,.4);
+  width:100%; padding:12px; margin-top:10px; border:none; border-radius:8px;
+  background:linear-gradient(135deg,#e94560,#ff6b81); color:#fff;
+  font-size:15px; cursor:pointer; font-weight:bold;
 }
 
 /* ===== اختيار الصعوبة ===== */
 .difficulty-select { 
+  max-width:700px; margin:30px auto; 
   background:linear-gradient(180deg,#1a1a3e,#0d0d1a); 
-  padding:25px; 
-  border-radius:20px; 
-  border:2px solid #2a3050; 
-  margin-bottom:15px; 
-  text-align:center;
-  box-shadow:0 10px 30px rgba(0,0,0,.3);
+  padding:25px; border-radius:16px; border:2px solid #2a3050;
 }
 .difficulty-select h3 { 
-  font-family:'Titan One',cursive; 
-  color:#ffd700; 
-  margin-bottom:20px; 
-  font-size:22px; 
-  text-shadow:2px 2px 0 rgba(0,0,0,.3);
+  font-family:'Titan One',cursive; color:#ffd700; 
+  margin-bottom:15px; font-size:20px; text-align:center;
 }
-.diff-grid { 
-  display:grid; 
-  grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); 
-  gap:12px; 
-  margin:15px 0; 
-}
+.diff-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:15px 0; }
+@media(max-width:600px){ .diff-grid{grid-template-columns:repeat(2,1fr)} }
 .diff-card { 
-  background:linear-gradient(180deg,#1a1a3e,#0d0d1a); 
-  padding:18px; 
-  border-radius:14px; 
-  border:2px solid #2a3050; 
-  cursor:pointer; 
-  transition:.3s; 
-  text-align:center;
-  position:relative;
-  overflow:hidden;
+  background:#0d0d1a; padding:15px; border-radius:12px; 
+  border:2px solid #2a3050; cursor:pointer; transition:.3s; text-align:center;
 }
-.diff-card::before {
-  content:'';
-  position:absolute;
-  top:0; left:0; right:0; height:3px;
-  background:transparent;
-  transition:.3s;
-}
-.diff-card:hover { 
-  border-color:#e94560; 
-  transform:translateY(-4px); 
-  box-shadow:0 8px 25px rgba(233,69,96,.2);
-}
-.diff-card.selected { 
-  border-color:#4ecca3; 
-  background:linear-gradient(180deg,#1a3a2a,#0d1a12);
-  box-shadow:0 0 20px rgba(78,204,163,.2);
-}
-.diff-card.selected::before { background:#4ecca3; }
-.diff-card h4 { color:#fff; margin-bottom:8px; font-size:16px; font-weight:700; }
-.diff-card .steps { color:#aaa; font-size:12px; margin-bottom:4px; }
-.diff-card .risk { color:#e94560; font-size:12px; font-weight:700; }
-.diff-card .max-win { color:#4ecca3; font-size:12px; margin-top:5px; font-weight:600; }
+.diff-card:hover { border-color:#e94560; transform:translateY(-3px); }
+.diff-card.selected { border-color:#4ecca3; background:#1a2f1a; }
+.diff-card h4 { color:#fff; margin-bottom:6px; font-size:15px; }
+.diff-card .steps { color:#aaa; font-size:11px; }
+.diff-card .risk { color:#e94560; font-size:11px; font-weight:700; }
+.diff-card .max-win { color:#4ecca3; font-size:11px; margin-top:4px; }
 
-.bet-area { 
-  display:flex; 
-  gap:10px; 
-  justify-content:center; 
-  align-items:center; 
-  margin:20px 0; 
-  flex-wrap:wrap;
-}
+.bet-area { display:flex; gap:10px; justify-content:center; align-items:center; margin:15px 0; }
 .bet-area label { color:#aaa; font-size:13px; }
-.bet-area input { 
-  width:140px; 
-  padding:12px; 
-  border:none; 
-  border-radius:10px; 
-  background:#0d0d1a; 
-  color:#fff; 
-  font-size:18px; 
-  text-align:center; 
-  border:2px solid #2a3050;
-  font-weight:700;
-}
-.bet-area input:focus { outline:none; border-color:#ffd700; }
-
+.bet-area input { width:120px; padding:10px; border:none; border-radius:8px; background:#0d0d1a; color:#fff; font-size:16px; text-align:center; border:2px solid #2a3050; }
 .play-btn { 
+  display:block; margin:15px auto 0;
   background:linear-gradient(135deg,#4ecca3,#3db892); 
-  color:#0d0d1a; 
-  border:none; 
-  padding:16px 50px; 
-  border-radius:14px; 
-  font-size:20px; 
-  font-weight:800; 
-  cursor:pointer; 
-  transition:.2s; 
-  box-shadow:0 4px 15px rgba(78,204,163,.3);
-  font-family:'Titan One',cursive;
-  letter-spacing:1px;
+  color:#0d0d1a; border:none; padding:14px 40px; border-radius:12px;
+  font-size:18px; font-weight:800; cursor:pointer;
+  font-family:'Titan One',cursive; letter-spacing:1px;
 }
-.play-btn:hover { 
-  transform:translateY(-3px); 
-  box-shadow:0 8px 25px rgba(78,204,163,.4);
-}
-.play-btn:disabled { 
-  background:#333; 
-  color:#555; 
-  cursor:not-allowed; 
-  transform:none;
-  box-shadow:none;
+.play-btn:disabled { background:#333; color:#555; cursor:not-allowed; }
+
+/* ===== منطقة اللعب الأفقية ===== */
+.game-wrapper { 
+  position:relative; width:100%; height:calc(100vh - 50px);
+  overflow:hidden; background:#3a3a4e;
 }
 
-/* ===== منطقة اللعب الحقيقية ===== */
-.game-board { 
-  background:linear-gradient(180deg,#2a2a3e,#1a1a2e); 
-  border-radius:20px; 
-  border:2px solid #3a3a5e; 
-  overflow:hidden;
-  box-shadow:0 15px 40px rgba(0,0,0,.4);
+/* الكاميرا/العالم */
+.game-world { 
+  position:absolute; top:0; left:0; 
+  height:100%; display:flex; align-items:center;
+  transition:transform .5s cubic-bezier(.25,.46,.45,.94);
 }
 
-.game-header { 
-  display:flex; 
-  justify-content:space-between; 
-  align-items:center; 
-  padding:15px 20px; 
-  background:#0d0d1a; 
-  border-bottom:2px solid #3a3a5e;
-}
-.game-header .left { display:flex; align-items:center; gap:15px; }
-.game-header .logo-small { 
-  font-family:'Titan One',cursive; 
-  font-size:18px; 
-  color:#ffd700;
-}
-.game-header .info { color:#aaa; font-size:12px; }
-.game-header .balance { 
-  background:linear-gradient(135deg,#ffd700,#ffaa00); 
-  padding:8px 16px; 
-  border-radius:20px; 
-  color:#1a1a2e; 
-  font-weight:bold; 
-  font-size:14px;
+/* المشهد */
+.scene { 
+  position:relative; height:100%; display:flex; align-items:center;
 }
 
-/* الطريق الرئيسي */
-.road-scene { 
-  position:relative; 
-  padding:30px 20px; 
-  background:#4a4a5e;
-  min-height:300px;
-}
-.road-lanes { 
-  display:flex; 
-  flex-direction:column; 
-  gap:0; 
+/* الرصيف */
+.sidewalk { 
+  width:120px; height:100%; 
+  background:linear-gradient(180deg,#6a6a7e,#5a5a6e);
+  display:flex; align-items:center; justify-content:center;
+  border-right:4px solid #ffd700;
   position:relative;
 }
+.sidewalk-start { border-right:4px solid #4ecca3; }
+.sidewalk-end { border-left:4px solid #ffd700; border-right:none; }
+.sidewalk-icon { font-size:50px; filter:drop-shadow(0 4px 8px rgba(0,0,0,.5)); }
+.sidewalk-label { 
+  position:absolute; bottom:20px; font-size:12px; color:#fff;
+  font-weight:700; text-shadow:0 2px 4px rgba(0,0,0,.5);
+}
+
+/* الطريق */
+.road { 
+  width:200px; height:100%; 
+  background:#4a4a5e;
+  position:relative;
+  display:flex; align-items:center; justify-content:center;
+}
+.road::before {
+  content:''; position:absolute; top:0; bottom:0; left:50%; width:4px;
+  background:repeating-linear-gradient(0deg,transparent 0,transparent 20px,rgba(255,255,255,.3) 20px,rgba(255,255,255,.3) 40px);
+  transform:translateX(-50%);
+}
+
+/* المسارات */
 .lane { 
-  display:flex; 
-  align-items:center; 
-  justify-content:center; 
-  height:70px; 
-  position:relative;
-  background:#5a5a6e;
-  border-bottom:2px dashed rgba(255,255,255,.2);
+  position:absolute; left:0; right:0; height:33.33%;
+  border-bottom:2px dashed rgba(255,255,255,.15);
 }
-.lane:last-child { border-bottom:none; }
-.lane.road-lane { 
-  background:#4a4a5e;
-  background-image:repeating-linear-gradient(90deg,transparent 0,transparent 30px,rgba(255,255,255,.15) 30px,rgba(255,255,255,.15) 35px);
-}
-.lane.sidewalk { 
-  background:#6a6a7e; 
-  height:50px;
-  background-image:repeating-linear-gradient(90deg,transparent 0,transparent 20px,rgba(255,255,255,.1) 20px,rgba(255,255,255,.1) 22px);
-}
+.lane:nth-child(1) { top:0; }
+.lane:nth-child(2) { top:33.33%; }
+.lane:nth-child(3) { top:66.66%; border-bottom:none; }
 
-/* البلاطات والعملات */
-.step-item { 
-  width:55px; 
-  height:55px; 
+/* العملات */
+.coin-spot { 
+  position:absolute; width:50px; height:50px; 
   border-radius:50%; 
-  display:flex; 
-  align-items:center; 
-  justify-content:center; 
-  font-size:14px; 
-  font-weight:700;
-  position:relative;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; color:#1a1a2e;
   transition:all .3s;
-  border:3px solid transparent;
+  z-index:10;
 }
-.step-item.hidden { 
-  background:#3a3a4e; 
-  border-color:#2a2a3e; 
-  color:transparent;
-  box-shadow:inset 0 2px 10px rgba(0,0,0,.3);
+.coin-spot.hidden { 
+  background:#3a3a4e; border:2px solid #2a2a3e; color:transparent;
+  box-shadow:inset 0 2px 8px rgba(0,0,0,.3);
 }
-.step-item.hidden::after {
-  content:'?';
-  color:#555;
-  font-size:20px;
-}
-.step-item.safe { 
+.coin-spot.hidden::after { content:'?'; color:#555; font-size:18px; }
+.coin-spot.safe { 
   background:linear-gradient(135deg,#ffd700,#ffaa00); 
-  border-color:#fff; 
-  color:#1a1a2e;
+  border:3px solid #fff;
   box-shadow:0 0 15px rgba(255,215,0,.4),0 4px 10px rgba(0,0,0,.3);
-  animation:coinSpin .5s ease-out;
+  animation:coinPop .4s ease-out;
 }
-.step-item.safe::before {
-  content:'';
-  position:absolute;
-  inset:-5px;
-  border-radius:50%;
-  border:2px solid rgba(255,215,0,.3);
-  animation:ringPulse 1s infinite;
+@keyframes coinPop { 
+  0%{transform:scale(0)} 60%{transform:scale(1.2)} 100%{transform:scale(1)} 
 }
-@keyframes coinSpin { 
-  0%{transform:rotateY(0) scale(0)} 
-  50%{transform:rotateY(180deg) scale(1.2)} 
-  100%{transform:rotateY(360deg) scale(1)} 
-}
-@keyframes ringPulse { 
-  0%{transform:scale(1);opacity:1} 
-  100%{transform:scale(1.3);opacity:0} 
-}
-.step-item.car { 
+.coin-spot.car { 
   background:linear-gradient(135deg,#e94560,#ff1744); 
-  border-color:#fff; 
+  border:3px solid #fff;
   font-size:28px;
   box-shadow:0 0 20px rgba(233,69,96,.5);
-  animation:carCrash .4s ease-out;
+  animation:carAppear .3s ease-out;
 }
-@keyframes carCrash { 
-  0%{transform:scale(0) rotate(0)} 
-  50%{transform:scale(1.3) rotate(10deg)} 
-  100%{transform:scale(1) rotate(0)} 
+@keyframes carAppear { 
+  0%{transform:scale(0) rotate(-10deg)} 100%{transform:scale(1) rotate(0)} 
 }
-.step-item.current { 
+.coin-spot.current { 
   border-color:#4ecca3; 
-  box-shadow:0 0 20px rgba(78,204,163,.5);
+  box-shadow:0 0 25px rgba(78,204,163,.6);
   transform:scale(1.15);
-  z-index:10;
+  z-index:20;
 }
 
 /* الدجاجة */
-.chicken-char { 
-  font-size:40px; 
-  position:absolute; 
-  top:50%; 
-  left:50%; 
-  transform:translate(-50%,-50%); 
-  z-index:20;
+.chicken { 
+  position:absolute; width:60px; height:60px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:45px; z-index:30;
   filter:drop-shadow(0 4px 8px rgba(0,0,0,.5));
   transition:all .4s cubic-bezier(.34,1.56,.64,1);
 }
-.chicken-char.dead { 
-  animation:splat .6s forwards; 
-  font-size:30px;
+.chicken.walk { animation:chickenWalk .3s infinite alternate; }
+@keyframes chickenWalk { 
+  0%{transform:translateY(0) rotate(-5deg)} 
+  100%{transform:translateY(-8px) rotate(5deg)} 
 }
-@keyframes splat { 
-  0%{transform:translate(-50%,-50%) scale(1)} 
-  30%{transform:translate(-50%,-50%) scale(1.4)} 
-  60%{transform:translate(-50%,-50%) scale(.8) rotate(45deg)} 
-  100%{transform:translate(-50%,-50%) scale(0) rotate(90deg);opacity:0} 
+.chicken.dead { 
+  animation:chickenDie .6s forwards; font-size:35px;
 }
-.chicken-char.win { 
-  animation:victory .8s infinite alternate; 
+@keyframes chickenDie { 
+  0%{transform:scale(1) rotate(0)} 
+  30%{transform:scale(1.3) rotate(20deg)} 
+  60%{transform:scale(.8) rotate(180deg)} 
+  100%{transform:scale(0) rotate(360deg);opacity:0} 
 }
-@keyframes victory { 
-  0%{transform:translate(-50%,-50%) scale(1)} 
-  100%{transform:translate(-50%,-50%) scale(1.2) translateY(-10px)} 
+.chicken.win { animation:chickenWin .8s infinite alternate; }
+@keyframes chickenWin { 
+  0%{transform:translateY(0) scale(1)} 
+  100%{transform:translateY(-15px) scale(1.2)} 
 }
 
 /* الحواجز */
 .barrier { 
-  position:absolute; 
-  left:0; 
-  right:0; 
-  height:12px; 
-  background:repeating-linear-gradient(90deg,#ffd700 0,#ffd700 15px,#1a1a2e 15px,#1a1a2e 30px);
-  border:2px solid #ffaa00;
-  border-radius:6px;
-  z-index:5;
+  position:absolute; left:0; right:0; height:14px;
+  background:repeating-linear-gradient(90deg,#ffd700 0,#ffd700 12px,#1a1a2e 12px,#1a1a2e 24px);
+  border:2px solid #ffaa00; border-radius:7px;
+  z-index:15;
 }
 
-/* المضاعف العلوي */
-.mult-display { 
-  text-align:center; 
-  padding:15px; 
-  background:#0d0d1a;
+/* المضاعف العائم */
+.float-mult { 
+  position:fixed; top:70px; left:50%; transform:translateX(-50%);
+  background:linear-gradient(135deg,#1a1a3e,#0d0d1a);
+  padding:10px 30px; border-radius:15px;
+  border:2px solid #4ecca3;
+  box-shadow:0 5px 20px rgba(0,0,0,.5);
+  z-index:100;
+  text-align:center;
 }
-.mult-value { 
-  font-family:'Titan One',cursive; 
-  font-size:56px; 
-  color:#4ecca3; 
-  text-shadow:0 0 30px rgba(78,204,163,.3),3px 3px 0 rgba(0,0,0,.3);
-  transition:all .3s;
+.float-mult .value { 
+  font-family:'Titan One',cursive; font-size:36px; color:#4ecca3;
+  text-shadow:0 0 20px rgba(78,204,163,.3);
 }
-.mult-value.crash { color:#e94560; text-shadow:0 0 30px rgba(233,69,96,.3); }
-.mult-value.win { color:#ffd700; text-shadow:0 0 30px rgba(255,215,0,.3); }
-.mult-label { color:#aaa; font-size:13px; margin-top:5px; }
+.float-mult .label { color:#aaa; font-size:11px; margin-top:2px; }
+.float-mult.crash { border-color:#e94560; }
+.float-mult.crash .value { color:#e94560; }
+.float-mult.win { border-color:#ffd700; }
+.float-mult.win .value { color:#ffd700; }
 
 /* شريط التحكم السفلي */
 .control-bar { 
-  display:grid; 
-  grid-template-columns:1fr 1fr; 
-  gap:15px; 
-  padding:20px; 
-  background:#0d0d1a; 
-  border-top:2px solid #3a3a5e;
+  position:fixed; bottom:0; left:0; right:0;
+  display:grid; grid-template-columns:1fr 1fr; gap:10px;
+  padding:12px 16px; background:#0d0d1a;
+  border-top:2px solid #3a3a5e; z-index:100;
 }
-@media(max-width:600px){ .control-bar { grid-template-columns:1fr; } }
-
-.control-left { display:flex; flex-direction:column; gap:10px; }
-.control-left .bet-row { display:flex; gap:8px; align-items:center; }
-.control-left .bet-row label { color:#aaa; font-size:12px; min-width:60px; }
+.control-left { display:flex; flex-direction:column; gap:6px; }
+.control-left .bet-row { display:flex; gap:6px; align-items:center; }
+.control-left .bet-row label { color:#aaa; font-size:11px; }
 .control-left .bet-row input { 
-  flex:1; 
-  padding:10px; 
-  border:none; 
-  border-radius:8px; 
-  background:#1a1a2e; 
-  color:#fff; 
-  font-size:14px; 
-  border:1px solid #2a3050;
+  flex:1; padding:8px; border:none; border-radius:6px;
+  background:#1a1a2e; color:#fff; font-size:13px; border:1px solid #2a3050;
 }
-.control-left .bet-row input:focus { outline:none; border-color:#ffd700; }
-
-.diff-buttons { display:flex; gap:6px; margin-top:5px; }
-.diff-btn { 
-  flex:1; 
-  padding:8px; 
-  border:1px solid #2a3050; 
-  border-radius:8px; 
-  background:#1a1a2e; 
-  color:#aaa; 
-  cursor:pointer; 
-  font-size:11px; 
-  font-weight:600;
-  transition:.2s;
+.diff-btns { display:flex; gap:4px; }
+.diff-btns button { 
+  flex:1; padding:6px; border:1px solid #2a3050; border-radius:6px;
+  background:#1a1a2e; color:#aaa; cursor:pointer; font-size:10px; font-weight:600;
 }
-.diff-btn:hover { border-color:#e94560; color:#fff; }
-.diff-btn.active { 
-  background:linear-gradient(135deg,#e94560,#ff6b81); 
-  color:#fff; 
-  border-color:#e94560;
+.diff-btns button.active { 
+  background:linear-gradient(135deg,#e94560,#ff6b81); color:#fff; border-color:#e94560;
 }
 
-.control-right { display:flex; flex-direction:column; gap:10px; }
+.control-right { display:flex; flex-direction:column; gap:6px; }
 .cashout-display { 
   background:linear-gradient(135deg,#ffd700,#ffaa00); 
-  padding:12px; 
-  border-radius:10px; 
-  text-align:center; 
-  color:#1a1a2e;
+  padding:8px; border-radius:8px; text-align:center; color:#1a1a2e;
 }
-.cashout-display .label { font-size:11px; font-weight:700; text-transform:uppercase; }
-.cashout-display .value { font-size:20px; font-weight:800; }
-
-.action-buttons { display:flex; gap:10px; }
+.cashout-display .label { font-size:10px; font-weight:700; }
+.cashout-display .value { font-size:16px; font-weight:800; }
+.action-btns { display:flex; gap:6px; }
 .go-btn { 
-  flex:1; 
-  padding:14px; 
-  border:none; 
-  border-radius:10px; 
-  background:linear-gradient(135deg,#4ecca3,#3db892); 
-  color:#0d0d1a; 
-  font-size:18px; 
-  font-weight:800; 
-  cursor:pointer; 
-  transition:.2s;
+  flex:1; padding:12px; border:none; border-radius:8px;
+  background:linear-gradient(135deg,#4ecca3,#3db892); color:#0d0d1a;
+  font-size:16px; font-weight:800; cursor:pointer;
   font-family:'Titan One',cursive;
-  letter-spacing:1px;
-  box-shadow:0 4px 15px rgba(78,204,163,.3);
 }
-.go-btn:hover:not(:disabled) { 
-  transform:translateY(-2px); 
-  box-shadow:0 6px 20px rgba(78,204,163,.4);
-}
-.go-btn:disabled { background:#333; color:#555; cursor:not-allowed; transform:none; box-shadow:none; }
-
+.go-btn:disabled { background:#333; color:#555; cursor:not-allowed; }
 .cashout-btn { 
-  flex:1; 
-  padding:14px; 
-  border:none; 
-  border-radius:10px; 
-  background:linear-gradient(135deg,#ffd700,#ffaa00); 
-  color:#1a1a2e; 
-  font-size:16px; 
-  font-weight:800; 
-  cursor:pointer; 
-  transition:.2s;
-  box-shadow:0 4px 15px rgba(255,215,0,.3);
+  flex:1; padding:12px; border:none; border-radius:8px;
+  background:linear-gradient(135deg,#ffd700,#ffaa00); color:#1a1a2e;
+  font-size:14px; font-weight:800; cursor:pointer;
 }
-.cashout-btn:hover:not(:disabled) { 
-  transform:translateY(-2px); 
-  box-shadow:0 6px 20px rgba(255,215,0,.4);
-}
-.cashout-btn:disabled { background:#333; color:#555; cursor:not-allowed; transform:none; box-shadow:none; }
+.cashout-btn:disabled { background:#333; color:#555; cursor:not-allowed; }
 
-.game-status { 
-  text-align:center; 
-  padding:10px; 
-  font-size:14px; 
-  color:#aaa; 
-  min-height:40px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+/* المحفظة */
+.wallet-panel { 
+  position:fixed; right:10px; top:60px;
+  background:linear-gradient(180deg,#1a1a3e,#0d0d1a);
+  padding:12px; border-radius:12px; border:2px solid #2a3050;
+  width:180px; z-index:50;
 }
-
-/* ===== المحفظة ===== */
-.wallet-section { 
-  background:linear-gradient(180deg,#1a1a3e,#0d0d1a); 
-  padding:20px; 
-  border-radius:16px; 
-  border:2px solid #2a3050; 
-  margin-top:15px;
-}
-.wallet-section h3 { 
-  font-family:'Titan One',cursive; 
-  color:#ffd700; 
-  margin-bottom:15px; 
-  font-size:18px;
-}
-.wallet-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-.wallet-actions input { 
-  width:160px; 
-  padding:12px; 
-  border:none; 
-  border-radius:10px; 
-  background:#0d0d1a; 
-  color:#fff; 
-  font-size:15px; 
-  border:2px solid #2a3050;
-}
-.wallet-actions input:focus { outline:none; border-color:#ffd700; }
-.wallet-actions button { 
-  padding:12px 18px; 
-  border:none; 
-  border-radius:10px; 
-  background:linear-gradient(135deg,#e94560,#ff6b81); 
-  color:#fff; 
-  cursor:pointer; 
-  font-size:14px; 
-  font-weight:600;
-  transition:.2s;
-}
-.wallet-actions button:hover { transform:translateY(-2px); box-shadow:0 4px 15px rgba(233,69,96,.3); }
-
-/* ===== الإدارة ===== */
-.admin-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
-.admin-header h2 { font-family:'Titan One',cursive; color:#ffd700; }
-.admin-tabs { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
-.admin-tabs button { 
-  padding:10px 20px; 
-  border:none; 
-  border-radius:10px; 
-  background:#1a1a2e; 
-  color:#aaa; 
-  cursor:pointer; 
-  font-size:14px; 
-  font-weight:600;
-  transition:.2s; 
-  border:1px solid #2a3050;
-}
-.admin-tabs button:hover { border-color:#e94560; color:#fff; }
-.admin-tabs button.active { 
-  background:linear-gradient(135deg,#e94560,#ff6b81); 
-  color:#fff; 
-  border-color:#e94560;
-}
-.admin-content { 
-  background:#0d0d1a; 
-  border-radius:12px; 
-  overflow-x:auto; 
-  border:1px solid #2a3050; 
-  max-height:400px; 
-  overflow-y:auto;
-}
-table { width:100%; border-collapse:collapse; font-size:13px; }
-th, td { padding:12px; text-align:right; border-bottom:1px solid #2a3050; white-space:nowrap; }
-th { color:#ffd700; background:#1a1a2e; position:sticky; top:0; font-weight:700; }
-tr:hover { background:#1a1a3e; }
-.admin-action { 
-  margin-top:20px; 
-  background:linear-gradient(180deg,#1a1a3e,#0d0d1a); 
-  padding:20px; 
-  border-radius:16px; 
-  border:2px solid #2a3050;
-}
-.admin-action h4 { font-family:'Titan One',cursive; color:#ffd700; margin-bottom:12px; }
-.admin-action input { 
-  width:150px; 
-  padding:12px; 
-  margin-left:8px; 
-  border:none; 
-  border-radius:10px; 
-  background:#0d0d1a; 
-  color:#fff; 
-  border:2px solid #2a3050;
-}
-.admin-action button { 
-  margin-left:8px; 
-  padding:10px 18px; 
-  border:none; 
-  border-radius:10px; 
-  cursor:pointer; 
-  font-size:14px; 
-  font-weight:600;
-  transition:.2s;
-}
-.btn-add { background:linear-gradient(135deg,#4ecca3,#3db892); color:#0d0d1a; }
-.btn-remove { background:linear-gradient(135deg,#e94560,#ff6b81); color:#fff; }
+.wallet-panel h4 { color:#ffd700; font-size:12px; margin-bottom:8px; font-family:'Titan One',cursive; }
+.wallet-panel input { width:100%; padding:8px; margin-bottom:6px; border:none; border-radius:6px; background:#0d0d1a; color:#fff; font-size:12px; border:1px solid #2a3050; }
+.wallet-panel button { width:100%; padding:8px; margin-bottom:4px; border:none; border-radius:6px; background:linear-gradient(135deg,#e94560,#ff6b81); color:#fff; cursor:pointer; font-size:12px; font-weight:600; }
 
 /* Toast */
 .toast { 
-  position:fixed; 
-  bottom:30px; 
-  left:50%; 
-  transform:translateX(-50%); 
-  background:linear-gradient(135deg,#1a1a3e,#0d0d1a); 
-  color:#fff; 
-  padding:14px 28px; 
-  border-radius:12px; 
-  border:2px solid #ffd700; 
-  box-shadow:0 10px 30px rgba(0,0,0,.5); 
-  z-index:999; 
-  animation:slideUp .3s; 
-  display:none; 
-  font-size:14px;
-  font-weight:600;
+  position:fixed; bottom:100px; left:50%; transform:translateX(-50%);
+  background:linear-gradient(135deg,#1a1a3e,#0d0d1a);
+  color:#fff; padding:12px 24px; border-radius:10px;
+  border:2px solid #ffd700; box-shadow:0 10px 30px rgba(0,0,0,.5);
+  z-index:999; display:none; font-size:13px; font-weight:600;
 }
-@keyframes slideUp { from{opacity:0;transform:translate(-50%,20px)} to{opacity:1;transform:translate(-50%,0)} }
+
+/* الإدارة */
+.admin-page { padding:60px 20px 20px; max-width:900px; margin:0 auto; }
+.admin-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; }
+.admin-header h2 { font-family:'Titan One',cursive; color:#ffd700; }
+.admin-tabs { display:flex; gap:6px; margin-bottom:12px; }
+.admin-tabs button { padding:8px 16px; border:1px solid #2a3050; border-radius:8px; background:#1a1a2e; color:#aaa; cursor:pointer; font-size:12px; font-weight:600; }
+.admin-tabs button.active { background:linear-gradient(135deg,#e94560,#ff6b81); color:#fff; border-color:#e94560; }
+.admin-content { background:#0d0d1a; border-radius:10px; overflow-x:auto; border:1px solid #2a3050; max-height:350px; overflow-y:auto; }
+table { width:100%; border-collapse:collapse; font-size:12px; }
+th, td { padding:10px; text-align:right; border-bottom:1px solid #2a3050; }
+th { color:#ffd700; background:#1a1a2e; position:sticky; top:0; }
+.admin-action { margin-top:15px; background:#1a1a2e; padding:15px; border-radius:12px; border:2px solid #2a3050; }
+.admin-action h4 { color:#ffd700; margin-bottom:10px; font-family:'Titan One',cursive; }
+.admin-action input { width:140px; padding:10px; margin-left:6px; border:none; border-radius:8px; background:#0d0d1a; color:#fff; border:1px solid #2a3050; }
+.admin-action button { margin-left:6px; padding:8px 14px; border:none; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; }
+.btn-add { background:linear-gradient(135deg,#4ecca3,#3db892); color:#0d0d1a; }
+.btn-remove { background:linear-gradient(135deg,#e94560,#ff6b81); color:#fff; }
 
 /* Responsive */
 @media(max-width:600px){
-  .mult-value{font-size:40px}
-  .step-item{width:45px;height:45px;font-size:12px}
-  .chicken-char{font-size:32px}
-  .auth-box{padding:20px;margin:20px}
-  .top-bar{flex-wrap:wrap;gap:8px}
-  .go-btn,.cashout-btn{font-size:14px;padding:12px}
+  .float-mult .value{font-size:28px}
+  .coin-spot{width:40px;height:40px;font-size:9px}
+  .chicken{font-size:35px}
+  .sidewalk{width:80px}
+  .road{width:150px}
+  .wallet-panel{width:150px;right:5px;top:55px}
+  .wallet-panel h4{font-size:10px}
 }
 </style>
 <base target="_blank">
@@ -695,28 +365,30 @@ tr:hover { background:#1a1a3e; }
     <span id="usernameDisplay"></span>
     <span class="balance-box" id="balanceDisplay">0.00 $</span>
     <button class="top-btn" onclick="logout()">خروج</button>
-    <button class="top-btn admin" id="adminBtn" onclick="showPage('adminPage')">⚙️ الإدارة</button>
+    <button class="top-btn admin" id="adminBtn" onclick="showPage('adminPage')">⚙️</button>
   </div>
 </header>
 
 <!-- تسجيل الدخول -->
 <div id="authPage" class="page active">
-  <div class="auth-box">
-    <div class="game-logo">CHICKEN<span>ROAD</span></div>
-    <p>🐔 ساعد الدجاجة لتعبر الطريق وتتجنب السيارات!</p>
-    <div class="tabs">
-      <button class="tab active" onclick="switchTab('login')">دخول</button>
-      <button class="tab" onclick="switchTab('register')">تسجيل</button>
-    </div>
-    <div id="loginForm">
-      <input type="text" id="loginUser" placeholder="اسم المستخدم">
-      <input type="password" id="loginPass" placeholder="كلمة المرور">
-      <button type="button" onclick="login()">🎮 دخول</button>
-    </div>
-    <div id="registerForm" style="display:none">
-      <input type="text" id="regUser" placeholder="اسم المستخدم">
-      <input type="password" id="regPass" placeholder="كلمة المرور">
-      <button type="button" onclick="register()">📝 تسجيل حساب</button>
+  <div style="display:flex;align-items:center;justify-content:center;height:100vh;padding-top:50px">
+    <div class="auth-box">
+      <div class="game-logo">CHICKEN<span>ROAD</span></div>
+      <p>🐔 ساعد الدجاجة تعبر الطريق!</p>
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('login')">دخول</button>
+        <button class="tab" onclick="switchTab('register')">تسجيل</button>
+      </div>
+      <div id="loginForm">
+        <input type="text" id="loginUser" placeholder="اسم المستخدم">
+        <input type="password" id="loginPass" placeholder="كلمة المرور">
+        <button type="button" onclick="login()">🎮 دخول</button>
+      </div>
+      <div id="registerForm" style="display:none">
+        <input type="text" id="regUser" placeholder="اسم المستخدم">
+        <input type="password" id="regPass" placeholder="كلمة المرور">
+        <button type="button" onclick="register()">📝 تسجيل</button>
+      </div>
     </div>
   </div>
 </div>
@@ -725,125 +397,116 @@ tr:hover { background:#1a1a3e; }
 <div id="gamePage" class="page">
 
   <!-- اختيار الصعوبة -->
-  <div id="difficultySelect" class="difficulty-select">
-    <h3>🎮 اختر مستوى الصعوبة</h3>
-    <div class="diff-grid">
-      <div class="diff-card" data-diff="easy" onclick="selectDiff('easy')">
-        <h4>🟢 سهل</h4>
-        <div class="steps">24 خطوة</div>
-        <div class="risk">خطر: 4%</div>
-        <div class="max-win">x24.50</div>
+  <div id="difficultySelect" style="padding:20px">
+    <div class="difficulty-select">
+      <h3>🎮 اختر مستوى الصعوبة</h3>
+      <div class="diff-grid">
+        <div class="diff-card" data-diff="easy" onclick="selectDiff('easy')">
+          <h4>🟢 سهل</h4>
+          <div class="steps">24 خطوة</div>
+          <div class="risk">خطر: 4%</div>
+          <div class="max-win">x24.50</div>
+        </div>
+        <div class="diff-card" data-diff="medium" onclick="selectDiff('medium')">
+          <h4>🟡 متوسط</h4>
+          <div class="steps">22 خطوة</div>
+          <div class="risk">خطر: 12%</div>
+          <div class="max-win">x2,254</div>
+        </div>
+        <div class="diff-card" data-diff="hard" onclick="selectDiff('hard')">
+          <h4>🔴 صعب</h4>
+          <div class="steps">20 خطوة</div>
+          <div class="risk">خطر: 20%</div>
+          <div class="max-win">x52,067</div>
+        </div>
+        <div class="diff-card" data-diff="hardcore" onclick="selectDiff('hardcore')">
+          <h4>⚫ هاردكور</h4>
+          <div class="steps">15 خطوة</div>
+          <div class="risk">خطر: 40%</div>
+          <div class="max-win">x3,203,384</div>
+        </div>
       </div>
-      <div class="diff-card" data-diff="medium" onclick="selectDiff('medium')">
-        <h4>🟡 متوسط</h4>
-        <div class="steps">22 خطوة</div>
-        <div class="risk">خطر: 12%</div>
-        <div class="max-win">x2,254</div>
+      <div class="bet-area">
+        <label>💰 الرهان:</label>
+        <input type="number" id="betAmount" value="10" min="1" step="1">
       </div>
-      <div class="diff-card" data-diff="hard" onclick="selectDiff('hard')">
-        <h4>🔴 صعب</h4>
-        <div class="steps">20 خطوة</div>
-        <div class="risk">خطر: 20%</div>
-        <div class="max-win">x52,067</div>
-      </div>
-      <div class="diff-card" data-diff="hardcore" onclick="selectDiff('hardcore')">
-        <h4>⚫ هاردكور</h4>
-        <div class="steps">15 خطوة</div>
-        <div class="risk">خطر: 40%</div>
-        <div class="max-win">x3,203,384</div>
-      </div>
+      <button class="play-btn" id="startBtn" onclick="startGame()" disabled>▶ PLAY</button>
     </div>
-    <div class="bet-area">
-      <label>💰 مبلغ الرهان:</label>
-      <input type="number" id="betAmount" value="10" min="1" step="1">
-    </div>
-    <button class="play-btn" id="startBtn" onclick="startGame()" disabled>▶ PLAY</button>
   </div>
 
-  <!-- منطقة اللعب -->
+  <!-- منطقة اللعب الأفقية -->
   <div id="playArea" style="display:none">
-    <div class="game-board">
-
-      <div class="game-header">
-        <div class="left">
-          <div class="logo-small">CHICKEN<span style="color:#e94560">ROAD</span></div>
-          <div class="info" id="stepInfo">الخطوة: 0 / 24</div>
-        </div>
-        <div class="balance" id="headerBalance">0.00 $</div>
+    <div class="game-wrapper" id="gameWrapper">
+      <div class="game-world" id="gameWorld">
+        <div class="scene" id="scene"></div>
       </div>
-
-      <div class="mult-display">
-        <div class="mult-value" id="multValue">1.00x</div>
-        <div class="mult-label" id="multLabel">اضغط GO للبدء</div>
-      </div>
-
-      <div class="road-scene" id="roadScene">
-        <div class="road-lanes" id="roadLanes"></div>
-      </div>
-
-      <div class="control-bar">
-        <div class="control-left">
-          <div class="bet-row">
-            <label>الرهان:</label>
-            <input type="number" id="gameBetAmount" value="10" readonly>
-          </div>
-          <div class="diff-buttons">
-            <button class="diff-btn" data-d="easy" onclick="changeDiff('easy')">سهل</button>
-            <button class="diff-btn" data-d="medium" onclick="changeDiff('medium')">متوسط</button>
-            <button class="diff-btn" data-d="hard" onclick="changeDiff('hard')">صعب</button>
-            <button class="diff-btn" data-d="hardcore" onclick="changeDiff('hardcore')">هاردكور</button>
-          </div>
-        </div>
-        <div class="control-right">
-          <div class="cashout-display">
-            <div class="label">CASH OUT</div>
-            <div class="value" id="cashoutValue">0.00 USD</div>
-          </div>
-          <div class="action-buttons">
-            <button class="go-btn" id="goBtn" onclick="makeStep()">GO</button>
-            <button class="cashout-btn" id="cashoutBtn2" onclick="cashoutGame()" disabled>CASH OUT</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="game-status" id="gameStatus"></div>
     </div>
 
-    <div style="text-align:center;margin-top:15px">
-      <button class="top-btn" onclick="resetGame()">🔄 لعبة جديدة</button>
+    <!-- المضاعف العائم -->
+    <div class="float-mult" id="floatMult">
+      <div class="value" id="multValue">1.00x</div>
+      <div class="label" id="multLabel">اضغط GO</div>
     </div>
-  </div>
 
-  <div class="wallet-section">
-    <h3>💳 المحفظة</h3>
-    <div class="wallet-actions">
-      <input type="number" id="walletAmount" placeholder="المبلغ" min="1" step="1">
+    <!-- المحفظة -->
+    <div class="wallet-panel" id="walletPanel">
+      <h4>💳 المحفظة</h4>
+      <input type="number" id="walletAmount" placeholder="المبلغ" min="1">
       <button onclick="transaction('deposit')">📥 إيداع</button>
       <button onclick="transaction('withdraw')">📤 سحب</button>
+      <button onclick="resetGame()" style="background:linear-gradient(135deg,#666,#444);margin-top:6px">🔄 لعبة جديدة</button>
+    </div>
+
+    <!-- شريط التحكم -->
+    <div class="control-bar">
+      <div class="control-left">
+        <div class="bet-row">
+          <label>الرهان:</label>
+          <input type="number" id="gameBetAmount" value="10" readonly>
+        </div>
+        <div class="diff-btns" id="diffBtns">
+          <button data-d="easy" onclick="changeDiff('easy')">سهل</button>
+          <button data-d="medium" onclick="changeDiff('medium')">متوسط</button>
+          <button data-d="hard" onclick="changeDiff('hard')">صعب</button>
+          <button data-d="hardcore" onclick="changeDiff('hardcore')">هارد</button>
+        </div>
+      </div>
+      <div class="control-right">
+        <div class="cashout-display">
+          <div class="label">CASH OUT</div>
+          <div class="value" id="cashoutValue">0.00 USD</div>
+        </div>
+        <div class="action-btns">
+          <button class="go-btn" id="goBtn" onclick="makeStep()">GO</button>
+          <button class="cashout-btn" id="cashoutBtn2" onclick="cashoutGame()" disabled>CASH OUT</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- الإدارة -->
 <div id="adminPage" class="page">
-  <div class="admin-header">
-    <h2>⚙️ الإدارة</h2>
-    <button class="top-btn" onclick="showPage('gamePage')">⬅️ رجوع</button>
-  </div>
-  <div class="admin-tabs">
-    <button onclick="loadAdminData('users')" class="active" id="tab-users">👥 المستخدمين</button>
-    <button onclick="loadAdminData('bets')" id="tab-bets">🎰 الرهانات</button>
-    <button onclick="loadAdminData('transactions')" id="tab-transactions">📋 التحويلات</button>
-  </div>
-  <div class="admin-content">
-    <table id="adminTable"><tbody></tbody></table>
-  </div>
-  <div class="admin-action">
-    <h4>🔧 تعديل رصيد</h4>
-    <input type="number" id="adminUserId" placeholder="ID المستخدم">
-    <input type="number" id="adminAmount" placeholder="المبلغ" min="1">
-    <button class="btn-add" onclick="adminAdjust('add')">➕ إضافة</button>
-    <button class="btn-remove" onclick="adminAdjust('remove')">➖ خصم</button>
+  <div class="admin-page">
+    <div class="admin-header">
+      <h2>⚙️ الإدارة</h2>
+      <button class="top-btn" onclick="showPage('gamePage')">⬅️ رجوع</button>
+    </div>
+    <div class="admin-tabs">
+      <button onclick="loadAdminData('users')" class="active" id="tab-users">👥 المستخدمين</button>
+      <button onclick="loadAdminData('bets')" id="tab-bets">🎰 الرهانات</button>
+      <button onclick="loadAdminData('transactions')" id="tab-transactions">📋 التحويلات</button>
+    </div>
+    <div class="admin-content">
+      <table id="adminTable"><tbody></tbody></table>
+    </div>
+    <div class="admin-action">
+      <h4>🔧 تعديل رصيد</h4>
+      <input type="number" id="adminUserId" placeholder="ID">
+      <input type="number" id="adminAmount" placeholder="المبلغ" min="1">
+      <button class="btn-add" onclick="adminAdjust('add')">➕ إضافة</button>
+      <button class="btn-remove" onclick="adminAdjust('remove')">➖ خصم</button>
+    </div>
   </div>
 </div>
 
@@ -886,6 +549,7 @@ let currentBet = 0;
 let gameActive = false;
 let nextId = () => Date.now() + Math.floor(Math.random()*1000);
 
+// ==================== تنقل ====================
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -903,12 +567,13 @@ function toast(msg) {
   setTimeout(() => t.style.display = 'none', 3000);
 }
 
+// ==================== مصادقة ====================
 function login() {
   const username = document.getElementById('loginUser').value.trim();
   const password = document.getElementById('loginPass').value;
   if (!username || !password) return toast('أدخل اسم المستخدم وكلمة المرور');
   const user = DB.getUsers().find(u => u.username === username && u.password === password);
-  if (!user) return toast('اسم المستخدم أو كلمة المرور غير صحيحة');
+  if (!user) return toast('بيانات غير صحيحة');
   currentUser = user;
   DB.setCurrentUser(user);
   initUser();
@@ -917,13 +582,13 @@ function register() {
   const username = document.getElementById('regUser').value.trim();
   const password = document.getElementById('regPass').value;
   if (!username || !password) return toast('أدخل جميع البيانات');
-  if (username.length < 3) return toast('اسم المستخدم قصير جداً');
+  if (username.length < 3) return toast('اسم المستخدم قصير');
   const users = DB.getUsers();
-  if (users.find(u => u.username === username)) return toast('اسم المستخدم موجود مسبقاً');
+  if (users.find(u => u.username === username)) return toast('الاسم موجود');
   const newUser = { id: nextId(), username, password, balance: 0, role: 'user', created_at: new Date().toLocaleString() };
   users.push(newUser);
   DB.setUsers(users);
-  toast('تم التسجيل! سجل دخول الآن');
+  toast('تم التسجيل!');
   switchTab('login');
 }
 function logout() {
@@ -934,12 +599,12 @@ function logout() {
 function initUser() {
   document.getElementById('usernameDisplay').textContent = currentUser.username;
   document.getElementById('balanceDisplay').textContent = currentUser.balance.toFixed(2) + ' $';
-  document.getElementById('headerBalance').textContent = currentUser.balance.toFixed(2) + ' $';
   document.getElementById('userInfo').style.display = 'flex';
   if (currentUser.role === 'admin') document.getElementById('adminBtn').style.display = 'inline-block';
   showPage('gamePage');
 }
 
+// ==================== محفظة ====================
 function transaction(type) {
   const amount = parseFloat(document.getElementById('walletAmount').value);
   if (!amount || amount <= 0) return toast('أدخل مبلغ صحيح');
@@ -954,7 +619,6 @@ function transaction(type) {
   currentUser = users[idx];
   DB.setCurrentUser(currentUser);
   document.getElementById('balanceDisplay').textContent = currentUser.balance.toFixed(2) + ' $';
-  document.getElementById('headerBalance').textContent = currentUser.balance.toFixed(2) + ' $';
 
   const trans = DB.getTrans();
   trans.push({ id: nextId(), user_id: currentUser.id, username: currentUser.username, type, amount, created_at: new Date().toLocaleString() });
@@ -964,6 +628,7 @@ function transaction(type) {
   document.getElementById('walletAmount').value = '';
 }
 
+// ==================== اللعبة الأفقية ====================
 function selectDiff(diff) {
   selectedDiff = diff;
   document.querySelectorAll('.diff-card').forEach(c => c.classList.remove('selected'));
@@ -972,12 +637,10 @@ function selectDiff(diff) {
 }
 
 function changeDiff(diff) {
-  if (gameActive) return toast('لا يمكن تغيير الصعوبة أثناء اللعبة');
+  if (gameActive) return toast('لا يمكن التغيير أثناء اللعبة');
   selectedDiff = diff;
-  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector(`.diff-btn[data-d="${diff}"]`).classList.add('active');
-  const d = DIFFICULTY[diff];
-  document.getElementById('stepInfo').textContent = `الخطوة: 0 / ${d.steps}`;
+  document.querySelectorAll('.diff-btns button').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.diff-btns button[data-d="${diff}"]`).classList.add('active');
 }
 
 function generatePath(diff) {
@@ -1001,9 +664,9 @@ function generateMultipliers(diff) {
 }
 
 function startGame() {
-  if (!selectedDiff) return toast('اختر مستوى الصعوبة');
+  if (!selectedDiff) return toast('اختر الصعوبة');
   const bet = parseFloat(document.getElementById('betAmount').value);
-  if (!bet || bet <= 0) return toast('أدخل مبلغ رهان');
+  if (!bet || bet <= 0) return toast('أدخل الرهان');
   if (currentUser.balance < bet) return toast('رصيد غير كافٍ');
 
   const users = DB.getUsers();
@@ -1013,7 +676,6 @@ function startGame() {
   currentUser = users[idx];
   DB.setCurrentUser(currentUser);
   document.getElementById('balanceDisplay').textContent = currentUser.balance.toFixed(2) + ' $';
-  document.getElementById('headerBalance').textContent = currentUser.balance.toFixed(2) + ' $';
 
   currentBet = bet;
   gamePath = generatePath(selectedDiff);
@@ -1024,63 +686,121 @@ function startGame() {
   document.getElementById('difficultySelect').style.display = 'none';
   document.getElementById('playArea').style.display = 'block';
   document.getElementById('gameBetAmount').value = bet;
-  document.getElementById('multLabel').textContent = 'اضغط GO للتقدم';
-  document.getElementById('gameStatus').textContent = '';
 
   // تحديث أزرار الصعوبة
-  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector(`.diff-btn[data-d="${selectedDiff}"]`).classList.add('active');
+  document.querySelectorAll('.diff-btns button').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.diff-btns button[data-d="${selectedDiff}"]`).classList.add('active');
 
-  renderRoad();
+  buildScene();
+  updateCamera();
   updateGameInfo();
   document.getElementById('goBtn').disabled = false;
   document.getElementById('cashoutBtn2').disabled = true;
+  document.getElementById('multLabel').textContent = 'اضغط GO للتقدم';
+  document.getElementById('floatMult').className = 'float-mult';
 }
 
-function renderRoad() {
-  const container = document.getElementById('roadLanes');
+function buildScene() {
+  const scene = document.getElementById('scene');
   const steps = DIFFICULTY[selectedDiff].steps;
+  const roadWidth = 200;
+  const sidewalkWidth = 120;
+
   let html = '';
 
-  // رصيف البداية
-  html += `<div class="lane sidewalk"><div class="step-item" style="background:#6a6a7e;border-color:#555">🏠</div></div>`;
+  // رصيف البداية (اليمين في RTL)
+  html += `
+    <div class="sidewalk sidewalk-start" style="width:${sidewalkWidth}px">
+      <div class="sidewalk-icon">🏠</div>
+      <div class="sidewalk-label">بداية</div>
+    </div>
+  `;
 
+  // الحاجز الأول
+  html += `<div style="width:30px;height:100%;display:flex;align-items:center;justify-content:center;position:relative"><div class="barrier" style="position:absolute;top:20%;bottom:20%;left:50%;width:8px;transform:translateX(-50%)"></div></div>`;
+
+  // الطريق والعملات
   for (let i = 0; i < steps; i++) {
-    let cls = 'step-item hidden';
-    let content = '';
-    let chicken = '';
+    const lanePositions = ['15%', '50%', '85%'];
+    const laneIdx = Math.floor(Math.random() * 3);
+    const topPos = lanePositions[laneIdx];
 
-    if (i < currentStep) {
-      cls = 'step-item safe';
-      content = `<div style="font-size:10px">${gameMults[i].toFixed(2)}x</div>`;
-    } else if (i === currentStep) {
-      cls = 'step-item current';
-      content = `<div style="font-size:10px;color:#4ecca3">${gameMults[i].toFixed(2)}x</div>`;
-      chicken = '<div class="chicken-char" id="activeChicken">🐔</div>';
+    html += `
+      <div class="road" style="width:${roadWidth}px" id="road-${i}">
+        <div class="lane" style="top:0"></div>
+        <div class="lane" style="top:33.33%"></div>
+        <div class="lane" style="top:66.66%"></div>
+        <div class="coin-spot hidden" id="coin-${i}" style="top:${topPos};transform:translateY(-50%)">
+          <div style="font-size:10px">${gameMults[i].toFixed(2)}x</div>
+        </div>
+      </div>
+    `;
+
+    // فاصل بين الطرق
+    if (i < steps - 1) {
+      html += `<div style="width:20px;height:100%;background:#3a3a4e"></div>`;
     }
-
-    if (i === currentStep && gamePath[i] === 'car' && !gameActive) {
-      cls = 'step-item car';
-      content = '🚗';
-      chicken = '<div class="chicken-char dead" id="activeChicken">💀</div>';
-    }
-
-    html += `<div class="lane road-lane"><div class="${cls}" id="tile-${i}">${content}${chicken}</div></div>`;
   }
 
-  // رصيف النهاية
-  html += `<div class="lane sidewalk"><div class="step-item" style="background:linear-gradient(135deg,#ffd700,#ffaa00);border-color:#fff;color:#1a1a2e;font-size:20px">🏆</div></div>`;
+  // الحاجز الأخير
+  html += `<div style="width:30px;height:100%;display:flex;align-items:center;justify-content:center;position:relative"><div class="barrier" style="position:absolute;top:20%;bottom:20%;left:50%;width:8px;transform:translateX(-50%)"></div></div>`;
 
-  container.innerHTML = html;
+  // رصيف النهاية
+  html += `
+    <div class="sidewalk sidewalk-end" style="width:${sidewalkWidth}px">
+      <div class="sidewalk-icon">🏆</div>
+      <div class="sidewalk-label">نهاية</div>
+    </div>
+  `;
+
+  scene.innerHTML = html;
+
+  // إضافة الدجاجة
+  const firstRoad = document.getElementById('road-0');
+  if (firstRoad) {
+    const chicken = document.createElement('div');
+    chicken.className = 'chicken';
+    chicken.id = 'activeChicken';
+    chicken.innerHTML = '🐔';
+    chicken.style.left = '50%';
+    chicken.style.top = '50%';
+    chicken.style.transform = 'translate(-50%, -50%)';
+    firstRoad.appendChild(chicken);
+  }
+}
+
+function updateCamera() {
+  const world = document.getElementById('gameWorld');
+  const wrapper = document.getElementById('gameWrapper');
+  const wrapperWidth = wrapper.offsetWidth;
+
+  // حساب موقع الدجاجة
+  let chickenX = 0;
+  if (currentStep >= 0) {
+    const road = document.getElementById(`road-${currentStep}`);
+    if (road) {
+      const roadRect = road.getBoundingClientRect();
+      const worldRect = world.getBoundingClientRect();
+      chickenX = roadRect.left - worldRect.left + roadRect.width / 2;
+    }
+  } else {
+    // في البداية
+    const startSidewalk = document.querySelector('.sidewalk-start');
+    if (startSidewalk) {
+      const rect = startSidewalk.getBoundingClientRect();
+      const worldRect = world.getBoundingClientRect();
+      chickenX = rect.left - worldRect.left + rect.width / 2;
+    }
+  }
+
+  // مركز الكاميرا على الدجاجة
+  const offset = wrapperWidth / 2 - chickenX;
+  world.style.transform = `translateX(${offset}px)`;
 }
 
 function updateGameInfo() {
-  const diff = DIFFICULTY[selectedDiff];
-  document.getElementById('stepInfo').textContent = `الخطوة: ${Math.max(0, currentStep)} / ${diff.steps}`;
-
   if (currentStep === -1) {
     document.getElementById('multValue').textContent = '1.00x';
-    document.getElementById('multValue').className = 'mult-value';
     document.getElementById('cashoutValue').textContent = '0.00 USD';
   } else {
     const mult = gameMults[currentStep];
@@ -1102,17 +822,50 @@ function makeStep() {
 
   const isCar = gamePath[currentStep] === 'car';
 
+  // تحديث العملة السابقة
+  if (currentStep > 0) {
+    const prevCoin = document.getElementById(`coin-${currentStep - 1}`);
+    if (prevCoin) {
+      prevCoin.classList.remove('hidden', 'current');
+      prevCoin.classList.add('safe');
+    }
+  }
+
+  // تحديث العملة الحالية
+  const currentCoin = document.getElementById(`coin-${currentStep}`);
+  if (currentCoin) {
+    currentCoin.classList.remove('hidden');
+    currentCoin.classList.add('current');
+  }
+
+  // نقل الدجاجة
+  const chicken = document.getElementById('activeChicken');
+  const targetRoad = document.getElementById(`road-${currentStep}`);
+  if (chicken && targetRoad) {
+    targetRoad.appendChild(chicken);
+    chicken.classList.add('walk');
+    setTimeout(() => chicken.classList.remove('walk'), 400);
+  }
+
+  // تحريك الكاميرا
+  setTimeout(updateCamera, 50);
+
   if (isCar) {
-    loseGame();
+    // إظهار السيارة
+    if (currentCoin) {
+      currentCoin.classList.remove('current');
+      currentCoin.classList.add('car');
+      currentCoin.innerHTML = '🚗';
+    }
+    setTimeout(loseGame, 300);
   } else {
-    renderRoad();
     updateGameInfo();
-    document.getElementById('multLabel').textContent = '✅ خطوة آمنة! تقدم أو اسحب...';
+    document.getElementById('multLabel').textContent = '✅ آمن! تقدم أو اسحب...';
     document.getElementById('multLabel').style.color = '#4ecca3';
     document.getElementById('cashoutBtn2').disabled = false;
 
     if (currentStep === diff.steps - 1) {
-      document.getElementById('multLabel').textContent = '🏁 خطوة أخيرة! اضغط CASH OUT للفوز!';
+      document.getElementById('multLabel').textContent = '🏁 الأخيرة! اسحب الآن!';
       document.getElementById('goBtn').disabled = true;
     }
   }
@@ -1135,7 +888,6 @@ function winGame(mult) {
   currentUser = users[idx];
   DB.setCurrentUser(currentUser);
   document.getElementById('balanceDisplay').textContent = currentUser.balance.toFixed(2) + ' $';
-  document.getElementById('headerBalance').textContent = currentUser.balance.toFixed(2) + ' $';
 
   const bets = DB.getBets();
   bets.push({
@@ -1147,22 +899,20 @@ function winGame(mult) {
   DB.setBets(bets);
 
   document.getElementById('multValue').textContent = mult.toFixed(2) + 'x';
-  document.getElementById('multValue').className = 'mult-value win';
+  document.getElementById('floatMult').className = 'float-mult win';
   document.getElementById('multLabel').textContent = `🎉 فزت بـ ${winAmount.toFixed(2)} $!`;
   document.getElementById('multLabel').style.color = '#ffd700';
   document.getElementById('goBtn').disabled = true;
   document.getElementById('cashoutBtn2').disabled = true;
 
-  if (currentStep >= 0) {
-    const chick = document.getElementById('activeChicken');
-    if (chick) chick.classList.add('win');
-  }
+  const chicken = document.getElementById('activeChicken');
+  if (chicken) chicken.classList.add('win');
+
   toast(`🎉 ربحت ${winAmount.toFixed(2)} $!`);
 }
 
 function loseGame() {
   gameActive = false;
-  renderRoad();
 
   const bets = DB.getBets();
   bets.push({
@@ -1174,24 +924,28 @@ function loseGame() {
   DB.setBets(bets);
 
   document.getElementById('multValue').textContent = '💥';
-  document.getElementById('multValue').className = 'mult-value crash';
-  document.getElementById('multLabel').textContent = '🚗💨 الدجاجة دهستها السيارة!';
+  document.getElementById('floatMult').className = 'float-mult crash';
+  document.getElementById('multLabel').textContent = '🚗💨 دهست!';
   document.getElementById('multLabel').style.color = '#e94560';
   document.getElementById('goBtn').disabled = true;
   document.getElementById('cashoutBtn2').disabled = true;
 
-  toast('🚗💨 صدمة! الدجاجة في الجنة 🪦');
+  const chicken = document.getElementById('activeChicken');
+  if (chicken) chicken.classList.add('dead');
+
+  toast('🚗💨 الدجاجة في الجنة!');
 }
 
 function resetGame() {
   document.getElementById('difficultySelect').style.display = 'block';
   document.getElementById('playArea').style.display = 'none';
-  document.getElementById('multValue').className = 'mult-value';
+  document.getElementById('floatMult').className = 'float-mult';
   selectedDiff = null;
   document.querySelectorAll('.diff-card').forEach(c => c.classList.remove('selected'));
   document.getElementById('startBtn').disabled = true;
 }
 
+// ==================== إدارة ====================
 function loadAdminData(type) {
   document.querySelectorAll('.admin-tabs button').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + type).classList.add('active');
@@ -1207,12 +961,12 @@ function loadAdminData(type) {
     DB.getBets().slice().reverse().forEach(b => {
       const diffName = DIFFICULTY[b.difficulty]?.name || b.difficulty;
       const color = b.result === 'win' ? 'color:#4ecca3' : 'color:#e94560';
-      html += `<tr><td>${b.id}</td><td>${b.username}</td><td>${b.amount}</td><td>${diffName}</td><td>${b.multiplier?.toFixed(2)}x</td><td>${b.steps_taken}</td><td style="${color}">${b.profit.toFixed(2)}</td><td style="${color}">${b.result === 'win' ? '✅ ربح' : '❌ خسارة'}</td></tr>`;
+      html += `<tr><td>${b.id}</td><td>${b.username}</td><td>${b.amount}</td><td>${diffName}</td><td>${b.multiplier?.toFixed(2)}x</td><td>${b.steps_taken}</td><td style="${color}">${b.profit.toFixed(2)}</td><td style="${color}">${b.result === 'win' ? '✅' : '❌'}</td></tr>`;
     });
   } else {
     html += '<th>ID</th><th>المستخدم</th><th>النوع</th><th>المبلغ</th><th>التاريخ</th></tr></thead><tbody>';
     DB.getTrans().slice().reverse().forEach(t => {
-      const typeName = t.type === 'deposit' ? 'إيداع' : t.type === 'withdraw' ? 'سحب' : t.type === 'admin_deposit' ? 'إضافة أدمن' : 'خصم أدمن';
+      const typeName = t.type === 'deposit' ? 'إيداع' : t.type === 'withdraw' ? 'سحب' : t.type === 'admin_deposit' ? 'إضافة' : 'خصم';
       html += `<tr><td>${t.id}</td><td>${t.username}</td><td>${typeName}</td><td>${t.amount}</td><td>${t.created_at}</td></tr>`;
     });
   }
@@ -1223,11 +977,11 @@ function loadAdminData(type) {
 function adminAdjust(type) {
   const userId = parseInt(document.getElementById('adminUserId').value);
   const amount = parseFloat(document.getElementById('adminAmount').value);
-  if (!userId || !amount || amount <= 0) return toast('أدخل ID والمبلغ');
+  if (!userId || !amount || amount <= 0) return toast('أدخل البيانات');
 
   const users = DB.getUsers();
   const idx = users.findIndex(u => u.id == userId);
-  if (idx === -1) return toast('المستخدم غير موجود');
+  if (idx === -1) return toast('غير موجود');
 
   if (type === 'add') users[idx].balance += amount;
   else {
@@ -1240,7 +994,7 @@ function adminAdjust(type) {
   trans.push({ id: nextId(), user_id: users[idx].id, username: users[idx].username, type: type === 'add' ? 'admin_deposit' : 'admin_withdraw', amount, created_at: new Date().toLocaleString() });
   DB.setTrans(trans);
 
-  toast(type === 'add' ? 'تم الإضافة!' : 'تم الخصم!');
+  toast(type === 'add' ? 'تم!' : 'تم الخصم!');
   loadAdminData('users');
   document.getElementById('adminUserId').value = '';
   document.getElementById('adminAmount').value = '';
