@@ -3,87 +3,128 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chicken Road - لعبة الدجاجة</title>
+<title>Chicken Road - طريق الدجاجة</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'Segoe UI',Tahoma,sans-serif; background:#0d0d1a; color:#fff; min-height:100vh; overflow-x:hidden; }
+body { font-family:'Segoe UI',Tahoma,sans-serif; background:#0a0a1a; color:#fff; min-height:100vh; overflow-x:hidden; }
 
-.top-bar { display:flex; justify-content:space-between; align-items:center; padding:12px 24px; background:#161b33; border-bottom:2px solid #e94560; position:sticky; top:0; z-index:100; }
+/* ===== شريط علوي ===== */
+.top-bar { display:flex; justify-content:space-between; align-items:center; padding:12px 24px; background:#12122a; border-bottom:2px solid #e94560; position:sticky; top:0; z-index:100; }
 .logo { font-size:22px; font-weight:bold; color:#e94560; letter-spacing:1px; }
 .user-info { display:flex; gap:12px; align-items:center; font-size:14px; }
-.balance-box { background:#0f3460; padding:6px 16px; border-radius:20px; color:#4ecca3; font-weight:bold; border:1px solid #4ecca3; }
+.balance-box { background:#0d1f3d; padding:6px 16px; border-radius:20px; color:#4ecca3; font-weight:bold; border:1px solid #4ecca3; }
 .top-btn { background:#e94560; color:#fff; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-size:13px; transition:.2s; }
 .top-btn:hover { background:#c73e54; }
 .top-btn.admin { background:#ffd700; color:#1a1a2e; display:none; }
 
-.page { display:none; padding:20px; max-width:900px; margin:0 auto; animation:fadeIn .4s; }
+.page { display:none; padding:20px; max-width:1000px; margin:0 auto; animation:fadeIn .4s; }
 .page.active { display:block; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 
-.auth-box { max-width:400px; margin:60px auto; background:#161b33; padding:40px; border-radius:16px; text-align:center; border:1px solid #2a3050; }
+/* ===== تسجيل الدخول ===== */
+.auth-box { max-width:400px; margin:60px auto; background:#12122a; padding:40px; border-radius:16px; text-align:center; border:1px solid #2a3050; }
 .auth-box h2 { margin-bottom:8px; color:#e94560; font-size:28px; }
 .auth-box p { color:#888; margin-bottom:24px; font-size:13px; }
-.tabs { display:flex; margin-bottom:20px; background:#0f3460; border-radius:8px; overflow:hidden; }
+.tabs { display:flex; margin-bottom:20px; background:#0d1f3d; border-radius:8px; overflow:hidden; }
 .tab { flex:1; padding:12px; background:transparent; border:none; color:#aaa; cursor:pointer; font-size:15px; transition:.2s; }
 .tab.active { background:#e94560; color:#fff; font-weight:bold; }
-.auth-box input { width:100%; padding:14px; margin:8px 0; border:none; border-radius:10px; background:#0f3460; color:#fff; font-size:15px; border:1px solid transparent; transition:.2s; }
+.auth-box input { width:100%; padding:14px; margin:8px 0; border:none; border-radius:10px; background:#0d1f3d; color:#fff; font-size:15px; border:1px solid transparent; transition:.2s; }
 .auth-box input:focus { outline:none; border-color:#e94560; }
 .auth-box button[type="button"] { width:100%; padding:14px; margin-top:10px; border:none; border-radius:10px; background:#e94560; color:#fff; font-size:16px; cursor:pointer; font-weight:bold; transition:.2s; }
 .auth-box button[type="button"]:hover { background:#ff6b81; }
 
-.game-container { background:#161b33; padding:30px; border-radius:16px; border:1px solid #2a3050; margin-bottom:20px; }
-.multiplier-display { font-size:80px; font-weight:bold; color:#4ecca3; text-align:center; margin:20px 0; text-shadow:0 0 30px rgba(78,204,163,.4); transition:color .2s; }
-.road { position:relative; height:140px; background:#0f3460; border-radius:12px; margin:20px 0; overflow:hidden; border:2px solid #2a3050; }
-.road-bg { position:absolute; inset:0; background:repeating-linear-gradient(90deg,transparent 0,transparent 40px,#1a1a2e 40px,#1a1a2e 42px); opacity:.3; }
-.road-line { position:absolute; bottom:25px; left:0; right:0; height:4px; background:#e94560; border-radius:2px; }
-.chicken { position:absolute; bottom:35px; left:5%; font-size:44px; transition:left .1s linear; filter:drop-shadow(0 4px 8px rgba(0,0,0,.5)); }
-.game-status { text-align:center; color:#aaa; margin:10px 0; font-size:16px; min-height:24px; }
+/* ===== اختيار الصعوبة ===== */
+.difficulty-select { background:#12122a; padding:30px; border-radius:16px; border:1px solid #2a3050; margin-bottom:20px; text-align:center; }
+.difficulty-select h3 { color:#ffd700; margin-bottom:20px; font-size:20px; }
+.diff-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:15px; margin:20px 0; }
+.diff-card { background:#0d1f3d; padding:20px; border-radius:12px; border:2px solid transparent; cursor:pointer; transition:.2s; text-align:center; }
+.diff-card:hover { border-color:#e94560; transform:translateY(-3px); }
+.diff-card.selected { border-color:#4ecca3; background:#1a2f4a; }
+.diff-card h4 { color:#fff; margin-bottom:8px; font-size:18px; }
+.diff-card .steps { color:#aaa; font-size:13px; margin-bottom:5px; }
+.diff-card .risk { color:#e94560; font-size:13px; font-weight:bold; }
+.diff-card .max-win { color:#4ecca3; font-size:13px; margin-top:5px; }
 
-.controls { display:flex; gap:12px; justify-content:center; align-items:flex-end; margin-top:20px; flex-wrap:wrap; }
-.bet-section { display:flex; flex-direction:column; align-items:flex-start; gap:6px; }
-.bet-section label { font-size:13px; color:#aaa; }
-.bet-section input { width:160px; padding:12px; border:none; border-radius:8px; background:#0f3460; color:#fff; font-size:16px; text-align:center; }
-.game-btn { padding:14px 32px; border:none; border-radius:10px; font-size:16px; cursor:pointer; font-weight:bold; transition:.2s; min-width:140px; }
-#betBtn { background:#e94560; color:#fff; }
-#betBtn:hover:not(:disabled) { background:#ff6b81; }
-#cashoutBtn { background:#4ecca3; color:#0d0d1a; display:none; }
-#cashoutBtn:hover:not(:disabled) { background:#3db892; }
-.game-btn:disabled { background:#333; color:#777; cursor:not-allowed; }
+.bet-input { margin:20px auto; max-width:300px; }
+.bet-input label { display:block; color:#aaa; margin-bottom:8px; font-size:14px; }
+.bet-input input { width:100%; padding:14px; border:none; border-radius:10px; background:#0d1f3d; color:#fff; font-size:18px; text-align:center; border:1px solid #2a3050; }
+.play-btn { background:#4ecca3; color:#0a0a1a; border:none; padding:16px 48px; border-radius:12px; font-size:18px; font-weight:bold; cursor:pointer; transition:.2s; margin-top:10px; }
+.play-btn:hover { background:#3db892; }
+.play-btn:disabled { background:#333; color:#777; cursor:not-allowed; }
 
-.wallet-section { background:#161b33; padding:24px; border-radius:16px; border:1px solid #2a3050; }
-.wallet-section h3 { color:#4ecca3; margin-bottom:16px; font-size:18px; display:flex; align-items:center; gap:8px; }
+/* ===== منطقة اللعبة ===== */
+.game-board { background:#12122a; padding:25px; border-radius:16px; border:1px solid #2a3050; margin-bottom:20px; }
+.game-info { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px; }
+.current-mult { font-size:48px; font-weight:bold; color:#4ecca3; text-shadow:0 0 20px rgba(78,204,163,.3); }
+.step-counter { color:#aaa; font-size:14px; }
+
+/* الطريق */
+.road-container { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:20px 0; padding:20px; background:#0a0a1a; border-radius:12px; min-height:120px; align-items:center; }
+.tile { width:60px; height:60px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:24px; background:#1a1a3e; border:2px solid #2a3050; transition:all .3s; position:relative; }
+.tile.safe { background:#1a3a2a; border-color:#4ecca3; box-shadow:0 0 10px rgba(78,204,163,.2); }
+.tile.fire { background:#3a1a1a; border-color:#e94560; animation:firePulse .5s infinite alternate; }
+.tile.current { border-color:#ffd700; box-shadow:0 0 15px rgba(255,215,0,.4); transform:scale(1.1); }
+.tile.hidden { background:#0d0d1d; border-color:#1a1a3e; color:transparent; }
+.tile.revealed { color:transparent; }
+
+@keyframes firePulse { from{box-shadow:0 0 5px rgba(233,69,96,.3)} to{box-shadow:0 0 15px rgba(233,69,96,.6)} }
+
+.chicken { font-size:36px; position:absolute; top:-45px; left:50%; transform:translateX(-50%); transition:all .3s; filter:drop-shadow(0 4px 6px rgba(0,0,0,.5)); z-index:10; }
+.chicken.burned { font-size:36px; animation:burn .5s forwards; }
+@keyframes burn { 0%{transform:translateX(-50%) scale(1)} 50%{transform:translateX(-50%) scale(1.2)} 100%{transform:translateX(-50%) scale(0) rotate(180deg);opacity:0} }
+
+.fire-effect { position:absolute; inset:-5px; font-size:40px; animation:flame .6s infinite; pointer-events:none; }
+@keyframes flame { 0%,100%{transform:scale(1)} 50%{transform:scale(1.2)} }
+
+.game-controls { display:flex; gap:15px; justify-content:center; margin-top:20px; flex-wrap:wrap; }
+.game-controls button { padding:16px 40px; border:none; border-radius:12px; font-size:18px; font-weight:bold; cursor:pointer; transition:.2s; min-width:160px; }
+#goBtn { background:#4ecca3; color:#0a0a1a; }
+#goBtn:hover:not(:disabled) { background:#3db892; }
+#cashoutBtn2 { background:#ffd700; color:#1a1a2e; }
+#cashoutBtn2:hover:not(:disabled) { background:#e6c200; }
+.game-controls button:disabled { background:#333; color:#555; cursor:not-allowed; }
+
+.game-status { text-align:center; margin-top:15px; font-size:16px; min-height:24px; color:#aaa; }
+
+/* ===== المحفظة ===== */
+.wallet-section { background:#12122a; padding:24px; border-radius:16px; border:1px solid #2a3050; }
+.wallet-section h3 { color:#4ecca3; margin-bottom:16px; font-size:18px; }
 .wallet-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-.wallet-actions input { width:180px; padding:12px; border:none; border-radius:8px; background:#0f3460; color:#fff; font-size:15px; }
-.wallet-actions button { padding:12px 20px; border:none; border-radius:8px; background:#0f3460; color:#fff; border:1px solid #e94560; cursor:pointer; font-size:14px; transition:.2s; }
+.wallet-actions input { width:180px; padding:12px; border:none; border-radius:8px; background:#0d1f3d; color:#fff; font-size:15px; border:1px solid #2a3050; }
+.wallet-actions button { padding:12px 20px; border:none; border-radius:8px; background:#0d1f3d; color:#fff; border:1px solid #e94560; cursor:pointer; font-size:14px; transition:.2s; }
 .wallet-actions button:hover { background:#e94560; }
 
+/* ===== الإدارة ===== */
 .admin-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
 .admin-header h2 { color:#ffd700; }
 .admin-tabs { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
-.admin-tabs button { padding:10px 20px; border:none; border-radius:8px; background:#0f3460; color:#fff; cursor:pointer; font-size:14px; transition:.2s; }
+.admin-tabs button { padding:10px 20px; border:none; border-radius:8px; background:#0d1f3d; color:#fff; cursor:pointer; font-size:14px; transition:.2s; }
 .admin-tabs button.active { background:#e94560; }
-.admin-content { background:#161b33; border-radius:12px; overflow-x:auto; border:1px solid #2a3050; max-height:400px; overflow-y:auto; }
+.admin-content { background:#12122a; border-radius:12px; overflow-x:auto; border:1px solid #2a3050; max-height:400px; overflow-y:auto; }
 table { width:100%; border-collapse:collapse; font-size:14px; }
 th, td { padding:12px; text-align:right; border-bottom:1px solid #2a3050; white-space:nowrap; }
-th { color:#e94560; background:#0f3460; position:sticky; top:0; }
+th { color:#e94560; background:#0d1f3d; position:sticky; top:0; }
 tr:hover { background:#1a1f3d; }
-.admin-action { margin-top:24px; background:#161b33; padding:20px; border-radius:12px; border:1px solid #2a3050; }
+.admin-action { margin-top:24px; background:#12122a; padding:20px; border-radius:12px; border:1px solid #2a3050; }
 .admin-action h4 { color:#ffd700; margin-bottom:12px; }
-.admin-action input { width:160px; padding:12px; margin-left:8px; border:none; border-radius:8px; background:#0f3460; color:#fff; }
+.admin-action input { width:160px; padding:12px; margin-left:8px; border:none; border-radius:8px; background:#0d1f3d; color:#fff; border:1px solid #2a3050; }
 .admin-action button { margin-left:8px; padding:10px 18px; border:none; border-radius:8px; cursor:pointer; font-size:14px; }
-.btn-add { background:#4ecca3; color:#0d0d1a; }
+.btn-add { background:#4ecca3; color:#0a0a1a; }
 .btn-remove { background:#e94560; color:#fff; }
 
-.toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:#161b33; color:#fff; padding:14px 28px; border-radius:10px; border:1px solid #e94560; box-shadow:0 10px 30px rgba(0,0,0,.5); z-index:999; animation:slideUp .3s; display:none; font-size:14px; }
+.toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:#12122a; color:#fff; padding:14px 28px; border-radius:10px; border:1px solid #e94560; box-shadow:0 10px 30px rgba(0,0,0,.5); z-index:999; animation:slideUp .3s; display:none; font-size:14px; }
 @keyframes slideUp { from{opacity:0;transform:translate(-50%,20px)} to{opacity:1;transform:translate(-50%,0)} }
 
 @media(max-width:600px){
-  .multiplier-display{font-size:52px}
-  .controls{flex-direction:column;align-items:center}
+  .current-mult{font-size:36px}
+  .tile{width:45px;height:45px;font-size:18px}
+  .chicken{font-size:28px;top:-35px}
   .auth-box{padding:24px;margin:20px}
   .top-bar{flex-wrap:wrap;gap:8px}
+  .game-controls button{padding:12px 24px;font-size:16px;min-width:120px}
 }
 </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -97,10 +138,11 @@ tr:hover { background:#1a1f3d; }
   </div>
 </header>
 
+<!-- تسجيل الدخول -->
 <div id="authPage" class="page active">
   <div class="auth-box">
     <h2>🐔 Chicken Road</h2>
-    <p>لعبة الدجاجة - اربح قبل ما تكراش!</p>
+    <p>ساعد الدجاجة لتعبر الطريق وتتجنب النار! 🔥</p>
     <div class="tabs">
       <button class="tab active" onclick="switchTab('login')">دخول</button>
       <button class="tab" onclick="switchTab('register')">تسجيل</button>
@@ -118,23 +160,71 @@ tr:hover { background:#1a1f3d; }
   </div>
 </div>
 
+<!-- صفحة اللعبة -->
 <div id="gamePage" class="page">
-  <div class="game-container">
-    <div class="multiplier-display" id="multiplier">1.00x</div>
-    <div class="road">
-      <div class="road-bg"></div>
-      <div class="road-line"></div>
-      <div class="chicken" id="chicken">🐔</div>
-    </div>
-    <div class="game-status" id="gameStatus">انتظر الجولة القادمة...</div>
-    
-    <div class="controls">
-      <div class="bet-section">
-        <label>💰 مبلغ الرهان</label>
-        <input type="number" id="betAmount" value="10" min="1" step="1">
+
+  <!-- اختيار الصعوبة -->
+  <div id="difficultySelect" class="difficulty-select">
+    <h3>🎮 اختر مستوى الصعوبة</h3>
+    <div class="diff-grid">
+      <div class="diff-card" data-diff="easy" onclick="selectDiff('easy')">
+        <h4>🟢 سهل</h4>
+        <div class="steps">24 خطوة</div>
+        <div class="risk">خطر: 4% لكل خطوة</div>
+        <div class="max-win">أقصى ربح: x24.50</div>
       </div>
-      <button class="game-btn" id="betBtn" onclick="placeBet()">🎯 ابدأ الرهان</button>
-      <button class="game-btn" id="cashoutBtn" onclick="cashout()">💰 سحب الأرباح</button>
+      <div class="diff-card" data-diff="medium" onclick="selectDiff('medium')">
+        <h4>🟡 متوسط</h4>
+        <div class="steps">22 خطوة</div>
+        <div class="risk">خطر: 12% لكل خطوة</div>
+        <div class="max-win">أقصى ربح: x2,254</div>
+      </div>
+      <div class="diff-card" data-diff="hard" onclick="selectDiff('hard')">
+        <h4>🔴 صعب</h4>
+        <div class="steps">20 خطوة</div>
+        <div class="risk">خطر: 20% لكل خطوة</div>
+        <div class="max-win">أقصى ربح: x52,067</div>
+      </div>
+      <div class="diff-card" data-diff="hardcore" onclick="selectDiff('hardcore')">
+        <h4>⚫ هاردكور</h4>
+        <div class="steps">15 خطوة</div>
+        <div class="risk">خطر: 40% لكل خطوة</div>
+        <div class="max-win">أقصى ربح: x3,203,384</div>
+      </div>
+    </div>
+    <div class="bet-input">
+      <label>💰 مبلغ الرهان</label>
+      <input type="number" id="betAmount" value="10" min="1" step="1">
+    </div>
+    <button class="play-btn" id="startBtn" onclick="startGame()" disabled>🎮 ابدأ اللعبة</button>
+  </div>
+
+  <!-- منطقة اللعب -->
+  <div id="playArea" style="display:none">
+    <div class="game-board">
+      <div class="game-info">
+        <div>
+          <div class="current-mult" id="currentMult">1.00x</div>
+          <div class="step-counter" id="stepCounter">الخطوة: 0 / 24</div>
+        </div>
+        <div style="text-align:left">
+          <div style="color:#aaa;font-size:13px">الرهان</div>
+          <div style="color:#fff;font-size:18px;font-weight:bold" id="currentBet">0 $</div>
+          <div style="color:#4ecca3;font-size:13px;margin-top:4px" id="potentialWin">ربح محتمل: 0 $</div>
+        </div>
+      </div>
+
+      <div class="road-container" id="roadContainer"></div>
+
+      <div class="game-controls">
+        <button id="goBtn" onclick="makeStep()">➡️ خطوة للأمام</button>
+        <button id="cashoutBtn2" onclick="cashoutGame()">💰 سحب الأرباح</button>
+      </div>
+      <div class="game-status" id="gameStatus">اضغط "خطوة للأمام" لبدء التقدم...</div>
+    </div>
+
+    <div style="text-align:center;margin-bottom:15px">
+      <button class="top-btn" onclick="resetGame()">🔄 لعبة جديدة</button>
     </div>
   </div>
 
@@ -148,22 +238,20 @@ tr:hover { background:#1a1f3d; }
   </div>
 </div>
 
+<!-- الإدارة -->
 <div id="adminPage" class="page">
   <div class="admin-header">
     <h2>⚙️ لوحة الإدارة</h2>
     <button class="top-btn" onclick="showPage('gamePage')">⬅️ رجوع للعبة</button>
   </div>
-  
   <div class="admin-tabs">
     <button onclick="loadAdminData('users')" class="active" id="tab-users">👥 المستخدمين</button>
     <button onclick="loadAdminData('bets')" id="tab-bets">🎰 الرهانات</button>
     <button onclick="loadAdminData('transactions')" id="tab-transactions">📋 التحويلات</button>
   </div>
-
   <div class="admin-content">
     <table id="adminTable"><tbody></tbody></table>
   </div>
-
   <div class="admin-action">
     <h4>🔧 تعديل رصيد مستخدم</h4>
     <input type="number" id="adminUserId" placeholder="ID المستخدم">
@@ -176,6 +264,7 @@ tr:hover { background:#1a1f3d; }
 <div class="toast" id="toast"></div>
 
 <script>
+// ==================== قاعدة البيانات ====================
 const DB = {
   getUsers() { return JSON.parse(localStorage.getItem('cr_users') || '[]'); },
   setUsers(u) { localStorage.setItem('cr_users', JSON.stringify(u)); },
@@ -195,15 +284,24 @@ const DB = {
 };
 DB.init();
 
+// ==================== إعدادات اللعبة ====================
+const DIFFICULTY = {
+  easy:     { name:'سهل',     steps:24, risk:0.04, startMult:1.03, base:1.15, maxMult:24.50 },
+  medium:   { name:'متوسط',   steps:22, risk:0.12, startMult:1.12, base:1.42, maxMult:2254 },
+  hard:     { name:'صعب',     steps:20, risk:0.20, startMult:1.23, base:1.68, maxMult:52067 },
+  hardcore: { name:'هاردكور', steps:15, risk:0.40, startMult:1.63, base:2.85, maxMult:3203384 }
+};
+
 let currentUser = DB.getCurrentUser();
+let selectedDiff = null;
+let gamePath = [];
+let gameMults = [];
+let currentStep = -1;
+let currentBet = 0;
 let gameActive = false;
-let currentMultiplier = 1.0;
-let betPlaced = false;
-let currentBetAmount = 0;
-let gameInterval;
-let crashPoint = 0;
 let nextId = () => Date.now() + Math.floor(Math.random()*1000);
 
+// ==================== تنقل ====================
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -214,7 +312,6 @@ function switchTab(tab) {
   document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
   document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
 }
-
 function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -222,6 +319,7 @@ function toast(msg) {
   setTimeout(() => t.style.display = 'none', 3000);
 }
 
+// ==================== مصادقة ====================
 function login() {
   const username = document.getElementById('loginUser').value.trim();
   const password = document.getElementById('loginPass').value;
@@ -232,7 +330,6 @@ function login() {
   DB.setCurrentUser(user);
   initUser();
 }
-
 function register() {
   const username = document.getElementById('regUser').value.trim();
   const password = document.getElementById('regPass').value;
@@ -246,177 +343,257 @@ function register() {
   toast('تم التسجيل! سجل دخول الآن');
   switchTab('login');
 }
-
 function logout() {
   currentUser = null;
   DB.setCurrentUser(null);
   location.reload();
 }
-
 function initUser() {
   document.getElementById('usernameDisplay').textContent = currentUser.username;
   document.getElementById('balanceDisplay').textContent = currentUser.balance.toFixed(2) + ' $';
   document.getElementById('userInfo').style.display = 'flex';
   if (currentUser.role === 'admin') document.getElementById('adminBtn').style.display = 'inline-block';
   showPage('gamePage');
-  startGameLoop();
 }
 
+// ==================== محفظة ====================
 function transaction(type) {
   const amount = parseFloat(document.getElementById('walletAmount').value);
   if (!amount || amount <= 0) return toast('أدخل مبلغ صحيح');
   const users = DB.getUsers();
   const idx = users.findIndex(u => u.id === currentUser.id);
   if (type === 'withdraw' && users[idx].balance < amount) return toast('رصيد غير كافٍ');
-  
+
   if (type === 'deposit') users[idx].balance += amount;
   else users[idx].balance -= amount;
-  
+
   DB.setUsers(users);
   currentUser = users[idx];
   DB.setCurrentUser(currentUser);
   document.getElementById('balanceDisplay').textContent = currentUser.balance.toFixed(2) + ' $';
-  
+
   const trans = DB.getTrans();
   trans.push({ id: nextId(), user_id: currentUser.id, username: currentUser.username, type, amount, created_at: new Date().toLocaleString() });
   DB.setTrans(trans);
-  
+
   toast(type === 'deposit' ? 'تم الإيداع بنجاح!' : 'تم السحب بنجاح!');
   document.getElementById('walletAmount').value = '';
 }
 
-function generateCrashPoint() {
-  const r = Math.random();
-  if (r < 0.02) return 1.00;
-  if (r < 0.50) return 1.00 + Math.random() * 1.0;
-  if (r < 0.80) return 2.00 + Math.random() * 1.5;
-  return 3.50 + Math.random() * 5.0;
+// ==================== لعبة Chicken Road الحقيقية ====================
+function selectDiff(diff) {
+  selectedDiff = diff;
+  document.querySelectorAll('.diff-card').forEach(c => c.classList.remove('selected'));
+  document.querySelector(`.diff-card[data-diff="${diff}"]`).classList.add('selected');
+  document.getElementById('startBtn').disabled = false;
 }
 
-function placeBet() {
-  if (gameActive || betPlaced) return;
-  const amount = parseFloat(document.getElementById('betAmount').value);
-  if (!amount || amount <= 0) return toast('أدخل مبلغ رهان');
-  if (currentUser.balance < amount) return toast('رصيد غير كافٍ للرهان');
-  
-  const users = DB.getUsers();
-  const idx = users.findIndex(u => u.id === currentUser.id);
-  users[idx].balance -= amount;
-  DB.setUsers(users);
-  currentUser = users[idx];
-  DB.setCurrentUser(currentUser);
-  document.getElementById('balanceDisplay').textContent = currentUser.balance.toFixed(2) + ' $';
-  
-  currentBetAmount = amount;
-  betPlaced = true;
-  document.getElementById('betBtn').style.display = 'none';
-  document.getElementById('cashoutBtn').style.display = 'inline-block';
-  document.getElementById('cashoutBtn').disabled = false;
-  document.getElementById('gameStatus').textContent = '🔴 الرهان مباشر! اضغط سحب قبل الكراش...';
-}
-
-function cashout() {
-  if (!gameActive || !betPlaced) return;
-  const profit = currentBetAmount * (currentMultiplier - 1);
-  const totalReturn = currentBetAmount + profit;
-  
-  const users = DB.getUsers();
-  const idx = users.findIndex(u => u.id === currentUser.id);
-  users[idx].balance += totalReturn;
-  DB.setUsers(users);
-  currentUser = users[idx];
-  DB.setCurrentUser(currentUser);
-  document.getElementById('balanceDisplay').textContent = currentUser.balance.toFixed(2) + ' $';
-  
-  const bets = DB.getBets();
-  bets.push({ id: nextId(), user_id: currentUser.id, username: currentUser.username, amount: currentBetAmount, multiplier: crashPoint, cashout_multiplier: currentMultiplier, profit: profit, result: 'win', created_at: new Date().toLocaleString() });
-  DB.setBets(bets);
-  
-  endGame(true, totalReturn);
-}
-
-function startGameLoop() {
-  let countdown = 3;
-  document.getElementById('gameStatus').textContent = `الجولة تبدأ بعد ${countdown}...`;
-  document.getElementById('multiplier').textContent = '1.00x';
-  document.getElementById('multiplier').style.color = '#4ecca3';
-  document.getElementById('chicken').style.left = '5%';
-  document.getElementById('betBtn').style.display = 'inline-block';
-  document.getElementById('betBtn').disabled = true;
-  document.getElementById('cashoutBtn').style.display = 'none';
-  
-  const cd = setInterval(() => {
-    countdown--;
-    if (countdown > 0) {
-      document.getElementById('gameStatus').textContent = `الجولة تبدأ بعد ${countdown}...`;
-    } else {
-      clearInterval(cd);
-      startRound();
-    }
-  }, 1000);
-}
-
-function startRound() {
-  gameActive = true;
-  currentMultiplier = 1.00;
-  crashPoint = generateCrashPoint();
-  betPlaced = false;
-  
-  document.getElementById('betBtn').disabled = false;
-  document.getElementById('cashoutBtn').disabled = true;
-  document.getElementById('gameStatus').textContent = '🔴 الجولة جارية!';
-  
-  const startTime = Date.now();
-  const multEl = document.getElementById('multiplier');
-  const chickEl = document.getElementById('chicken');
-  
-  gameInterval = setInterval(() => {
-    const elapsed = (Date.now() - startTime) / 1000;
-    currentMultiplier = parseFloat((1 + elapsed * 0.4 + elapsed * elapsed * 0.05).toFixed(2));
-    const pos = 5 + Math.min((currentMultiplier - 1) / (crashPoint - 1) * 85, 90);
-    
-    multEl.textContent = currentMultiplier.toFixed(2) + 'x';
-    chickEl.style.left = pos + '%';
-    
-    if (currentMultiplier >= crashPoint) {
-      clearInterval(gameInterval);
-      if (betPlaced) {
-        const bets = DB.getBets();
-        bets.push({ id: nextId(), user_id: currentUser.id, username: currentUser.username, amount: currentBetAmount, multiplier: crashPoint, cashout_multiplier: 0, profit: 0, result: 'loss', created_at: new Date().toLocaleString() });
-        DB.setBets(bets);
-        endGame(false, 0);
-      } else {
-        endGame(false, 0, true);
-      }
-    }
-  }, 80);
-}
-
-function endGame(win, amount, noBet = false) {
-  gameActive = false;
-  clearInterval(gameInterval);
-  document.getElementById('betBtn').style.display = 'inline-block';
-  document.getElementById('betBtn').disabled = true;
-  document.getElementById('cashoutBtn').style.display = 'none';
-  
-  if (noBet) {
-    document.getElementById('gameStatus').textContent = '⚪ لم تراهن هذه الجولة';
-  } else if (win) {
-    document.getElementById('gameStatus').textContent = `🎉 ربحت ${amount.toFixed(2)} $!`;
-    document.getElementById('multiplier').style.color = '#ffd700';
-    toast(`🎉 ربحت ${amount.toFixed(2)} $!`);
-  } else {
-    document.getElementById('gameStatus').textContent = '💥 كراش! خسرت الرهان';
-    document.getElementById('multiplier').style.color = '#e94560';
-    toast('💥 كراش! خسرت الرهان');
+function generatePath(diff) {
+  const { steps, risk } = DIFFICULTY[diff];
+  const path = [];
+  for (let i = 0; i < steps; i++) {
+    path.push(Math.random() < risk ? 'fire' : 'safe');
   }
-  setTimeout(startGameLoop, 2500);
+  // تأكد أن آخر خطوة على الأقل آمنة إذا كلها نار (نادر)
+  if (path.every(p => p === 'fire')) path[steps - 1] = 'safe';
+  return path;
 }
 
+function generateMultipliers(diff) {
+  const { steps, startMult, base, maxMult } = DIFFICULTY[diff];
+  const mults = [];
+  for (let i = 0; i < steps; i++) {
+    let val = startMult * Math.pow(base, i);
+    if (i === steps - 1) val = maxMult; // آخر خطوة = أقصى ربح
+    else if (val > maxMult) val = maxMult;
+    mults.push(parseFloat(val.toFixed(2)));
+  }
+  return mults;
+}
+
+function startGame() {
+  if (!selectedDiff) return toast('اختر مستوى الصعوبة أولاً');
+  const bet = parseFloat(document.getElementById('betAmount').value);
+  if (!bet || bet <= 0) return toast('أدخل مبلغ رهان');
+  if (currentUser.balance < bet) return toast('رصيد غير كافٍ');
+
+  // خصم الرهان
+  const users = DB.getUsers();
+  const idx = users.findIndex(u => u.id === currentUser.id);
+  users[idx].balance -= bet;
+  DB.setUsers(users);
+  currentUser = users[idx];
+  DB.setCurrentUser(currentUser);
+  document.getElementById('balanceDisplay').textContent = currentUser.balance.toFixed(2) + ' $';
+
+  currentBet = bet;
+  gamePath = generatePath(selectedDiff);
+  gameMults = generateMultipliers(selectedDiff);
+  currentStep = -1;
+  gameActive = true;
+
+  document.getElementById('difficultySelect').style.display = 'none';
+  document.getElementById('playArea').style.display = 'block';
+  document.getElementById('currentBet').textContent = bet.toFixed(2) + ' $';
+  document.getElementById('gameStatus').textContent = 'اضغط "خطوة للأمام" لتبدأ التقدم...';
+  document.getElementById('gameStatus').style.color = '#aaa';
+
+  renderRoad();
+  updateGameInfo();
+  document.getElementById('goBtn').disabled = false;
+  document.getElementById('cashoutBtn2').disabled = true;
+}
+
+function renderRoad() {
+  const container = document.getElementById('roadContainer');
+  const steps = DIFFICULTY[selectedDiff].steps;
+  let html = '';
+  for (let i = 0; i < steps; i++) {
+    let cls = 'tile hidden';
+    let content = '?';
+    let chicken = '';
+
+    if (i < currentStep) {
+      cls = 'tile safe revealed';
+      content = '✓';
+    } else if (i === currentStep) {
+      cls = 'tile current';
+      content = '';
+      chicken = '<div class="chicken" id="activeChicken">🐔</div>';
+    }
+
+    if (i === currentStep && gamePath[i] === 'fire' && !gameActive) {
+      cls = 'tile fire';
+      content = '';
+      chicken = '<div class="chicken burned">🍗</div><div class="fire-effect">🔥</div>';
+    }
+
+    html += `<div class="${cls}" id="tile-${i}">${content}${chicken}</div>`;
+  }
+  container.innerHTML = html;
+}
+
+function updateGameInfo() {
+  const diff = DIFFICULTY[selectedDiff];
+  if (currentStep === -1) {
+    document.getElementById('currentMult').textContent = '1.00x';
+    document.getElementById('potentialWin').textContent = 'ربح محتمل: ' + currentBet.toFixed(2) + ' $';
+  } else {
+    const mult = gameMults[currentStep];
+    document.getElementById('currentMult').textContent = mult.toFixed(2) + 'x';
+    document.getElementById('potentialWin').textContent = 'ربح محتمل: ' + (currentBet * mult).toFixed(2) + ' $';
+  }
+  document.getElementById('stepCounter').textContent = `الخطوة: ${Math.max(0, currentStep)} / ${diff.steps}`;
+}
+
+function makeStep() {
+  if (!gameActive) return;
+
+  currentStep++;
+  const diff = DIFFICULTY[selectedDiff];
+
+  if (currentStep >= diff.steps) {
+    // وصل للنهاية!
+    winGame(diff.maxMult);
+    return;
+  }
+
+  const isFire = gamePath[currentStep] === 'fire';
+
+  if (isFire) {
+    // 🔥 نار! الدجاجة تُشوى
+    loseGame();
+  } else {
+    // ✅ آمن
+    renderRoad();
+    updateGameInfo();
+    document.getElementById('gameStatus').textContent = '✅ خطوة آمنة! تقدم أو اسحب أرباحك...';
+    document.getElementById('gameStatus').style.color = '#4ecca3';
+    document.getElementById('cashoutBtn2').disabled = false;
+
+    // إذا وصل للخطوة الأخيرة
+    if (currentStep === diff.steps - 1) {
+      document.getElementById('gameStatus').textContent = '🏁 خطوة أخيرة! اضغط سحب للفوز بالجائزة الكبرى!';
+      document.getElementById('goBtn').disabled = true;
+    }
+  }
+}
+
+function cashoutGame() {
+  if (!gameActive || currentStep < 0) return;
+  const mult = gameMults[currentStep];
+  winGame(mult);
+}
+
+function winGame(mult) {
+  gameActive = false;
+  const winAmount = currentBet * mult;
+
+  const users = DB.getUsers();
+  const idx = users.findIndex(u => u.id === currentUser.id);
+  users[idx].balance += winAmount;
+  DB.setUsers(users);
+  currentUser = users[idx];
+  DB.setCurrentUser(currentUser);
+  document.getElementById('balanceDisplay').textContent = currentUser.balance.toFixed(2) + ' $';
+
+  const bets = DB.getBets();
+  bets.push({
+    id: nextId(), user_id: currentUser.id, username: currentUser.username,
+    amount: currentBet, difficulty: selectedDiff, multiplier: mult,
+    steps_taken: currentStep + 1, profit: winAmount - currentBet,
+    result: 'win', created_at: new Date().toLocaleString()
+  });
+  DB.setBets(bets);
+
+  document.getElementById('currentMult').textContent = mult.toFixed(2) + 'x';
+  document.getElementById('currentMult').style.color = '#ffd700';
+  document.getElementById('gameStatus').textContent = `🎉 فزت بـ ${winAmount.toFixed(2)} $! (${mult.toFixed(2)}x)`;
+  document.getElementById('gameStatus').style.color = '#4ecca3';
+  document.getElementById('goBtn').disabled = true;
+  document.getElementById('cashoutBtn2').disabled = true;
+
+  if (currentStep >= 0) renderRoad();
+  toast(`🎉 ربحت ${winAmount.toFixed(2)} $!`);
+}
+
+function loseGame() {
+  gameActive = false;
+  renderRoad();
+
+  const bets = DB.getBets();
+  bets.push({
+    id: nextId(), user_id: currentUser.id, username: currentUser.username,
+    amount: currentBet, difficulty: selectedDiff, multiplier: 0,
+    steps_taken: currentStep + 1, profit: -currentBet,
+    result: 'loss', created_at: new Date().toLocaleString()
+  });
+  DB.setBets(bets);
+
+  document.getElementById('currentMult').textContent = '💥';
+  document.getElementById('currentMult').style.color = '#e94560';
+  document.getElementById('gameStatus').textContent = '💥 الدجاجة وقعت في النار! خسرت الرهان';
+  document.getElementById('gameStatus').style.color = '#e94560';
+  document.getElementById('goBtn').disabled = true;
+  document.getElementById('cashoutBtn2').disabled = true;
+
+  toast('💥 كراش! الدجاجة أصبحت مشوية 🍗');
+}
+
+function resetGame() {
+  document.getElementById('difficultySelect').style.display = 'block';
+  document.getElementById('playArea').style.display = 'none';
+  document.getElementById('currentMult').style.color = '#4ecca3';
+  selectedDiff = null;
+  document.querySelectorAll('.diff-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('startBtn').disabled = true;
+}
+
+// ==================== إدارة ====================
 function loadAdminData(type) {
   document.querySelectorAll('.admin-tabs button').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + type).classList.add('active');
-  
+
   let html = '<thead><tr>';
   if (type === 'users') {
     html += '<th>ID</th><th>المستخدم</th><th>الرصيد</th><th>الصلاحية</th><th>التاريخ</th></tr></thead><tbody>';
@@ -424,15 +601,17 @@ function loadAdminData(type) {
       html += `<tr><td>${u.id}</td><td>${u.username}</td><td>${u.balance.toFixed(2)}</td><td>${u.role}</td><td>${u.created_at}</td></tr>`;
     });
   } else if (type === 'bets') {
-    html += '<th>ID</th><th>المستخدم</th><th>الرهان</th><th>كراش</th><th>سحب</th><th>الربح</th><th>النتيجة</th></tr></thead><tbody>';
+    html += '<th>ID</th><th>المستخدم</th><th>الرهان</th><th>الصعوبة</th><th>المضاعف</th><th>الخطوات</th><th>الربح</th><th>النتيجة</th></tr></thead><tbody>';
     DB.getBets().slice().reverse().forEach(b => {
+      const diffName = DIFFICULTY[b.difficulty]?.name || b.difficulty;
       const color = b.result === 'win' ? 'color:#4ecca3' : 'color:#e94560';
-      html += `<tr><td>${b.id}</td><td>${b.username}</td><td>${b.amount}</td><td>${b.multiplier?.toFixed(2)}x</td><td>${b.cashout_multiplier?.toFixed(2)}x</td><td style="${color}">${b.profit.toFixed(2)}</td><td style="${color}">${b.result === 'win' ? '✅ ربح' : '❌ خسارة'}</td></tr>`;
+      html += `<tr><td>${b.id}</td><td>${b.username}</td><td>${b.amount}</td><td>${diffName}</td><td>${b.multiplier?.toFixed(2)}x</td><td>${b.steps_taken}</td><td style="${color}">${b.profit.toFixed(2)}</td><td style="${color}">${b.result === 'win' ? '✅ ربح' : '❌ خسارة'}</td></tr>`;
     });
   } else {
     html += '<th>ID</th><th>المستخدم</th><th>النوع</th><th>المبلغ</th><th>التاريخ</th></tr></thead><tbody>';
     DB.getTrans().slice().reverse().forEach(t => {
-      html += `<tr><td>${t.id}</td><td>${t.username}</td><td>${t.type === 'deposit' ? 'إيداع' : t.type === 'withdraw' ? 'سحب' : t.type}</td><td>${t.amount}</td><td>${t.created_at}</td></tr>`;
+      const typeName = t.type === 'deposit' ? 'إيداع' : t.type === 'withdraw' ? 'سحب' : t.type === 'admin_deposit' ? 'إضافة أدمن' : 'خصم أدمن';
+      html += `<tr><td>${t.id}</td><td>${t.username}</td><td>${typeName}</td><td>${t.amount}</td><td>${t.created_at}</td></tr>`;
     });
   }
   html += '</tbody>';
@@ -443,22 +622,22 @@ function adminAdjust(type) {
   const userId = parseInt(document.getElementById('adminUserId').value);
   const amount = parseFloat(document.getElementById('adminAmount').value);
   if (!userId || !amount || amount <= 0) return toast('أدخل ID والمبلغ بشكل صحيح');
-  
+
   const users = DB.getUsers();
   const idx = users.findIndex(u => u.id == userId);
   if (idx === -1) return toast('المستخدم غير موجود');
-  
+
   if (type === 'add') users[idx].balance += amount;
   else {
     if (users[idx].balance < amount) return toast('رصيد المستخدم غير كافٍ للخصم');
     users[idx].balance -= amount;
   }
   DB.setUsers(users);
-  
+
   const trans = DB.getTrans();
   trans.push({ id: nextId(), user_id: users[idx].id, username: users[idx].username, type: type === 'add' ? 'admin_deposit' : 'admin_withdraw', amount, created_at: new Date().toLocaleString() });
   DB.setTrans(trans);
-  
+
   toast(type === 'add' ? 'تم إضافة الرصيد!' : 'تم خصم الرصيد!');
   loadAdminData('users');
   document.getElementById('adminUserId').value = '';
