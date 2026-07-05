@@ -222,16 +222,12 @@ html, body {
   0%{transform:translateY(-50%) rotate(-3deg)}
   100%{transform:translateY(-50%) rotate(3deg) translateX(-8px)}
 }
+/* الدجاجة عند الخسارة - تقف ولا تتحرك */
 .chicken-wrapper.dead {
-  animation:chickenCrash .8s forwards;
-}
-@keyframes chickenCrash {
-  0%{transform:translateY(-50%) scale(1) rotate(0); filter:brightness(1)}
-  20%{transform:translateY(-50%) scale(1.2) rotate(-15deg); filter:brightness(2)}
-  40%{transform:translateY(-50%) scale(0.9) rotate(30deg); filter:brightness(1)}
-  60%{transform:translateY(-50%) scale(1.1) rotate(-20deg) translateX(-20px)}
-  80%{transform:translateY(-50%) scale(0.7) rotate(180deg) translateX(30px); opacity:0.8}
-  100%{transform:translateY(-50%) scale(0) rotate(360deg) translateX(60px); opacity:0}
+  animation:none;
+  transform:translateY(-50%) scale(1);
+  filter:grayscale(100%) brightness(0.5);
+  opacity:0.7;
 }
 .chicken-wrapper.win {
   animation:chickenVictory .6s infinite alternate;
@@ -241,7 +237,7 @@ html, body {
   100%{transform:translateY(-50%) translateX(-20px) scale(1.15)}
 }
 
-/* ===== السيارات العمودية الكبيرة (من الأسفل للأعلى - واقعية وسريعة) ===== */
+/* ===== السيارات العمودية الكبيرة (من الأسفل للأعلى - لا ترجع) ===== */
 .moving-car {
   position:absolute;
   z-index:25;
@@ -252,13 +248,12 @@ html, body {
   transition:none;
 }
 .moving-car.driving {
-  animation:carDrive 1.5s linear infinite;
+  animation:carDrive 1.5s linear forwards;
 }
 @keyframes carDrive {
   0%{transform:translateX(-50%) rotate(-90deg) translateY(400px); opacity:0.8}
   10%{transform:translateX(-50%) rotate(-90deg) translateY(350px); opacity:1}
-  90%{transform:translateX(-50%) rotate(-90deg) translateY(-350px); opacity:1}
-  100%{transform:translateX(-50%) rotate(-90deg) translateY(-400px); opacity:0.8}
+  100%{transform:translateX(-50%) rotate(-90deg) translateY(-400px); opacity:1}
 }
 .moving-car.crashing {
   animation:carCrashAnim .5s forwards;
@@ -877,7 +872,7 @@ function buildScene() {
   }
 }
 
-// ==================== سيارات متحركة عمودية كبيرة (من الأسفل للأعلى - واقعية وسريعة) =====
+// ==================== سيارات متحركة عمودية كبيرة (من الأسفل للأعلى - لا ترجع) =====
 function startMovingCars() {
   const steps = DIFFICULTY[selectedDiff].steps;
 
@@ -899,7 +894,7 @@ function createMovingCar(road, roadIndex) {
   const leftPos = lanePositions[laneIdx];
   const carTypes = ['🚗', '🚙', '🚕', '🚓', '🚐'];
   const carType = carTypes[Math.floor(Math.random() * carTypes.length)];
-  const speed = 5 + Math.random() * 5; // سرعة أعلى
+  const speed = 5 + Math.random() * 5;
 
   const car = document.createElement('div');
   car.className = 'moving-car';
@@ -910,21 +905,26 @@ function createMovingCar(road, roadIndex) {
   car.dataset.roadIndex = roadIndex;
   road.appendChild(car);
 
-  // تحريك السيارة عمودياً من الأسفل للأعلى بشكل واقعي وسريع
+  // تحريك السيارة عمودياً من الأسفل للأعلى - لا ترجع
   let pos = road.offsetHeight + 70;
   const interval = setInterval(() => {
-    if (!gameActive && currentStep >= roadIndex) {
-      clearInterval(interval);
-      car.remove();
-      return;
+    if (!gameActive) {
+      // عند الوصول لأي ضعف، السيارات تختفي
+      if (currentStep >= roadIndex) {
+        car.remove();
+        clearInterval(interval);
+        return;
+      }
     }
     pos -= speed;
     car.style.top = pos + 'px';
 
+    // إذا خرجت السيارة من الشاشة للأعلى - احذفها (لا ترجع)
     if (pos < -70) {
-      pos = road.offsetHeight + 70;
+      car.remove();
+      clearInterval(interval);
     }
-  }, 16); // ~60fps
+  }, 16);
 
   carIntervals.push(interval);
 }
@@ -1026,7 +1026,7 @@ function makeStep() {
   }
 }
 
-// ==================== اصطدام حقيقي ====================
+// ==================== اصطدام حقيقي - الدجاجة تقف ولا تتحرك ====================
 function crashEffect() {
   const chicken = document.getElementById('activeChicken');
   const road = document.getElementById(`road-${currentStep}`);
@@ -1068,8 +1068,9 @@ function crashEffect() {
   document.body.classList.add('screen-shake');
   setTimeout(() => document.body.classList.remove('screen-shake'), 500);
 
-  // تغيير الدجاجة لميتة
+  // الدجاجة تقف ولا تتحرك - تتحول لرمادية
   chicken.innerHTML = getDeadChickenSVG();
+  chicken.classList.remove('walk');
   chicken.classList.add('dead');
 
   setTimeout(() => loseGame(), 800);
