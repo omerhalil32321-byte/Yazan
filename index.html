@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
+
 /* ============================================
    Casino Dashboard - Complete Styles
    ============================================ */
@@ -364,12 +365,15 @@ body {
 /* Extra styles for single-page router */
 .page-section { display: block; }
 #dashboard-page { display: none; }
+
+/* Router styles */
+.page-section { display: block; }
+#dashboard-page { display: none; }
 </style>
 <base target="_blank">
 </head>
 <body>
 
-<!-- LOGIN PAGE -->
 <div id="login-page" class="page-section">
 
 
@@ -461,7 +465,8 @@ body {
 
 </div>
 
-<!-- DASHBOARD PAGE -->
+
+
 <div id="dashboard-page" class="page-section">
 
 
@@ -1072,7 +1077,10 @@ body {
 
 </div>
 
+
+
 <script>
+
 // ============================================
 // Casino Dashboard - Complete JavaScript
 // ============================================
@@ -1210,7 +1218,7 @@ const Auth = {
     logout() {
         this.currentUser = null;
         sessionStorage.removeItem('currentUser');
-        window.location.href = 'index.html';
+        showLoginPage();
     },
 
     getCurrentUser() {
@@ -1367,76 +1375,12 @@ function openModal(modalId) {
 }
 
 // ============================================
-// LOGIN PAGE LOGIC
-// ============================================
-function initLoginPage() {
-    // Tabs
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const forms = document.querySelectorAll('.form');
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            tabBtns.forEach(b => b.classList.remove('active'));
-            forms.forEach(f => f.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById(btn.dataset.tab + 'Form').classList.add('active');
-        });
-    });
-
-    // Login form
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const username = document.getElementById('loginUsername').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            const result = Auth.login(username, password);
-            if (result.success) {
-                showMessage('message', 'success', 'تم تسجيل الدخول بنجاح! جاري التحويل...');
-                setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
-            } else {
-                showMessage('message', 'error', result.message);
-            }
-        });
-    }
-
-    // Register form
-    const registerForm = document.getElementById('registerForm');
-    if (registerForm) {
-        registerForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const password = document.getElementById('regPassword').value;
-            const confirmPassword = document.getElementById('regConfirmPassword').value;
-            if (password !== confirmPassword) {
-                showMessage('message', 'error', 'كلمتا المرور غير متطابقتين');
-                return;
-            }
-            const userData = {
-                fullName: document.getElementById('regFullName').value.trim(),
-                username: document.getElementById('regUsername').value.trim(),
-                email: document.getElementById('regEmail').value.trim(),
-                phone: document.getElementById('regPhone').value.trim(),
-                password: password,
-                balance: 0
-            };
-            const result = Auth.register(userData);
-            if (result.success) {
-                showMessage('message', 'success', result.message + ' يمكنك الآن تسجيل الدخول');
-                document.querySelector('.tab-btn[data-tab="login"]').click();
-                registerForm.reset();
-            } else {
-                showMessage('message', 'error', result.message);
-            }
-        });
-    }
-}
-
-// ============================================
 // DASHBOARD PAGE LOGIC
 // ============================================
 function initDashboard() {
     const user = Auth.getCurrentUser();
     if (!user) {
-        window.location.href = 'index.html';
+        showLoginPage();
         return;
     }
 
@@ -2178,27 +2122,8 @@ function loadAdminStats() {
 }
 
 // ============================================
-// LOGOUT
-// ============================================
-function logout() {
-    Auth.logout();
-}
-
-// ============================================
 // INITIALIZATION
 // ============================================
-document.addEventListener('DOMContentLoaded', () => {
-    DataStore.init();
-
-    if (document.getElementById('loginForm') || document.getElementById('registerForm')) {
-        initLoginPage();
-    }
-
-    if (document.querySelector('.app-container')) {
-        initDashboard();
-    }
-});
-
 
 // ============================================
 // SINGLE PAGE ROUTER
@@ -2217,14 +2142,25 @@ function showDashboardPage() {
 }
 
 // Override logout
-logout = function() {
+function logout() {
     Auth.currentUser = null;
     sessionStorage.removeItem('currentUser');
     showLoginPage();
-};
+}
 
-// Override login success in initLoginPage
-initLoginPage = function() {
+// Override login success
+function initLoginPage() {
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const forms = document.querySelectorAll('.form');
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabBtns.forEach(b => b.classList.remove('active'));
+            forms.forEach(f => f.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.tab + 'Form').classList.add('active');
+        });
+    });
+
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
@@ -2269,27 +2205,20 @@ initLoginPage = function() {
             }
         });
     }
+}
 
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const forms = document.querySelectorAll('.form');
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            tabBtns.forEach(b => b.classList.remove('active'));
-            forms.forEach(f => f.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById(btn.dataset.tab + 'Form').classList.add('active');
-        });
-    });
-};
-
+// Single init
 document.addEventListener('DOMContentLoaded', () => {
     DataStore.init();
     initLoginPage();
     const user = Auth.getCurrentUser();
     if (user) {
         showDashboardPage();
+    } else {
+        showLoginPage();
     }
 });
+
 </script>
 
 </body>
