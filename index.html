@@ -1240,4 +1240,1246 @@ module.exports = app;
     "nodemon": "^3.0.1"
   }
 }
-      
+/**
+ * ╔══════════════════════════════════════════════════════════════════════╗
+ * ║        🐔 CHICKEN ROAD CASINO - Single File Edition                 ║
+ * ║        Full Casino Game with SYP Currency & Admin Panel             ║
+ * ║        One File - Everything Included                               ║
+ * ╚══════════════════════════════════════════════════════════════════════╝
+ * 
+ *  Setup:
+ *    1. npm init -y
+ *    2. npm install express sqlite3 bcryptjs jsonwebtoken cors dotenv helmet
+ *    3. node app.js
+ *    4. Open http://localhost:3000
+ * 
+ *  Default Admin: admin / Admin123!
+ */
+
+const express = require('express');
+const sqlite3 = require('sqlite3').verbose();
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const cors = require('cors');
+const helmet = require('helmet');
+const path = require('path');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET || 'chicken_road_secret_key_2024_syria';
+
+// ═══════════════════════════════════════════════════════════════════════
+// DATABASE SETUP (SQLite - Single File)
+// ═══════════════════════════════════════════════════════════════════════
+const DB_PATH = path.join(__dirname, 'casino.db');
+const db = new sqlite3.Database(DB_PATH);
+
+db.serialize(() => {
+  db.run(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    phone TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    role TEXT DEFAULT 'player',
+    is_active INTEGER DEFAULT 1,
+    is_verified INTEGER DEFAULT 0,
+    balance INTEGER DEFAULT 0,
+    total_deposited INTEGER DEFAULT 0,
+    total_withdrawn INTEGER DEFAULT 0,
+    total_wagered INTEGER DEFAULT 0,
+    total_won INTEGER DEFAULT 0,
+    games_played INTEGER DEFAULT 0,
+    games_won INTEGER DEFAULT 0,
+    highest_win INTEGER DEFAULT 0,
+    highest_multiplier REAL DEFAULT 0,
+    client_seed TEXT,
+    server_seed TEXT,
+    nonce INTEGER DEFAULT 0,
+    referral_code TEXT UNIQUE,
+    referred_by INTEGER,
+    referral_count INTEGER DEFAULT 0,
+    vip_level INTEGER DEFAULT 0,
+    vip_points INTEGER DEFAULT 0,
+    last_login DATETIME,
+    login_attempts INTEGER DEFAULT 0,
+    lock_until DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS games (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    bet_amount INTEGER NOT NULL,
+    difficulty TEXT NOT NULL,
+    server_seed TEXT NOT NULL,
+    client_seed TEXT NOT NULL,
+    nonce INTEGER NOT NULL,
+    mine_positions TEXT NOT NULL,
+    safe_positions TEXT NOT NULL,
+    revealed_positions TEXT DEFAULT '[]',
+    current_step INTEGER DEFAULT 0,
+    current_multiplier REAL DEFAULT 1.0,
+    status TEXT DEFAULT 'active',
+    final_multiplier REAL DEFAULT 1.0,
+    win_amount INTEGER DEFAULT 0,
+    profit INTEGER DEFAULT 0,
+    cashed_out_at REAL,
+    cashed_out_at_step INTEGER,
+    started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    ended_at DATETIME,
+    ip_address TEXT
+  )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS transactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    type TEXT NOT NULL,
+    amount INTEGER NOT NULL,
+    currency TEXT DEFAULT 'SYP',
+    status TEXT DEFAULT 'pending',
+    payment_method TEXT NOT NULL,
+    payment_details TEXT,
+    game_id INTEGER,
+    approved_by INTEGER,
+    approved_at DATETIME,
+    admin_notes TEXT,
+    balance_before INTEGER DEFAULT 0,
+    balance_after INTEGER DEFAULT 0,
+    ip_address TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    description TEXT,
+    category TEXT DEFAULT 'general',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+
+  const defaultSettings = [
+    ['min_bet', '100', 'Minimum bet amount in SYP', 'game'],
+    ['max_bet', '500000', 'Maximum bet amount in SYP', 'game'],
+    ['house_edge', '0.02', 'House edge percentage', 'game'],
+    ['usd_to_syp', '14500', 'USD to SYP exchange rate', 'payment'],
+    ['maintenance_mode', '0', 'Maintenance mode flag', 'general']
+  ];
+
+  defaultSettings.forEach(([key, value, desc, cat]) => {
+    db.run(`INSERT OR IGNORE INTO settings (key, value, description, category) VALUES (?, ?, ?, ?)`,
+      [key, value, desc, cat]);
+  });
+
+  const adminPassword = bcrypt.hashSync('Admin123!', 10);
+  db.run(`INSERT OR IGNORE INTO users 
+    (username, email, phone, password, role, is_verified, is_active, balance, client_seed, referral_code)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ['admin', 'admin@chickenroad.sy', '0933000000', adminPassword, 'super_admin', 1, 1, 0, 
+     crypto.randomBytes(16).toString('hex'), 'ADMIN001']);
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// MIDDLEWARE
+// ═══════════════════════════════════════════════════════════════════════
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+const authenticate = (req, res, next) => {
+  const token = req.header('Authorization')?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ success: false, message: 'لا يوجد توكن' });
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    res.status(401).json({ success: false, message: 'توكن غير صالح' });
+  }
+};
+
+const requireAdmin = (req, res, next) => {
+  if (!req.user || !['admin', 'super_admin', 'moderator'].includes(req.user.role)) {
+    return res.status(403).json({ success: false, message: 'غير مصرح' });
+  }
+  next();
+};
+
+const requireSuperAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== 'super_admin') {
+    return res.status(403).json({ success: false, message: 'مدير عام فقط' });
+  }
+  next();
+};
+
+// ═══════════════════════════════════════════════════════════════════════
+// HELPER FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════
+const dbGet = (sql, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.get(sql, params, (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+};
+
+const dbAll = (sql, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+};
+
+const dbRun = (sql, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function(err) {
+      if (err) reject(err);
+      else resolve({ id: this.lastID, changes: this.changes });
+    });
+  });
+};
+
+const formatSYP = (amount) => {
+  return new Intl.NumberFormat('ar-SY').format(amount || 0) + ' £S';
+};
+
+const generateServerSeed = () => crypto.randomBytes(32).toString('hex');
+const hashServerSeed = (seed) => crypto.createHash('sha256').update(seed).digest('hex');
+
+const generateGameResult = (serverSeed, clientSeed, nonce, difficulty) => {
+  const hash = crypto.createHash('sha256').update(`${serverSeed}:${clientSeed}:${nonce}`).digest('hex');
+  const mines = difficulty === 'EASY' ? 1 : difficulty === 'MEDIUM' ? 3 : difficulty === 'HARD' ? 5 : 10;
+  const total = 25;
+
+  const numbers = [];
+  for (let i = 0; i < hash.length; i += 8) {
+    numbers.push(parseInt(hash.substring(i, i + 8), 16));
+  }
+
+  const positions = Array.from({ length: total }, (_, i) => i);
+  const minePositions = [];
+  let seedIndex = 0;
+
+  for (let i = 0; i < mines; i++) {
+    const randomIndex = numbers[seedIndex % numbers.length] % positions.length;
+    minePositions.push(positions[randomIndex]);
+    positions.splice(randomIndex, 1);
+    seedIndex++;
+  }
+
+  return {
+    minePositions: minePositions.sort((a, b) => a - b),
+    safePositions: positions.sort((a, b) => a - b)
+  };
+};
+
+const calculateMultiplier = (step, difficulty) => {
+  const mines = difficulty === 'EASY' ? 1 : difficulty === 'MEDIUM' ? 3 : difficulty === 'HARD' ? 5 : 10;
+  const total = 25;
+  const safeTiles = total - mines;
+
+  let prob = 1;
+  for (let i = 0; i < step; i++) {
+    prob *= (safeTiles - i) / (total - i);
+  }
+
+  const diffMult = difficulty === 'EASY' ? 1.0 : difficulty === 'MEDIUM' ? 1.5 : difficulty === 'HARD' ? 2.0 : 3.0;
+  return Math.round((1 / prob) * (1 - 0.02) * diffMult * 100) / 100;
+};
+
+const activeGames = new Map();
+
+// ═══════════════════════════════════════════════════════════════════════
+// AUTH ROUTES
+// ═══════════════════════════════════════════════════════════════════════
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { username, email, phone, password, referralCode } = req.body;
+
+    const existing = await dbGet(`SELECT id FROM users WHERE username = ? OR email = ? OR phone = ?`,
+      [username, email, phone]);
+
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'المستخدم موجود مسبقاً' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const clientSeed = crypto.randomBytes(16).toString('hex');
+    const userReferralCode = crypto.randomBytes(4).toString('hex').toUpperCase();
+
+    let referredBy = null;
+    if (referralCode) {
+      const referrer = await dbGet(`SELECT id FROM users WHERE referral_code = ?`, [referralCode.toUpperCase()]);
+      if (referrer) {
+        referredBy = referrer.id;
+        await dbRun(`UPDATE users SET referral_count = referral_count + 1 WHERE id = ?`, [referrer.id]);
+      }
+    }
+
+    const result = await dbRun(
+      `INSERT INTO users (username, email, phone, password, client_seed, referral_code, referred_by) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [username, email, phone, hashedPassword, clientSeed, userReferralCode, referredBy]
+    );
+
+    const token = jwt.sign({ id: result.id, role: 'player' }, JWT_SECRET, { expiresIn: '7d' });
+
+    res.status(201).json({
+      success: true,
+      message: 'تم التسجيل بنجاح',
+      token,
+      user: { id: result.id, username, email, phone, balance: 0, role: 'player', referralCode: userReferralCode }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ في التسجيل', error: error.message });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    const user = await dbGet(
+      `SELECT * FROM users WHERE username = ? OR email = ? OR phone = ?`,
+      [username, username, username]
+    );
+
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'بيانات الدخول غير صحيحة' });
+    }
+
+    if (user.lock_until && new Date(user.lock_until) > new Date()) {
+      return res.status(403).json({ success: false, message: 'الحساب مقفل مؤقتاً' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      await dbRun(`UPDATE users SET login_attempts = login_attempts + 1 WHERE id = ?`, [user.id]);
+      if (user.login_attempts + 1 >= 5) {
+        const lockTime = new Date(Date.now() + 2 * 60 * 60 * 1000);
+        await dbRun(`UPDATE users SET lock_until = ? WHERE id = ?`, [lockTime, user.id]);
+      }
+      return res.status(401).json({ success: false, message: 'بيانات الدخول غير صحيحة' });
+    }
+
+    await dbRun(`UPDATE users SET login_attempts = 0, lock_until = NULL, last_login = CURRENT_TIMESTAMP WHERE id = ?`, [user.id]);
+
+    const expiresIn = ['admin', 'super_admin', 'moderator'].includes(user.role) ? '1d' : '7d';
+    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn });
+
+    res.json({
+      success: true,
+      message: 'تم تسجيل الدخول بنجاح',
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        phone: user.phone,
+        balance: user.balance,
+        role: user.role,
+        isVerified: user.is_verified,
+        vipLevel: user.vip_level,
+        referralCode: user.referral_code
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ في تسجيل الدخول' });
+  }
+});
+
+app.get('/api/auth/me', authenticate, async (req, res) => {
+  try {
+    const user = await dbGet(`SELECT id, username, email, phone, balance, role, is_verified, vip_level, games_played, total_won, referral_code, referral_count FROM users WHERE id = ?`, [req.user.id]);
+    res.json({ success: true, user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ' });
+  }
+});
+
+app.post('/api/auth/refresh-seed', authenticate, async (req, res) => {
+  const newSeed = crypto.randomBytes(16).toString('hex');
+  await dbRun(`UPDATE users SET client_seed = ?, nonce = 0 WHERE id = ?`, [newSeed, req.user.id]);
+  res.json({ success: true, clientSeed: newSeed });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// GAME ROUTES
+// ═══════════════════════════════════════════════════════════════════════
+app.post('/api/game/start', authenticate, async (req, res) => {
+  try {
+    const { amount, difficulty } = req.body;
+    const userId = req.user.id;
+
+    if (amount < 100 || amount > 500000 || amount % 100 !== 0) {
+      return res.status(400).json({ success: false, message: 'مبلغ غير صالح (100 - 500,000 £S)' });
+    }
+
+    const user = await dbGet(`SELECT * FROM users WHERE id = ?`, [userId]);
+    if (user.balance < amount) {
+      return res.status(400).json({ success: false, message: `رصيد غير كافي. رصيدك: ${formatSYP(user.balance)}` });
+    }
+
+    if (activeGames.has(userId.toString())) {
+      return res.status(400).json({ success: false, message: 'لديك لعبة نشطة' });
+    }
+
+    const serverSeed = generateServerSeed();
+    const clientSeed = user.client_seed || generateServerSeed();
+    const nonce = (user.nonce || 0) + 1;
+
+    const gameResult = generateGameResult(serverSeed, clientSeed, nonce, difficulty);
+
+    await dbRun(`UPDATE users SET balance = balance - ?, total_wagered = total_wagered + ?, nonce = ? WHERE id = ?`,
+      [amount, amount, nonce, userId]);
+
+    const gameResult_db = await dbRun(
+      `INSERT INTO games (user_id, bet_amount, difficulty, server_seed, client_seed, nonce, mine_positions, safe_positions, ip_address)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [userId, amount, difficulty, serverSeed, clientSeed, nonce,
+       JSON.stringify(gameResult.minePositions), JSON.stringify(gameResult.safePositions), req.ip]
+    );
+
+    await dbRun(
+      `INSERT INTO transactions (user_id, type, amount, status, payment_method, game_id, balance_before, balance_after)
+       VALUES (?, 'loss', ?, 'completed', 'internal', ?, ?, ?)`,
+      [userId, amount, gameResult_db.id, user.balance, user.balance - amount]
+    );
+
+    activeGames.set(userId.toString(), {
+      gameId: gameResult_db.id,
+      serverSeed,
+      minePositions: gameResult.minePositions,
+      safePositions: gameResult.safePositions,
+      currentStep: 0,
+      betAmount: amount,
+      difficulty,
+      revealedPositions: []
+    });
+
+    const multipliers = [];
+    const maxSteps = difficulty === 'EASY' ? 24 : difficulty === 'MEDIUM' ? 22 : difficulty === 'HARD' ? 20 : 15;
+    for (let i = 1; i <= maxSteps; i++) {
+      multipliers.push({ step: i, multiplier: calculateMultiplier(i, difficulty) });
+    }
+
+    const updatedUser = await dbGet(`SELECT balance FROM users WHERE id = ?`, [userId]);
+
+    res.json({
+      success: true,
+      game: {
+        id: gameResult_db.id,
+        betAmount: amount,
+        difficulty,
+        serverSeedHash: hashServerSeed(serverSeed),
+        clientSeed,
+        nonce,
+        currentStep: 0,
+        currentMultiplier: 1.0,
+        balance: updatedUser.balance,
+        multipliers
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ في بدء اللعبة', error: error.message });
+  }
+});
+
+app.post('/api/game/step', authenticate, async (req, res) => {
+  try {
+    const { position } = req.body;
+    const userId = req.user.id;
+
+    const activeGame = activeGames.get(userId.toString());
+    if (!activeGame) {
+      return res.status(400).json({ success: false, message: 'لا يوجد لعبة نشطة' });
+    }
+
+    if (activeGame.revealedPositions.includes(position)) {
+      return res.status(400).json({ success: false, message: 'موقع مكشوف مسبقاً' });
+    }
+
+    const isMine = activeGame.minePositions.includes(position);
+    const newStep = activeGame.currentStep + 1;
+    activeGame.revealedPositions.push(position);
+    activeGame.currentStep = newStep;
+
+    if (isMine) {
+      activeGames.delete(userId.toString());
+
+      await dbRun(`UPDATE games SET status = 'lost', current_step = ?, revealed_positions = ?, ended_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        [newStep, JSON.stringify(activeGame.revealedPositions), activeGame.gameId]);
+
+      await dbRun(`UPDATE users SET games_played = games_played + 1 WHERE id = ?`, [userId]);
+
+      const user = await dbGet(`SELECT balance FROM users WHERE id = ?`, [userId]);
+
+      return res.json({
+        success: true,
+        result: 'lost',
+        message: '💥 انفجرت! خسرت الرهان',
+        game: {
+          id: activeGame.gameId,
+          step: newStep,
+          position,
+          isMine: true,
+          minePositions: activeGame.minePositions,
+          betAmount: activeGame.betAmount,
+          lossAmount: activeGame.betAmount,
+          balance: user.balance
+        }
+      });
+    }
+
+    const newMultiplier = calculateMultiplier(newStep, activeGame.difficulty);
+    activeGame.currentMultiplier = newMultiplier;
+
+    await dbRun(`UPDATE games SET current_step = ?, current_multiplier = ?, revealed_positions = ? WHERE id = ?`,
+      [newStep, newMultiplier, JSON.stringify(activeGame.revealedPositions), activeGame.gameId]);
+
+    const potentialWin = Math.round(activeGame.betAmount * newMultiplier);
+    const profit = potentialWin - activeGame.betAmount;
+
+    const maxSteps = activeGame.difficulty === 'EASY' ? 24 : activeGame.difficulty === 'MEDIUM' ? 22 : activeGame.difficulty === 'HARD' ? 20 : 15;
+
+    if (newStep >= maxSteps) {
+      activeGames.delete(userId.toString());
+
+      await dbRun(`UPDATE users SET balance = balance + ?, total_won = total_won + ?, games_played = games_played + 1, games_won = games_won + 1 WHERE id = ?`,
+        [potentialWin, potentialWin, userId]);
+
+      await dbRun(`UPDATE games SET status = 'won', final_multiplier = ?, win_amount = ?, profit = ?, ended_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        [newMultiplier, potentialWin, profit, activeGame.gameId]);
+
+      const user = await dbGet(`SELECT balance FROM users WHERE id = ?`, [userId]);
+
+      await dbRun(
+        `INSERT INTO transactions (user_id, type, amount, status, payment_method, game_id, balance_before, balance_after)
+         VALUES (?, 'win', ?, 'completed', 'internal', ?, ?, ?)`,
+        [userId, potentialWin, activeGame.gameId, user.balance - potentialWin, user.balance]
+      );
+
+      return res.json({
+        success: true,
+        result: 'won',
+        message: '🎉 فوز كبير!',
+        game: {
+          id: activeGame.gameId,
+          step: newStep,
+          position,
+          isMine: false,
+          multiplier: newMultiplier,
+          winAmount: potentialWin,
+          profit,
+          balance: user.balance
+        }
+      });
+    }
+
+    const user = await dbGet(`SELECT balance FROM users WHERE id = ?`, [userId]);
+
+    res.json({
+      success: true,
+      result: 'safe',
+      message: '✅ آمن!',
+      game: {
+        id: activeGame.gameId,
+        step: newStep,
+        position,
+        isMine: false,
+        currentMultiplier: newMultiplier,
+        potentialWin,
+        potentialProfit: profit,
+        balance: user.balance,
+        canCashOut: true
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ في اللعبة' });
+  }
+});
+
+app.post('/api/game/cashout', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const activeGame = activeGames.get(userId.toString());
+
+    if (!activeGame) {
+      return res.status(400).json({ success: false, message: 'لا يوجد لعبة للسحب' });
+    }
+
+    if (activeGame.currentStep === 0) {
+      return res.status(400).json({ success: false, message: 'يجب خطوة واحدة على الأقل' });
+    }
+
+    const winAmount = Math.round(activeGame.betAmount * activeGame.currentMultiplier);
+    const profit = winAmount - activeGame.betAmount;
+
+    await dbRun(`UPDATE users SET balance = balance + ?, total_won = total_won + ?, games_played = games_played + 1, games_won = games_won + 1 WHERE id = ?`,
+      [winAmount, winAmount, userId]);
+
+    await dbRun(`UPDATE games SET status = 'cashed_out', final_multiplier = ?, win_amount = ?, profit = ?, cashed_out_at = ?, cashed_out_at_step = ?, ended_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      [activeGame.currentMultiplier, winAmount, profit, activeGame.currentMultiplier, activeGame.currentStep, activeGame.gameId]);
+
+    const user = await dbGet(`SELECT balance FROM users WHERE id = ?`, [userId]);
+
+    await dbRun(
+      `INSERT INTO transactions (user_id, type, amount, status, payment_method, game_id, balance_before, balance_after)
+       VALUES (?, 'win', ?, 'completed', 'internal', ?, ?, ?)`,
+      [userId, winAmount, activeGame.gameId, user.balance - winAmount, user.balance]
+    );
+
+    activeGames.delete(userId.toString());
+
+    res.json({
+      success: true,
+      message: '💰 تم السحب بنجاح!',
+      game: {
+        id: activeGame.gameId,
+        cashedOutAtStep: activeGame.currentStep,
+        multiplier: activeGame.currentMultiplier,
+        winAmount,
+        profit,
+        balance: user.balance
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ في السحب' });
+  }
+});
+
+app.get('/api/game/history', authenticate, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = (page - 1) * limit;
+
+    const games = await dbAll(
+      `SELECT id, bet_amount, difficulty, status, current_step, final_multiplier, win_amount, profit, created_at
+       FROM games WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+      [req.user.id, limit, offset]
+    );
+
+    const total = await dbGet(`SELECT COUNT(*) as count FROM games WHERE user_id = ?`, [req.user.id]);
+
+    res.json({
+      success: true,
+      games,
+      pagination: { page, limit, total: total.count, pages: Math.ceil(total.count / limit) }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// TRANSACTION ROUTES
+// ═══════════════════════════════════════════════════════════════════════
+app.post('/api/transactions/deposit', authenticate, async (req, res) => {
+  try {
+    const { amount, paymentMethod, paymentDetails } = req.body;
+    if (amount < 1000) {
+      return res.status(400).json({ success: false, message: 'الحد الأدنى 1,000 £S' });
+    }
+    const user = await dbGet(`SELECT balance FROM users WHERE id = ?`, [req.user.id]);
+    const result = await dbRun(
+      `INSERT INTO transactions (user_id, type, amount, payment_method, payment_details, balance_before, balance_after, ip_address)
+       VALUES (?, 'deposit', ?, ?, ?, ?, ?, ?)`,
+      [req.user.id, amount, paymentMethod, JSON.stringify(paymentDetails), user.balance, user.balance, req.ip]
+    );
+    res.json({ success: true, message: 'تم إرسال طلب الإيداع', transactionId: result.id });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ' });
+  }
+});
+
+app.post('/api/transactions/withdrawal', authenticate, async (req, res) => {
+  try {
+    const { amount, paymentMethod, paymentDetails } = req.body;
+    if (amount < 5000) {
+      return res.status(400).json({ success: false, message: 'الحد الأدنى 5,000 £S' });
+    }
+    const user = await dbGet(`SELECT balance FROM users WHERE id = ?`, [req.user.id]);
+    if (user.balance < amount) {
+      return res.status(400).json({ success: false, message: 'رصيد غير كافٍ' });
+    }
+    await dbRun(`UPDATE users SET balance = balance - ? WHERE id = ?`, [amount, req.user.id]);
+    const result = await dbRun(
+      `INSERT INTO transactions (user_id, type, amount, payment_method, payment_details, balance_before, balance_after, ip_address)
+       VALUES (?, 'withdrawal', ?, ?, ?, ?, ?, ?)`,
+      [req.user.id, amount, paymentMethod, JSON.stringify(paymentDetails), user.balance, user.balance - amount, req.ip]
+    );
+    res.json({ success: true, message: 'تم إرسال طلب السحب', transactionId: result.id });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ' });
+  }
+});
+
+app.get('/api/transactions/history', authenticate, async (req, res) => {
+  try {
+    const transactions = await dbAll(
+      `SELECT * FROM transactions WHERE user_id = ? ORDER BY created_at DESC`,
+      [req.user.id]
+    );
+    res.json({ success: true, transactions });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// ADMIN ROUTES
+// ═══════════════════════════════════════════════════════════════════════
+app.post('/api/admin/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const user = await dbGet(
+      `SELECT * FROM users WHERE (username = ? OR email = ?) AND role IN ('admin', 'super_admin', 'moderator')`,
+      [username, username]
+    );
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'بيانات الدخول غير صحيحة' });
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'بيانات الدخول غير صحيحة' });
+    }
+    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
+    res.json({
+      success: true,
+      token,
+      admin: { id: user.id, username: user.username, role: user.role, email: user.email }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ' });
+  }
+});
+
+app.get('/api/admin/dashboard', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const totalUsers = await dbGet(`SELECT COUNT(*) as count FROM users`);
+    const totalPlayers = await dbGet(`SELECT COUNT(*) as count FROM users WHERE role = 'player'`);
+    const newUsersToday = await dbGet(`SELECT COUNT(*) as count FROM users WHERE DATE(created_at) = ?`, [today]);
+    const totalGames = await dbGet(`SELECT COUNT(*) as count FROM games`);
+    const gamesToday = await dbGet(`SELECT COUNT(*) as count FROM games WHERE DATE(started_at) = ?`, [today]);
+    const totalDeposits = await dbGet(`SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE type = 'deposit' AND status = 'completed'`);
+    const totalWithdrawals = await dbGet(`SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE type = 'withdrawal' AND status = 'completed'`);
+    const pendingTransactions = await dbGet(`SELECT COUNT(*) as count FROM transactions WHERE status = 'pending'`);
+    const totalRevenue = await dbGet(`SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE type = 'win' AND status = 'completed'`);
+
+    const recentGames = await dbAll(
+      `SELECT g.*, u.username FROM games g JOIN users u ON g.user_id = u.id ORDER BY g.created_at DESC LIMIT 10`
+    );
+    const recentTransactions = await dbAll(
+      `SELECT t.*, u.username FROM transactions t JOIN users u ON t.user_id = u.id ORDER BY t.created_at DESC LIMIT 10`
+    );
+
+    res.json({
+      success: true,
+      stats: {
+        users: { total: totalUsers.count, players: totalPlayers.count, newToday: newUsersToday.count },
+        games: { total: totalGames.count, today: gamesToday.count },
+        financial: {
+          totalDeposits: totalDeposits.total,
+          totalWithdrawals: totalWithdrawals.total,
+          pendingTransactions: pendingTransactions.count,
+          totalRevenue: totalRevenue.total
+        }
+      },
+      recentActivity: { games: recentGames, transactions: recentTransactions }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ' });
+  }
+});
+
+app.get('/api/admin/users', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = (page - 1) * limit;
+    const search = req.query.search || '';
+
+    let sql = `SELECT id, username, email, phone, role, balance, is_active, is_verified, games_played, total_wagered, total_won, vip_level, last_login, created_at FROM users`;
+    let countSql = `SELECT COUNT(*) as count FROM users`;
+    let params = [];
+
+    if (search) {
+      sql += ` WHERE username LIKE ? OR email LIKE ? OR phone LIKE ?`;
+      countSql += ` WHERE username LIKE ? OR email LIKE ? OR phone LIKE ?`;
+      params = [`%${search}%`, `%${search}%`, `%${search}%`];
+    }
+
+    sql += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+
+    const users = await dbAll(sql, [...params, limit, offset]);
+    const total = await dbGet(countSql, params);
+
+    res.json({ success: true, users, pagination: { page, limit, total: total.count, pages: Math.ceil(total.count / limit) } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ' });
+  }
+});
+
+app.put('/api/admin/users/:id', authenticate, requireSuperAdmin, async (req, res) => {
+  try {
+    const { isActive, role, balance } = req.body;
+    const updates = [];
+    const params = [];
+
+    if (isActive !== undefined) { updates.push('is_active = ?'); params.push(isActive ? 1 : 0); }
+    if (role) { updates.push('role = ?'); params.push(role); }
+    if (balance !== undefined) { updates.push('balance = ?'); params.push(balance); }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ success: false, message: 'لا يوجد بيانات للتحديث' });
+    }
+
+    params.push(req.params.id);
+    await dbRun(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, params);
+
+    const user = await dbGet(`SELECT * FROM users WHERE id = ?`, [req.params.id]);
+    res.json({ success: true, message: 'تم التحديث', user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ' });
+  }
+});
+
+app.get('/api/admin/transactions', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = (page - 1) * limit;
+
+    const transactions = await dbAll(
+      `SELECT t.*, u.username, u.phone FROM transactions t JOIN users u ON t.user_id = u.id ORDER BY t.created_at DESC LIMIT ? OFFSET ?`,
+      [limit, offset]
+    );
+    const total = await dbGet(`SELECT COUNT(*) as count FROM transactions`);
+
+    res.json({ success: true, transactions, pagination: { page, limit, total: total.count, pages: Math.ceil(total.count / limit) } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ' });
+  }
+});
+
+app.put('/api/admin/transactions/:id', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { status, adminNotes } = req.body;
+    const transaction = await dbGet(`SELECT * FROM transactions WHERE id = ?`, [req.params.id]);
+    if (!transaction) {
+      return res.status(404).json({ success: false, message: 'المعاملة غير موجودة' });
+    }
+
+    await dbRun(
+      `UPDATE transactions SET status = ?, approved_by = ?, approved_at = CURRENT_TIMESTAMP, admin_notes = ? WHERE id = ?`,
+      [status, req.user.id, adminNotes || '', req.params.id]
+    );
+
+    if (status === 'approved' && transaction.type === 'deposit') {
+      await dbRun(`UPDATE users SET balance = balance + ?, total_deposited = total_deposited + ? WHERE id = ?`,
+        [transaction.amount, transaction.amount, transaction.user_id]);
+    }
+    if (status === 'approved' && transaction.type === 'withdrawal') {
+      await dbRun(`UPDATE users SET total_withdrawn = total_withdrawn + ? WHERE id = ?`,
+        [transaction.amount, transaction.user_id]);
+    }
+    if (status === 'rejected' && transaction.type === 'withdrawal') {
+      await dbRun(`UPDATE users SET balance = balance + ? WHERE id = ?`,
+        [transaction.amount, transaction.user_id]);
+    }
+
+    res.json({ success: true, message: `تم ${status === 'approved' ? 'الموافقة' : 'الرفض'}` });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ' });
+  }
+});
+
+app.get('/api/admin/games', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = (page - 1) * limit;
+
+    const games = await dbAll(
+      `SELECT g.*, u.username FROM games g JOIN users u ON g.user_id = u.id ORDER BY g.created_at DESC LIMIT ? OFFSET ?`,
+      [limit, offset]
+    );
+    const total = await dbGet(`SELECT COUNT(*) as count FROM games`);
+
+    res.json({ success: true, games, pagination: { page, limit, total: total.count, pages: Math.ceil(total.count / limit) } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// FRONTEND - SINGLE HTML FILE
+// ═══════════════════════════════════════════════════════════════════════
+
+const HTML_CONTENT = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐔 Chicken Road Casino - لعبة الدجاجة</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0a0a1a; color: #fff; min-height: 100vh; overflow-x: hidden; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+  .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: #1a1a3e; border-radius: 12px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .logo { font-size: 24px; font-weight: bold; color: #e94560; }
+  .balance-display { background: #0f3460; padding: 10px 20px; border-radius: 8px; font-size: 18px; }
+  .balance-display span { color: #4CAF50; font-weight: bold; }
+  .btn { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: all 0.3s; }
+  .btn-primary { background: #e94560; color: white; }
+  .btn-primary:hover { background: #ff6b6b; transform: translateY(-2px); }
+  .btn-success { background: #4CAF50; color: white; }
+  .btn-success:hover { background: #66BB6A; }
+  .btn-warning { background: #FF9800; color: white; }
+  .btn-danger { background: #F44336; color: white; }
+  .btn-outline { background: transparent; border: 2px solid #e94560; color: #e94560; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .card { background: #16213e; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+  .card-title { font-size: 20px; margin-bottom: 15px; color: #e94560; }
+  .form-group { margin-bottom: 15px; }
+  .form-group label { display: block; margin-bottom: 8px; color: #aaa; }
+  .form-control { width: 100%; padding: 12px; border: 2px solid #0f3460; border-radius: 8px; background: #0a0a1a; color: white; font-size: 16px; }
+  .form-control:focus { outline: none; border-color: #e94560; }
+  .game-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; max-width: 500px; margin: 0 auto 20px; }
+  .tile { aspect-ratio: 1; border-radius: 10px; border: none; background: #0f3460; color: white; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+  .tile:hover:not(:disabled) { background: #1a5490; transform: scale(1.05); }
+  .tile.revealed-safe { background: #4CAF50; }
+  .tile.revealed-mine { background: #F44336; animation: shake 0.5s; }
+  .tile:disabled { cursor: default; }
+  @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+  .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+  .stat-box { background: #1a1a3e; padding: 15px; border-radius: 10px; text-align: center; }
+  .stat-box .value { font-size: 28px; font-weight: bold; color: #e94560; }
+  .stat-box .label { color: #aaa; font-size: 14px; margin-top: 5px; }
+  .difficulty-selector { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+  .difficulty-btn { padding: 15px; border-radius: 10px; border: 2px solid; background: transparent; color: white; cursor: pointer; transition: all 0.3s; }
+  .difficulty-btn.active { background: var(--diff-color); }
+  .difficulty-btn.easy { --diff-color: #4CAF50; border-color: #4CAF50; }
+  .difficulty-btn.medium { --diff-color: #FF9800; border-color: #FF9800; }
+  .difficulty-btn.hard { --diff-color: #F44336; border-color: #F44336; }
+  .difficulty-btn.hardcore { --diff-color: #9C27B0; border-color: #9C27B0; }
+  .bet-amounts { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+  .bet-btn { padding: 8px 16px; border-radius: 6px; border: none; background: #0f3460; color: white; cursor: pointer; }
+  .bet-btn.active { background: #e94560; }
+  .multiplier-table { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; max-height: 200px; overflow-y: auto; }
+  .multiplier-item { background: #0f3460; padding: 8px; border-radius: 6px; text-align: center; font-size: 14px; }
+  .multiplier-item.current { background: #e94560; }
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+  .modal-content { background: #1a1a3e; padding: 30px; border-radius: 15px; max-width: 400px; width: 90%; text-align: center; }
+  .modal-content .icon { font-size: 60px; margin-bottom: 15px; }
+  .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #0f3460; padding-bottom: 10px; }
+  .tab { padding: 10px 20px; cursor: pointer; border-radius: 6px; }
+  .tab.active { background: #e94560; }
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th, .data-table td { padding: 12px; text-align: right; border-bottom: 1px solid #0f3460; }
+  .data-table th { background: #0f3460; color: #e94560; }
+  .data-table tr:hover { background: #1a1a3e; }
+  .badge { padding: 4px 12px; border-radius: 12px; font-size: 12px; }
+  .badge-success { background: #4CAF50; }
+  .badge-danger { background: #F44336; }
+  .badge-warning { background: #FF9800; }
+  .nav-menu { display: flex; gap: 15px; flex-wrap: wrap; }
+  .nav-item { padding: 10px 15px; cursor: pointer; border-radius: 6px; transition: 0.3s; }
+  .nav-item:hover, .nav-item.active { background: #e94560; }
+  .hidden { display: none !important; }
+  .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 2000; }
+  .toast { background: #1a1a3e; padding: 15px 25px; border-radius: 8px; margin-bottom: 10px; border-right: 4px solid #e94560; animation: slideDown 0.3s ease-out; }
+  @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .fade-in { animation: fadeIn 0.5s ease-in; }
+  .slide-up { animation: slideUp 0.5s ease-out; }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .loading { text-align: center; padding: 40px; }
+  .spinner { width: 50px; height: 50px; border: 4px solid #0f3460; border-top-color: #e94560; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (max-width: 768px) { .game-grid { gap: 5px; } .tile { font-size: 14px; } .stats-bar { grid-template-columns: repeat(2, 1fr); } .difficulty-selector { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="loading">
+    <div class="spinner"></div>
+    <p>جاري التحميل...</p>
+  </div>
+</div>
+<script>
+const API_URL = window.location.origin + '/api';
+const state = { user: null, token: localStorage.getItem('token'), game: null, currentView: 'login', isAdmin: false };
+const formatSYP = (amount) => new Intl.NumberFormat('ar-SY').format(amount || 0) + ' £S';
+const el = (id) => document.getElementById(id);
+const showToast = (message, type = 'info') => {
+  const container = el('toast-container') || document.body;
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.style.borderRightColor = type === 'success' ? '#4CAF50' : type === 'error' ? '#F44336' : '#e94560';
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+};
+const api = async (endpoint, options = {}) => {
+  const url = API_URL + endpoint;
+  const config = { headers: { 'Content-Type': 'application/json', ...(state.token ? { 'Authorization': 'Bearer ' + state.token } : {}) }, ...options };
+  if (config.body && typeof config.body === 'object') config.body = JSON.stringify(config.body);
+  const response = await fetch(url, config);
+  const data = await response.json();
+  if (!data.success) throw new Error(data.message || 'خطأ');
+  return data;
+};
+
+function renderApp() {
+  const app = el('app');
+  app.innerHTML = '<div id="toast-container" class="toast-container"></div><div id="main-content"></div>';
+  if (state.token) {
+    loadUser().then(() => {
+      if (state.isAdmin && state.currentView === 'admin') renderAdmin();
+      else renderGame();
+    }).catch(() => { state.token = null; localStorage.removeItem('token'); renderLogin(); });
+  } else renderLogin();
+}
+
+async function loadUser() {
+  const data = await api('/auth/me');
+  state.user = data.user;
+  state.isAdmin = ['admin', 'super_admin', 'moderator'].includes(data.user.role);
+}
+
+function renderLogin() {
+  const main = el('main-content');
+  main.innerHTML = '<div class="container fade-in"><div class="card" style="max-width: 450px; margin: 50px auto;"><div style="text-align: center; margin-bottom: 30px;"><div style="font-size: 60px; margin-bottom: 10px;">🐔</div><h1 style="color: #e94560;">Chicken Road Casino</h1><p style="color: #aaa;">لعبة الدجاجة - الليرة السورية</p></div><div class="tabs" style="justify-content: center;"><div class="tab active" onclick="showLoginForm()">تسجيل الدخول</div><div class="tab" onclick="showRegisterForm()">حساب جديد</div></div><div id="login-form"><div class="form-group"><label>اسم المستخدم أو البريد أو الهاتف</label><input type="text" id="login-username" class="form-control" placeholder="admin"></div><div class="form-group"><label>كلمة المرور</label><input type="password" id="login-password" class="form-control" placeholder="••••••"></div><button class="btn btn-primary" style="width: 100%;" onclick="handleLogin()">تسجيل الدخول</button><p style="text-align: center; margin-top: 15px; color: #aaa; font-size: 14px;">للأدمن: admin / Admin123!</p></div><div id="register-form" class="hidden"><div class="form-group"><label>اسم المستخدم</label><input type="text" id="reg-username" class="form-control" placeholder="user123"></div><div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="reg-email" class="form-control" placeholder="user@email.com"></div><div class="form-group"><label>رقم الهاتف (سوري)</label><input type="text" id="reg-phone" class="form-control" placeholder="0933123456"></div><div class="form-group"><label>كلمة المرور</label><input type="password" id="reg-password" class="form-control" placeholder="6 أحرف على الأقل"></div><div class="form-group"><label>كود الإحالة (اختياري)</label><input type="text" id="reg-referral" class="form-control" placeholder="XXXX"></div><button class="btn btn-primary" style="width: 100%;" onclick="handleRegister()">إنشاء حساب</button></div></div></div>';
+}
+
+function showLoginForm() { el('login-form').classList.remove('hidden'); el('register-form').classList.add('hidden'); document.querySelectorAll('.tab')[0].classList.add('active'); document.querySelectorAll('.tab')[1].classList.remove('active'); }
+function showRegisterForm() { el('login-form').classList.add('hidden'); el('register-form').classList.remove('hidden'); document.querySelectorAll('.tab')[0].classList.remove('active'); document.querySelectorAll('.tab')[1].classList.add('active'); }
+
+async function handleLogin() {
+  try {
+    const data = await api('/auth/login', { method: 'POST', body: { username: el('login-username').value, password: el('login-password').value } });
+    state.token = data.token; state.user = data.user; state.isAdmin = ['admin', 'super_admin', 'moderator'].includes(data.user.role);
+    localStorage.setItem('token', data.token);
+    showToast('تم تسجيل الدخول بنجاح!', 'success');
+    if (state.isAdmin) { state.currentView = 'admin'; renderAdmin(); } else renderGame();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function handleRegister() {
+  try {
+    const data = await api('/auth/register', { method: 'POST', body: { username: el('reg-username').value, email: el('reg-email').value, phone: el('reg-phone').value, password: el('reg-password').value, referralCode: el('reg-referral').value } });
+    state.token = data.token; state.user = data.user; localStorage.setItem('token', data.token);
+    showToast('تم إنشاء الحساب!', 'success'); renderGame();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+function logout() { state.token = null; state.user = null; state.isAdmin = false; localStorage.removeItem('token'); showToast('تم تسجيل الخروج'); renderLogin(); }
+
+function renderGame() {
+  const main = el('main-content');
+  main.innerHTML = '<div class="container fade-in"><div class="header"><div class="logo">🐔 Chicken Road</div><div class="nav-menu"><div class="nav-item active" onclick="showGamePanel()">🎮 اللعبة</div><div class="nav-item" onclick="showWallet()">💰 المحفظة</div><div class="nav-item" onclick="showHistory()">📜 السجل</div>' + (state.isAdmin ? '<div class="nav-item" onclick="switchToAdmin()">⚙️ الأدمن</div>' : '') + '<div class="nav-item" onclick="logout()">🚪 خروج</div></div><div class="balance-display">الرصيد: <span id="user-balance">' + formatSYP(state.user?.balance || 0) + '</span></div></div><div id="game-panel"><div id="bet-setup" class="card"><h2 class="card-title">🎯 ابدأ لعبتك</h2><div class="form-group"><label>💵 مبلغ الرهان (الليرة السورية)</label><input type="number" id="bet-amount" class="form-control" value="1000" min="100" max="500000" step="100"><div class="bet-amounts" style="margin-top: 10px;"><button class="bet-btn" onclick="setBet(1000)">1,000</button><button class="bet-btn" onclick="setBet(5000)">5,000</button><button class="bet-btn" onclick="setBet(10000)">10,000</button><button class="bet-btn" onclick="setBet(50000)">50,000</button><button class="bet-btn" onclick="setBet(100000)">100,000</button></div></div><div class="form-group"><label>⚡ مستوى الصعوبة</label><div class="difficulty-selector"><button class="difficulty-btn easy active" onclick="setDifficulty(\'EASY\', this)"><div style="font-weight: bold;">🟢 سهل</div><div style="font-size: 12px; margin-top: 5px;">1 لغم / 24 خطوة</div></button><button class="difficulty-btn medium" onclick="setDifficulty(\'MEDIUM\', this)"><div style="font-weight: bold;">🟠 متوسط</div><div style="font-size: 12px; margin-top: 5px;">3 ألغام / 22 خطوة</div></button><button class="difficulty-btn hard" onclick="setDifficulty(\'HARD\', this)"><div style="font-weight: bold;">🔴 صعب</div><div style="font-size: 12px; margin-top: 5px;">5 ألغام / 20 خطوة</div></button><button class="difficulty-btn hardcore" onclick="setDifficulty(\'HARDCORE\', this)"><div style="font-weight: bold;">🟣 فائق</div><div style="font-size: 12px; margin-top: 5px;">10 ألغام / 15 خطوة</div></button></div></div><button class="btn btn-primary" style="width: 100%; padding: 18px; font-size: 20px;" onclick="startGame()">🚀 ابدأ اللعبة</button></div><div id="active-game" class="hidden"><div class="stats-bar"><div class="stat-box"><div class="value" id="game-bet">-</div><div class="label">الرهان</div></div><div class="stat-box"><div class="value" id="game-step">0</div><div class="label">الخطوة</div></div><div class="stat-box"><div class="value" id="game-multiplier" style="color: #4CAF50;">x1.00</div><div class="label">المضاعف</div></div><div class="stat-box"><div class="value" id="game-potential" style="color: #FF9800;">-</div><div class="label">ممكن الفوز</div></div></div><div class="card" style="text-align: center;"><div id="game-grid" class="game-grid"></div><button id="cashout-btn" class="btn btn-success" style="width: 100%; padding: 18px; font-size: 18px; margin-top: 15px;" onclick="cashOut()" disabled>💰 سحب الأرباح</button></div><div class="card"><div class="card-title">📊 جدول المضاعفات</div><div id="multiplier-table" class="multiplier-table"></div></div></div></div><div id="wallet-panel" class="hidden"><div class="card"><h2 class="card-title">💰 المحفظة</h2><div class="stats-bar"><div class="stat-box"><div class="value" style="color: #4CAF50;">' + formatSYP(state.user?.balance || 0) + '</div><div class="label">الرصيد الحالي</div></div><div class="stat-box"><div class="value">' + formatSYP(state.user?.total_deposited || 0) + '</div><div class="label">إجمالي الإيداعات</div></div><div class="stat-box"><div class="value">' + formatSYP(state.user?.total_withdrawn || 0) + '</div><div class="label">إجمالي السحوبات</div></div></div></div><div class="card"><h3>📥 إيداع</h3><div class="form-group"><label>المبلغ (£S)</label><input type="number" id="deposit-amount" class="form-control" value="10000" min="1000" step="1000"></div><div class="form-group"><label>طريقة الدفع</label><select id="deposit-method" class="form-control"><option value="syriatel_cash">Syriatel Cash</option><option value="mtn_cash">MTN Cash</option><option value="bank_transfer">تحويل بنكي</option><option value="usdt">USDT</option></select></div><div class="form-group"><label>تفاصيل الدفع</label><input type="text" id="deposit-details" class="form-control" placeholder="رقم العملية / رقم الحساب"></div><button class="btn btn-success" onclick="handleDeposit()">إرسال طلب الإيداع</button></div><div class="card"><h3>📤 سحب</h3><div class="form-group"><label>المبلغ (£S)</label><input type="number" id="withdrawal-amount" class="form-control" value="10000" min="5000" step="1000"></div><div class="form-group"><label>طريقة السحب</label><select id="withdrawal-method" class="form-control"><option value="syriatel_cash">Syriatel Cash</option><option value="mtn_cash">MTN Cash</option><option value="bank_transfer">تحويل بنكي</option><option value="usdt">USDT</option></select></div><div class="form-group"><label>رقم الحساب / المحفظة</label><input type="text" id="withdrawal-account" class="form-control" placeholder="أدخل رقم الحساب"></div><button class="btn btn-warning" onclick="handleWithdrawal()">إرسال طلب السحب</button></div></div><div id="history-panel" class="hidden"><div class="card"><h2 class="card-title">📜 سجل الألعاب</h2><div id="games-history"></div></div><div class="card"><h2 class="card-title">💳 سجل المعاملات</h2><div id="transactions-history"></div></div></div></div>';
+  updateBalance();
+}
+
+function showGamePanel() { el('game-panel').classList.remove('hidden'); el('wallet-panel').classList.add('hidden'); el('history-panel').classList.add('hidden'); document.querySelectorAll('.nav-item').forEach((n, i) => n.classList.toggle('active', i === 0)); }
+function showWallet() { el('game-panel').classList.add('hidden'); el('wallet-panel').classList.remove('hidden'); el('history-panel').classList.add('hidden'); document.querySelectorAll('.nav-item').forEach((n, i) => n.classList.toggle('active', i === 1)); }
+function showHistory() { el('game-panel').classList.add('hidden'); el('wallet-panel').classList.add('hidden'); el('history-panel').classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach((n, i) => n.classList.toggle('active', i === 2)); loadHistory(); }
+function switchToAdmin() { state.currentView = 'admin'; renderAdmin(); }
+function setBet(amount) { el('bet-amount').value = amount; document.querySelectorAll('.bet-btn').forEach(btn => btn.classList.toggle('active', btn.textContent === amount.toLocaleString('en'))); }
+function setDifficulty(diff, btn) { state.selectedDifficulty = diff; document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
+
+let currentGame = null;
+
+async function startGame() {
+  try {
+    const amount = parseInt(el('bet-amount').value);
+    const difficulty = state.selectedDifficulty || 'EASY';
+    const data = await api('/game/start', { method: 'POST', body: { amount, difficulty } });
+    currentGame = data.game; state.user.balance = data.game.balance; updateBalance();
+    el('bet-setup').classList.add('hidden'); el('active-game').classList.remove('hidden');
+    el('game-bet').textContent = formatSYP(data.game.betAmount);
+    el('game-step').textContent = '0'; el('game-multiplier').textContent = 'x1.00';
+    el('game-potential').textContent = formatSYP(data.game.betAmount); el('cashout-btn').disabled = true;
+    renderGrid(); renderMultipliers(data.game.multipliers);
+    showToast('🎮 اللعبة بدأت! اختر موقعاً آمناً', 'success');
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+function renderGrid() {
+  const grid = el('game-grid'); grid.innerHTML = '';
+  for (let i = 0; i < 25; i++) { const tile = document.createElement('button'); tile.className = 'tile'; tile.id = 'tile-' + i; tile.textContent = i + 1; tile.onclick = () => takeStep(i); grid.appendChild(tile); }
+}
+function renderMultipliers(multipliers) {
+  const table = el('multiplier-table'); table.innerHTML = '';
+  multipliers.forEach(m => { const item = document.createElement('div'); item.className = 'multiplier-item'; item.id = 'mult-' + m.step; item.innerHTML = '<div>الخطوة ' + m.step + '</div><div style="font-weight: bold; color: #e94560;">x' + m.multiplier + '</div>'; table.appendChild(item); });
+}
+
+async function takeStep(position) {
+  try {
+    const data = await api('/game/step', { method: 'POST', body: { position } });
+    const tile = el('tile-' + position);
+    if (data.result === 'lost') { tile.classList.add('revealed-mine'); tile.innerHTML = '💥'; showGameResult(data, false); }
+    else if (data.result === 'won') { tile.classList.add('revealed-safe'); tile.innerHTML = '✅'; showGameResult(data, true); }
+    else {
+      tile.classList.add('revealed-safe'); tile.innerHTML = '🐔'; tile.disabled = true;
+      el('game-step').textContent = data.game.step; el('game-multiplier').textContent = 'x' + data.game.currentMultiplier;
+      el('game-potential').textContent = formatSYP(data.game.potentialWin); el('cashout-btn').disabled = false;
+      el('cashout-btn').textContent = '💰 سحب ' + formatSYP(data.game.potentialWin);
+      document.querySelectorAll('.multiplier-item').forEach(item => item.classList.remove('current'));
+      const currentMult = el('mult-' + data.game.step); if (currentMult) currentMult.classList.add('current');
+    }
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function cashOut() {
+  try { const data = await api('/game/cashout', { method: 'POST' }); showGameResult(data, true); }
+  catch (err) { showToast(err.message, 'error'); }
+}
+
+function showGameResult(data, isWin) {
+  state.user.balance = data.game.balance; updateBalance();
+  const modal = document.createElement('div'); modal.className = 'modal-overlay';
+  modal.innerHTML = '<div class="modal-content slide-up"><div class="icon">' + (isWin ? '🎉' : '💥') + '</div><h2>' + (isWin ? 'مبروك!' : 'انفجرت!') + '</h2><p style="font-size: 18px; margin: 15px 0;">' + (isWin ? 'ربحت: ' + formatSYP(data.game.winAmount) : 'خسرت: ' + formatSYP(data.game.lossAmount || data.game.betAmount)) + '</p><p style="color: #aaa;">المضاعف: x' + (data.game.multiplier || data.game.cashedOutAt || 1) + '</p><button class="btn btn-primary" style="margin-top: 20px;" onclick="closeModal(); resetGame();">لعبة جديدة</button></div>';
+  document.body.appendChild(modal);
+}
+function closeModal() { document.querySelector('.modal-overlay')?.remove(); }
+function resetGame() { currentGame = null; el('bet-setup').classList.remove('hidden'); el('active-game').classList.add('hidden'); }
+function updateBalance() { const balanceEl = el('user-balance'); if (balanceEl) balanceEl.textContent = formatSYP(state.user?.balance || 0); }
+
+async function handleDeposit() {
+  try { await api('/transactions/deposit', { method: 'POST', body: { amount: parseInt(el('deposit-amount').value), paymentMethod: el('deposit-method').value, paymentDetails: { info: el('deposit-details').value } } }); showToast('تم إرسال طلب الإيداع، سيتم المراجعة', 'success'); }
+  catch (err) { showToast(err.message, 'error'); }
+}
+async function handleWithdrawal() {
+  try { await api('/transactions/withdrawal', { method: 'POST', body: { amount: parseInt(el('withdrawal-amount').value), paymentMethod: el('withdrawal-method').value, paymentDetails: { account: el('withdrawal-account').value } } }); showToast('تم إرسال طلب السحب، سيتم المراجعة', 'success'); loadUser().then(() => updateBalance()); }
+  catch (err) { showToast(err.message, 'error'); }
+}
+
+async function loadHistory() {
+  try {
+    const gamesData = await api('/game/history');
+    const gamesDiv = el('games-history');
+    gamesDiv.innerHTML = '<table class="data-table"><thead><tr><th>التاريخ</th><th>الرهان</th><th>الصعوبة</th><th>النتيجة</th><th>الربح/الخسارة</th></tr></thead><tbody>' + gamesData.games.map(g => '<tr><td>' + new Date(g.created_at).toLocaleDateString('ar-SY') + '</td><td>' + formatSYP(g.bet_amount) + '</td><td>' + g.difficulty + '</td><td><span class="badge badge-' + (g.status === 'won' || g.status === 'cashed_out' ? 'success' : 'danger') + '">' + (g.status === 'won' ? 'فوز' : g.status === 'cashed_out' ? 'سحب' : 'خسارة') + '</span></td><td style="color: ' + (g.profit > 0 ? '#4CAF50' : '#F44336') + '">' + (g.profit > 0 ? '+' : '') + formatSYP(g.profit) + '</td></tr>').join('') + '</tbody></table>';
+    const transData = await api('/transactions/history');
+    const transDiv = el('transactions-history');
+    transDiv.innerHTML = '<table class="data-table"><thead><tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>الحالة</th></tr></thead><tbody>' + transData.transactions.map(t => '<tr><td>' + new Date(t.created_at).toLocaleDateString('ar-SY') + '</td><td>' + (t.type === 'deposit' ? 'إيداع' : t.type === 'withdrawal' ? 'سحب' : t.type === 'win' ? 'ربح' : 'خسارة') + '</td><td>' + formatSYP(t.amount) + '</td><td><span class="badge badge-' + (t.status === 'completed' ? 'success' : t.status === 'pending' ? 'warning' : 'danger') + '">' + t.status + '</span></td></tr>').join('') + '</tbody></table>';
+  } catch (err) { console.error(err); }
+}
+
+function renderAdmin() {
+  const main = el('main-content');
+  main.innerHTML = '<div class="container fade-in"><div class="header"><div class="logo">⚙️ لوحة التحكم</div><div class="nav-menu"><div class="nav-item active" onclick="showAdminDashboard()">📊 الإحصائيات</div><div class="nav-item" onclick="showAdminUsers()">👥 المستخدمين</div><div class="nav-item" onclick="showAdminTransactions()">💳 المعاملات</div><div class="nav-item" onclick="showAdminGames()">🎮 الألعاب</div><div class="nav-item" onclick="switchToGame()">🎮 اللعبة</div><div class="nav-item" onclick="logout()">🚪 خروج</div></div><div class="balance-display">' + state.user?.username + ' (' + state.user?.role + ')</div></div><div id="admin-dashboard"></div><div id="admin-users" class="hidden"></div><div id="admin-transactions" class="hidden"></div><div id="admin-games" class="hidden"></div></div>';
+  loadAdminDashboard();
+}
+function switchToGame() { state.currentView = 'game'; renderGame(); }
+function showAdminDashboard() { el('admin-dashboard').classList.remove('hidden'); el('admin-users').classList.add('hidden'); el('admin-transactions').classList.add('hidden'); el('admin-games').classList.add('hidden'); document.querySelectorAll('.nav-item').forEach((n, i) => n.classList.toggle('active', i === 0)); }
+function showAdminUsers() { el('admin-dashboard').classList.add('hidden'); el('admin-users').classList.remove('hidden'); el('admin-transactions').classList.add('hidden'); el('admin-games').classList.add('hidden'); document.querySelectorAll('.nav-item').forEach((n, i) => n.classList.toggle('active', i === 1)); loadAdminUsers(); }
+function showAdminTransactions() { el('admin-dashboard').classList.add('hidden'); el('admin-users').classList.add('hidden'); el('admin-transactions').classList.remove('hidden'); el('admin-games').classList.add('hidden'); document.querySelectorAll('.nav-item').forEach((n, i) => n.classList.toggle('active', i === 2)); loadAdminTransactions(); }
+function showAdminGames() { el('admin-dashboard').classList.add('hidden'); el('admin-users').classList.add('hidden'); el('admin-transactions').classList.add('hidden'); el('admin-games').classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach((n, i) => n.classList.toggle('active', i === 3)); loadAdminGames(); }
+
+async function loadAdminDashboard() {
+  try {
+    const data = await api('/admin/dashboard');
+    const stats = data.stats;
+    el('admin-dashboard').innerHTML = '<div class="stats-bar"><div class="stat-box"><div class="value">' + stats.users.total + '</div><div class="label">إجمالي المستخدمين</div></div><div class="stat-box"><div class="value">' + stats.users.players + '</div><div class="label">اللاعبين</div></div><div class="stat-box"><div class="value">' + stats.users.newToday + '</div><div class="label">جديد اليوم</div></div><div class="stat-box"><div class="value">' + stats.games.total + '</div><div class="label">إجمالي الألعاب</div></div><div class="stat-box"><div class="value" style="color: #4CAF50;">' + formatSYP(stats.financial.totalDeposits) + '</div><div class="label">إجمالي الإيداعات</div></div><div class="stat-box"><div class="value" style="color: #F44336;">' + formatSYP(stats.financial.totalWithdrawals) + '</div><div class="label">إجمالي السحوبات</div></div><div class="stat-box"><div class="value" style="color: #FF9800;">' + stats.financial.pendingTransactions + '</div><div class="label">معلق</div></div><div class="stat-box"><div class="value" style="color: #e94560;">' + formatSYP(stats.financial.totalRevenue) + '</div><div class="label">إجمالي الأرباح</div></div></div><div class="card"><h3 class="card-title">🎮 آخر الألعاب</h3><table class="data-table"><thead><tr><th>اللاعب</th><th>الرهان</th><th>الصعوبة</th><th>النتيجة</th><th>التاريخ</th></tr></thead><tbody>' + data.recentActivity.games.map(g => '<tr><td>' + g.username + '</td><td>' + formatSYP(g.bet_amount) + '</td><td>' + g.difficulty + '</td><td><span class="badge badge-' + (g.status === 'won' || g.status === 'cashed_out' ? 'success' : 'danger') + '">' + g.status + '</span></td><td>' + new Date(g.created_at).toLocaleString('ar-SY') + '</td></tr>').join('') + '</tbody></table></div><div class="card"><h3 class="card-title">💳 آخر المعاملات</h3><table class="data-table"><thead><tr><th>المستخدم</th><th>النوع</th><th>المبلغ</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody>' + data.recentActivity.transactions.map(t => '<tr><td>' + t.username + '</td><td>' + t.type + '</td><td>' + formatSYP(t.amount) + '</td><td><span class="badge badge-' + (t.status === 'completed' ? 'success' : t.status === 'pending' ? 'warning' : 'danger') + '">' + t.status + '</span></td><td>' + new Date(t.created_at).toLocaleString('ar-SY') + '</td></tr>').join('') + '</tbody></table></div>';
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function loadAdminUsers() {
+  try {
+    const data = await api('/admin/users');
+    el('admin-users').innerHTML = '<div class="card"><h3 class="card-title">👥 إدارة المستخدمين</h3><div class="form-group" style="max-width: 300px;"><input type="text" class="form-control" placeholder="بحث..." onkeyup="searchUsers(this.value)"></div><table class="data-table"><thead><tr><th>ID</th><th>الاسم</th><th>الهاتف</th><th>الدور</th><th>الرصيد</th><th>الحالة</th><th>تاريخ التسجيل</th><th>إجراءات</th></tr></thead><tbody>' + data.users.map(u => '<tr><td>' + u.id + '</td><td>' + u.username + '</td><td>' + u.phone + '</td><td>' + u.role + '</td><td>' + formatSYP(u.balance) + '</td><td><span class="badge badge-' + (u.is_active ? 'success' : 'danger') + '">' + (u.is_active ? 'نشط' : 'معطل') + '</span></td><td>' + new Date(u.created_at).toLocaleDateString('ar-SY') + '</td><td><button class="btn btn-warning" style="padding: 5px 10px; font-size: 12px;" onclick="toggleUserStatus(' + u.id + ', ' + (!u.is_active ? 1 : 0) + ')">' + (u.is_active ? 'تعطيل' : 'تفعيل') + '</button></td></tr>').join('') + '</tbody></table></div>';
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function toggleUserStatus(userId, newStatus) {
+  try { await api('/admin/users/' + userId, { method: 'PUT', body: { isActive: newStatus } }); showToast('تم التحديث', 'success'); loadAdminUsers(); }
+  catch (err) { showToast(err.message, 'error'); }
+}
+
+async function searchUsers(query) {
+  if (!query) { loadAdminUsers(); return; }
+  try {
+    const data = await api('/admin/users?search=' + encodeURIComponent(query));
+    const tbody = document.querySelector('#admin-users tbody');
+    if (tbody) tbody.innerHTML = data.users.map(u => '<tr><td>' + u.id + '</td><td>' + u.username + '</td><td>' + u.phone + '</td><td>' + u.role + '</td><td>' + formatSYP(u.balance) + '</td><td><span class="badge badge-' + (u.is_active ? 'success' : 'danger') + '">' + (u.is_active ? 'نشط' : 'معطل') + '</span></td><td>' + new Date(u.created_at).toLocaleDateString('ar-SY') + '</td><td><button class="btn btn-warning" style="padding: 5px 10px; font-size: 12px;" onclick="toggleUserStatus(' + u.id + ', ' + (!u.is_active ? 1 : 0) + ')">' + (u.is_active ? 'تعطيل' : 'تفعيل') + '</button></td></tr>').join('');
+  } catch (err) {}
+}
+
+async function loadAdminTransactions() {
+  try {
+    const data = await api('/admin/transactions');
+    el('admin-transactions').innerHTML = '<div class="card"><h3 class="card-title">💳 إدارة المعاملات</h3><table class="data-table"><thead><tr><th>ID</th><th>المستخدم</th><th>النوع</th><th>المبلغ</th><th>الطريقة</th><th>الحالة</th><th>التاريخ</th><th>إجراء</th></tr></thead><tbody>' + data.transactions.map(t => '<tr><td>' + t.id + '</td><td>' + t.username + ' (' + t.phone + ')</td><td>' + (t.type === 'deposit' ? 'إيداع' : t.type === 'withdrawal' ? 'سحب' : t.type) + '</td><td>' + formatSYP(t.amount) + '</td><td>' + t.payment_method + '</td><td><span class="badge badge-' + (t.status === 'completed' ? 'success' : t.status === 'pending' ? 'warning' : 'danger') + '">' + t.status + '</span></td><td>' + new Date(t.created_at).toLocaleString('ar-SY') + '</td><td>' + (t.status === 'pending' ? '<button class="btn btn-success" style="padding: 5px 10px; font-size: 12px;" onclick="approveTransaction(' + t.id + ')">✓ موافقة</button><button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;" onclick="rejectTransaction(' + t.id + ')">✕ رفض</button>' : '-') + '</td></tr>').join('') + '</tbody></table></div>';
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function approveTransaction(id) {
+  try { await api('/admin/transactions/' + id, { method: 'PUT', body: { status: 'approved' } }); showToast('تمت الموافقة', 'success'); loadAdminTransactions(); loadAdminDashboard(); }
+  catch (err) { showToast(err.message, 'error'); }
+}
+async function rejectTransaction(id) {
+  try { await api('/admin/transactions/' + id, { method: 'PUT', body: { status: 'rejected' } }); showToast('تم الرفض', 'success'); loadAdminTransactions(); }
+  catch (err) { showToast(err.message, 'error'); }
+}
+
+async function loadAdminGames() {
+  try {
+    const data = await api('/admin/games');
+    el('admin-games').innerHTML = '<div class="card"><h3 class="card-title">🎮 سجل الألعاب</h3><table class="data-table"><thead><tr><th>ID</th><th>اللاعب</th><th>الرهان</th><th>الصعوبة</th><th>الخطوات</th><th>النتيجة</th><th>الربح</th><th>التاريخ</th></tr></thead><tbody>' + data.games.map(g => '<tr><td>' + g.id + '</td><td>' + g.username + '</td><td>' + formatSYP(g.bet_amount) + '</td><td>' + g.difficulty + '</td><td>' + g.current_step + '</td><td><span class="badge badge-' + (g.status === 'won' || g.status === 'cashed_out' ? 'success' : 'danger') + '">' + g.status + '</span></td><td style="color: ' + (g.profit > 0 ? '#4CAF50' : '#F44336') + '">' + (g.profit > 0 ? '+' : '') + formatSYP(g.profit) + '</td><td>' + new Date(g.created_at).toLocaleString('ar-SY') + '</td></tr>').join('') + '</tbody></table></div>';
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+renderApp();
+</script>
+</body>
+</html>`;
+
+app.get('/', (req, res) => { res.send(HTML_CONTENT); });
+app.get('/admin', (req, res) => { res.send(HTML_CONTENT); });
+
+app.listen(PORT, () => {
+  console.log(`
+╔══════════════════════════════════════════════════════════════╗
+║  🐔 CHICKEN ROAD CASINO - Single File Edition               ║
+║  Server running on http://localhost:${PORT}                    ║
+║                                                              ║
+║  Default Admin: admin / Admin123!                            ║
+║  Currency: Syrian Pound (SYP) £S                             ║
+╚══════════════════════════════════════════════════════════════╝
+  `);
+});
+
+module.exports = app;
+      {
+  "name": "chicken-road-casino",
+  "version": "1.0.0",
+  "description": "Chicken Road Casino Game with SYP Currency - Single File Edition",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "keywords": ["casino", "game", "chicken-road", "syp", "syria"],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
+            
