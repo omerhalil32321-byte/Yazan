@@ -119,7 +119,7 @@ html, body {
 .game-world { 
   position:absolute; top:0; left:0; 
   height:100%; display:flex; align-items:center;
-  transition:transform .5s cubic-bezier(.25,.46,.45,.94);
+  transition:transform .6s cubic-bezier(.25,.46,.45,.94);
 }
 
 /* المشهد */
@@ -148,7 +148,9 @@ html, body {
   width:200px; height:100%; 
   background:#4a4a5e;
   position:relative;
-  display:flex; align-items:center; justify-content:center;
+  display:flex; align-items:center;
+  justify-content:center;
+  overflow:hidden;
 }
 .road::before {
   content:''; position:absolute; top:0; bottom:0; left:50%; width:4px;
@@ -167,7 +169,7 @@ html, body {
 
 /* العملات */
 .coin-spot { 
-  position:absolute; width:50px; height:50px; 
+  position:absolute; width:55px; height:55px; 
   border-radius:50%; 
   display:flex; align-items:center; justify-content:center;
   font-size:11px; font-weight:700; color:#1a1a2e;
@@ -205,32 +207,103 @@ html, body {
   z-index:20;
 }
 
-/* الدجاجة */
-.chicken { 
-  position:absolute; width:60px; height:60px;
-  display:flex; align-items:center; justify-content:center;
-  font-size:45px; z-index:30;
-  filter:drop-shadow(0 4px 8px rgba(0,0,0,.5));
-  transition:all .4s cubic-bezier(.34,1.56,.64,1);
+/* ===== الدجاجة الكاملة (SVG) ===== */
+.chicken-wrapper {
+  position:absolute;
+  width:70px; height:70px;
+  z-index:30;
+  transition:all .5s cubic-bezier(.34,1.56,.64,1);
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
-.chicken.walk { animation:chickenWalk .3s infinite alternate; }
-@keyframes chickenWalk { 
-  0%{transform:translateY(0) rotate(-5deg)} 
-  100%{transform:translateY(-8px) rotate(5deg)} 
+.chicken-wrapper.walk {
+  animation:chickenBounce .4s infinite alternate;
 }
-.chicken.dead { 
-  animation:chickenDie .6s forwards; font-size:35px;
+@keyframes chickenBounce {
+  0%{transform:translateY(0) rotate(-3deg)}
+  100%{transform:translateY(-10px) rotate(3deg)}
 }
-@keyframes chickenDie { 
-  0%{transform:scale(1) rotate(0)} 
-  30%{transform:scale(1.3) rotate(20deg)} 
-  60%{transform:scale(.8) rotate(180deg)} 
-  100%{transform:scale(0) rotate(360deg);opacity:0} 
+.chicken-wrapper.dead {
+  animation:chickenCrash .8s forwards;
 }
-.chicken.win { animation:chickenWin .8s infinite alternate; }
-@keyframes chickenWin { 
-  0%{transform:translateY(0) scale(1)} 
-  100%{transform:translateY(-15px) scale(1.2)} 
+@keyframes chickenCrash {
+  0%{transform:scale(1) rotate(0); filter:brightness(1)}
+  20%{transform:scale(1.2) rotate(-15deg); filter:brightness(2)}
+  40%{transform:scale(0.9) rotate(30deg); filter:brightness(1)}
+  60%{transform:scale(1.1) rotate(-20deg) translateY(-20px)}
+  80%{transform:scale(0.7) rotate(180deg) translateY(30px); opacity:0.8}
+  100%{transform:scale(0) rotate(360deg) translateY(60px); opacity:0}
+}
+.chicken-wrapper.win {
+  animation:chickenVictory .6s infinite alternate;
+}
+@keyframes chickenVictory {
+  0%{transform:translateY(0) scale(1)}
+  100%{transform:translateY(-20px) scale(1.15)}
+}
+
+/* ===== السيارات المتحركة ===== */
+.moving-car {
+  position:absolute;
+  font-size:40px;
+  z-index:25;
+  filter:drop-shadow(0 3px 6px rgba(0,0,0,.4));
+  transition:none;
+}
+.moving-car.driving {
+  animation:carDrive 2s linear infinite;
+}
+@keyframes carDrive {
+  0%{transform:translateX(-300px)}
+  100%{transform:translateX(300px)}
+}
+.moving-car.crashing {
+  animation:carCrashAnim .5s forwards;
+}
+@keyframes carCrashAnim {
+  0%{transform:scale(1)}
+  50%{transform:scale(1.3) rotate(-10deg)}
+  100%{transform:scale(1.1) rotate(5deg)}
+}
+
+/* تأثير الاصطدام */
+.crash-effect {
+  position:absolute;
+  width:100px; height:100px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(255,100,0,.8) 0%, rgba(255,0,0,.4) 50%, transparent 70%);
+  z-index:35;
+  animation:crashExpand .6s forwards;
+  pointer-events:none;
+}
+@keyframes crashExpand {
+  0%{transform:scale(0); opacity:1}
+  100%{transform:scale(3); opacity:0}
+}
+
+/* ريش متناثر */
+.feather {
+  position:absolute;
+  font-size:20px;
+  z-index:36;
+  animation:featherFly 1s forwards;
+  pointer-events:none;
+}
+@keyframes featherFly {
+  0%{transform:translate(0,0) rotate(0); opacity:1}
+  100%{transform:translate(var(--tx), var(--ty)) rotate(var(--rot)); opacity:0}
+}
+
+/* اهتزاز الشاشة */
+.screen-shake {
+  animation:shake .5s cubic-bezier(.36,.07,.19,.97) both;
+}
+@keyframes shake {
+  10%, 90%{transform:translate3d(-2px,0,0)}
+  20%, 80%{transform:translate3d(4px,0,0)}
+  30%, 50%, 70%{transform:translate3d(-6px,0,0)}
+  40%, 60%{transform:translate3d(6px,0,0)}
 }
 
 /* الحواجز */
@@ -347,8 +420,8 @@ th { color:#ffd700; background:#1a1a2e; position:sticky; top:0; }
 /* Responsive */
 @media(max-width:600px){
   .float-mult .value{font-size:28px}
-  .coin-spot{width:40px;height:40px;font-size:9px}
-  .chicken{font-size:35px}
+  .coin-spot{width:45px;height:45px;font-size:9px}
+  .chicken-wrapper{width:55px;height:55px}
   .sidewalk{width:80px}
   .road{width:150px}
   .wallet-panel{width:150px;right:5px;top:55px}
@@ -547,6 +620,7 @@ let gameMults = [];
 let currentStep = -1;
 let currentBet = 0;
 let gameActive = false;
+let carIntervals = [];
 let nextId = () => Date.now() + Math.floor(Math.random()*1000);
 
 // ==================== تنقل ====================
@@ -628,6 +702,52 @@ function transaction(type) {
   document.getElementById('walletAmount').value = '';
 }
 
+// ==================== الدجاجة الكاملة (SVG) ====================
+function getChickenSVG() {
+  return `<svg viewBox="0 0 80 80" width="60" height="60">
+    <!-- جسم -->
+    <ellipse cx="40" cy="45" rx="22" ry="20" fill="#fff" stroke="#ddd" stroke-width="1"/>
+    <!-- رأس -->
+    <circle cx="40" cy="22" r="14" fill="#fff" stroke="#ddd" stroke-width="1"/>
+    <!-- تاج -->
+    <path d="M32 12 L36 4 L40 10 L44 4 L48 12" fill="#e94560" stroke="#c73e54" stroke-width="1"/>
+    <!-- منقار -->
+    <ellipse cx="40" cy="26" rx="6" ry="4" fill="#ffd700" stroke="#ffaa00" stroke-width="1"/>
+    <!-- عين -->
+    <circle cx="36" cy="18" r="3" fill="#1a1a2e"/>
+    <circle cx="37" cy="17" r="1" fill="#fff"/>
+    <!-- عين ثانية -->
+    <circle cx="44" cy="18" r="3" fill="#1a1a2e"/>
+    <circle cx="45" cy="17" r="1" fill="#fff"/>
+    <!-- جناح -->
+    <ellipse cx="28" cy="42" rx="8" ry="12" fill="#f0f0f0" stroke="#ddd" stroke-width="1" transform="rotate(-20 28 42)"/>
+    <!-- جناح ثاني -->
+    <ellipse cx="52" cy="42" rx="8" ry="12" fill="#f0f0f0" stroke="#ddd" stroke-width="1" transform="rotate(20 52 42)"/>
+    <!-- رجل -->
+    <line x1="34" y1="62" x2="34" y2="72" stroke="#ffaa00" stroke-width="3" stroke-linecap="round"/>
+    <line x1="46" y1="62" x2="46" y2="72" stroke="#ffaa00" stroke-width="3" stroke-linecap="round"/>
+    <!-- قدم -->
+    <ellipse cx="34" cy="74" rx="5" ry="3" fill="#ffaa00"/>
+    <ellipse cx="46" cy="74" rx="5" ry="3" fill="#ffaa00"/>
+    <!-- ذيل -->
+    <path d="M58 38 Q68 30 65 42 Q68 48 58 45" fill="#fff" stroke="#ddd" stroke-width="1"/>
+  </svg>`;
+}
+
+function getDeadChickenSVG() {
+  return `<svg viewBox="0 0 80 80" width="50" height="50" style="transform:rotate(180deg)">
+    <ellipse cx="40" cy="50" rx="20" ry="15" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <circle cx="40" cy="30" r="12" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <path d="M34 22 L38 16 L42 22" fill="#999"/>
+    <ellipse cx="40" cy="32" rx="5" ry="3" fill="#999"/>
+    <circle cx="36" cy="26" r="2" fill="#666"/>
+    <circle cx="44" cy="26" r="2" fill="#666"/>
+    <line x1="35" y1="62" x2="35" y2="70" stroke="#999" stroke-width="2"/>
+    <line x1="45" y1="62" x2="45" y2="70" stroke="#999" stroke-width="2"/>
+    <text x="40" y="45" text-anchor="middle" font-size="20">💀</text>
+  </svg>`;
+}
+
 // ==================== اللعبة الأفقية ====================
 function selectDiff(diff) {
   selectedDiff = diff;
@@ -682,16 +802,17 @@ function startGame() {
   gameMults = generateMultipliers(selectedDiff);
   currentStep = -1;
   gameActive = true;
+  carIntervals = [];
 
   document.getElementById('difficultySelect').style.display = 'none';
   document.getElementById('playArea').style.display = 'block';
   document.getElementById('gameBetAmount').value = bet;
 
-  // تحديث أزرار الصعوبة
   document.querySelectorAll('.diff-btns button').forEach(b => b.classList.remove('active'));
   document.querySelector(`.diff-btns button[data-d="${selectedDiff}"]`).classList.add('active');
 
   buildScene();
+  startMovingCars();
   updateCamera();
   updateGameInfo();
   document.getElementById('goBtn').disabled = false;
@@ -708,7 +829,7 @@ function buildScene() {
 
   let html = '';
 
-  // رصيف البداية (اليمين في RTL)
+  // رصيف البداية
   html += `
     <div class="sidewalk sidewalk-start" style="width:${sidewalkWidth}px">
       <div class="sidewalk-icon">🏠</div>
@@ -736,7 +857,6 @@ function buildScene() {
       </div>
     `;
 
-    // فاصل بين الطرق
     if (i < steps - 1) {
       html += `<div style="width:20px;height:100%;background:#3a3a4e"></div>`;
     }
@@ -759,9 +879,9 @@ function buildScene() {
   const firstRoad = document.getElementById('road-0');
   if (firstRoad) {
     const chicken = document.createElement('div');
-    chicken.className = 'chicken';
+    chicken.className = 'chicken-wrapper';
     chicken.id = 'activeChicken';
-    chicken.innerHTML = '🐔';
+    chicken.innerHTML = getChickenSVG();
     chicken.style.left = '50%';
     chicken.style.top = '50%';
     chicken.style.transform = 'translate(-50%, -50%)';
@@ -769,12 +889,66 @@ function buildScene() {
   }
 }
 
+// ==================== سيارات متحركة ====================
+function startMovingCars() {
+  const steps = DIFFICULTY[selectedDiff].steps;
+
+  for (let i = 0; i < steps; i++) {
+    const road = document.getElementById(`road-${i}`);
+    if (!road) continue;
+
+    // سيارات عشوائية تتحرك على المسارات
+    const numCars = Math.floor(Math.random() * 2) + 1;
+    for (let c = 0; c < numCars; c++) {
+      createMovingCar(road, i);
+    }
+  }
+}
+
+function createMovingCar(road, roadIndex) {
+  const lanePositions = ['15%', '50%', '85%'];
+  const laneIdx = Math.floor(Math.random() * 3);
+  const topPos = lanePositions[laneIdx];
+  const carTypes = ['🚗', '🚙', '🚕', '🚓', '🚐'];
+  const carType = carTypes[Math.floor(Math.random() * carTypes.length)];
+  const speed = 2 + Math.random() * 3;
+  const direction = Math.random() > 0.5 ? 1 : -1;
+
+  const car = document.createElement('div');
+  car.className = 'moving-car';
+  car.innerHTML = carType;
+  car.style.top = topPos;
+  car.style.transform = 'translateY(-50%)';
+  car.style.left = direction > 0 ? '-50px' : '250px';
+  car.dataset.direction = direction;
+  car.dataset.speed = speed;
+  car.dataset.roadIndex = roadIndex;
+  road.appendChild(car);
+
+  // تحريك السيارة
+  let pos = direction > 0 ? -50 : 250;
+  const interval = setInterval(() => {
+    if (!gameActive && currentStep >= roadIndex) {
+      clearInterval(interval);
+      car.remove();
+      return;
+    }
+    pos += speed * direction;
+    car.style.left = pos + 'px';
+
+    if ((direction > 0 && pos > 250) || (direction < 0 && pos < -50)) {
+      pos = direction > 0 ? -50 : 250;
+    }
+  }, 30);
+
+  carIntervals.push(interval);
+}
+
 function updateCamera() {
   const world = document.getElementById('gameWorld');
   const wrapper = document.getElementById('gameWrapper');
   const wrapperWidth = wrapper.offsetWidth;
 
-  // حساب موقع الدجاجة
   let chickenX = 0;
   if (currentStep >= 0) {
     const road = document.getElementById(`road-${currentStep}`);
@@ -784,7 +958,6 @@ function updateCamera() {
       chickenX = roadRect.left - worldRect.left + roadRect.width / 2;
     }
   } else {
-    // في البداية
     const startSidewalk = document.querySelector('.sidewalk-start');
     if (startSidewalk) {
       const rect = startSidewalk.getBoundingClientRect();
@@ -793,7 +966,6 @@ function updateCamera() {
     }
   }
 
-  // مركز الكاميرا على الدجاجة
   const offset = wrapperWidth / 2 - chickenX;
   world.style.transform = `translateX(${offset}px)`;
 }
@@ -844,20 +1016,19 @@ function makeStep() {
   if (chicken && targetRoad) {
     targetRoad.appendChild(chicken);
     chicken.classList.add('walk');
-    setTimeout(() => chicken.classList.remove('walk'), 400);
+    setTimeout(() => chicken.classList.remove('walk'), 500);
   }
 
-  // تحريك الكاميرا
   setTimeout(updateCamera, 50);
 
   if (isCar) {
-    // إظهار السيارة
+    // إظهار السيارة والاصطدام
     if (currentCoin) {
       currentCoin.classList.remove('current');
       currentCoin.classList.add('car');
       currentCoin.innerHTML = '🚗';
     }
-    setTimeout(loseGame, 300);
+    setTimeout(() => crashEffect(), 300);
   } else {
     updateGameInfo();
     document.getElementById('multLabel').textContent = '✅ آمن! تقدم أو اسحب...';
@@ -871,6 +1042,58 @@ function makeStep() {
   }
 }
 
+// ==================== اصطدام حقيقي ====================
+function crashEffect() {
+  const chicken = document.getElementById('activeChicken');
+  const road = document.getElementById(`road-${currentStep}`);
+
+  if (!chicken || !road) {
+    loseGame();
+    return;
+  }
+
+  // إيقاف السيارات
+  carIntervals.forEach(interval => clearInterval(interval));
+  carIntervals = [];
+
+  // إزالة السيارات المتحركة في هذا الطريق
+  const movingCars = road.querySelectorAll('.moving-car');
+  movingCars.forEach(car => {
+    car.classList.add('crashing');
+  });
+
+  // تأثير الاصطدام
+  const crash = document.createElement('div');
+  crash.className = 'crash-effect';
+  crash.style.left = '50%';
+  crash.style.top = '50%';
+  crash.style.transform = 'translate(-50%, -50%)';
+  road.appendChild(crash);
+
+  // ريش متناثر
+  for (let i = 0; i < 8; i++) {
+    const feather = document.createElement('div');
+    feather.className = 'feather';
+    feather.innerHTML = '🪶';
+    feather.style.left = '50%';
+    feather.style.top = '50%';
+    feather.style.setProperty('--tx', (Math.random() * 200 - 100) + 'px');
+    feather.style.setProperty('--ty', (Math.random() * 200 - 100) + 'px');
+    feather.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg');
+    road.appendChild(feather);
+  }
+
+  // اهتزاز الشاشة
+  document.body.classList.add('screen-shake');
+  setTimeout(() => document.body.classList.remove('screen-shake'), 500);
+
+  // تغيير الدجاجة لميتة
+  chicken.innerHTML = getDeadChickenSVG();
+  chicken.classList.add('dead');
+
+  setTimeout(() => loseGame(), 800);
+}
+
 function cashoutGame() {
   if (!gameActive || currentStep < 0) return;
   const mult = gameMults[currentStep];
@@ -879,6 +1102,9 @@ function cashoutGame() {
 
 function winGame(mult) {
   gameActive = false;
+  carIntervals.forEach(interval => clearInterval(interval));
+  carIntervals = [];
+
   const winAmount = currentBet * mult;
 
   const users = DB.getUsers();
@@ -906,13 +1132,18 @@ function winGame(mult) {
   document.getElementById('cashoutBtn2').disabled = true;
 
   const chicken = document.getElementById('activeChicken');
-  if (chicken) chicken.classList.add('win');
+  if (chicken) {
+    chicken.classList.remove('walk');
+    chicken.classList.add('win');
+  }
 
   toast(`🎉 ربحت ${winAmount.toFixed(2)} $!`);
 }
 
 function loseGame() {
   gameActive = false;
+  carIntervals.forEach(interval => clearInterval(interval));
+  carIntervals = [];
 
   const bets = DB.getBets();
   bets.push({
@@ -930,13 +1161,14 @@ function loseGame() {
   document.getElementById('goBtn').disabled = true;
   document.getElementById('cashoutBtn2').disabled = true;
 
-  const chicken = document.getElementById('activeChicken');
-  if (chicken) chicken.classList.add('dead');
-
   toast('🚗💨 الدجاجة في الجنة!');
 }
 
 function resetGame() {
+  // إيقاف كل السيارات
+  carIntervals.forEach(interval => clearInterval(interval));
+  carIntervals = [];
+
   document.getElementById('difficultySelect').style.display = 'block';
   document.getElementById('playArea').style.display = 'none';
   document.getElementById('floatMult').className = 'float-mult';
