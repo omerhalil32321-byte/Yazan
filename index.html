@@ -278,7 +278,7 @@
             color: var(--danger);
         }
 
-        /* ========== VISA CARD HERO ========== */
+        /* ========== VISA CARD REALISTIC ========== */
         .visa-hero {
             margin-bottom: 25px;
         }
@@ -287,21 +287,38 @@
             display: flex;
             justify-content: center;
             margin-bottom: 20px;
+            perspective: 1000px;
         }
 
-        .visa-card {
-            width: 100%;
-            max-width: 380px;
-            height: 230px;
-            border-radius: 20px;
-            padding: 25px;
+        .visa-card-inner {
             position: relative;
-            overflow: hidden;
-            transition: all 0.5s;
+            width: 100%;
+            max-width: 400px;
+            height: 250px;
+            transition: transform 0.8s;
             transform-style: preserve-3d;
         }
 
-        .visa-card::before {
+        .visa-card-inner.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .visa-card-front, .visa-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+            backface-visibility: hidden;
+            overflow: hidden;
+            padding: 25px;
+        }
+
+        .visa-card-front {
+            background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
+            box-shadow: 0 20px 60px rgba(26, 41, 128, 0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+
+        .visa-card-front::before {
             content: '';
             position: absolute;
             top: -50%;
@@ -310,10 +327,7 @@
             height: 200%;
             background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
             transform: rotate(45deg);
-        }
-
-        .visa-card:hover::before {
-            animation: shine 0.8s ease;
+            animation: shine 3s infinite;
         }
 
         @keyframes shine {
@@ -321,33 +335,78 @@
             100% { transform: translateX(100%) rotate(45deg); }
         }
 
-        .visa-card.locked {
+        .visa-card-back {
+            background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
+            transform: rotateY(180deg);
+            box-shadow: 0 20px 60px rgba(26, 41, 128, 0.5);
+        }
+
+        .visa-card-back::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.5;
+        }
+
+        .visa-card-locked {
+            width: 100%;
+            max-width: 400px;
+            height: 250px;
+            border-radius: 20px;
+            padding: 25px;
             background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
             border: 2px dashed rgba(255,255,255,0.3);
-        }
-
-        .visa-card.active {
-            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #0ea5e9 100%);
-            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.4);
-        }
-
-        .visa-header {
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
-            margin-bottom: 35px;
-        }
-
-        .visa-chip {
-            width: 45px;
-            height: 34px;
-            background: linear-gradient(135deg, #fbbf24, #d97706);
-            border-radius: 8px;
+            justify-content: center;
+            text-align: center;
             position: relative;
             overflow: hidden;
         }
 
-        .visa-chip::before {
+        .visa-card-locked .lock-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .visa-card-locked p {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .visa-card-locked .sub-text {
+            font-size: 0.85rem;
+            opacity: 0.7;
+            margin-top: 5px;
+            font-weight: 400;
+        }
+
+        /* Front Card Elements */
+        .vc-front-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .vc-chip {
+            width: 50px;
+            height: 38px;
+            background: linear-gradient(135deg, #fbbf24, #d97706);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .vc-chip::before {
             content: '';
             position: absolute;
             top: 50%;
@@ -359,75 +418,167 @@
             border-radius: 4px;
         }
 
-        .visa-logo {
-            font-size: 1.5rem;
-            font-weight: 900;
-            font-style: italic;
-            color: rgba(255,255,255,0.9);
-        }
-
-        .visa-number {
-            font-size: 1.4rem;
-            font-weight: 600;
-            letter-spacing: 3px;
-            margin-bottom: 20px;
-            font-family: 'Courier New', monospace;
-        }
-
-        .visa-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-        }
-
-        .visa-holder {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .visa-expiry {
-            text-align: left;
-        }
-
-        .visa-expiry-label {
-            font-size: 0.65rem;
-            opacity: 0.8;
-            margin-bottom: 2px;
-        }
-
-        .visa-expiry-value {
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-
-        .card-status-overlay {
+        .vc-chip::after {
+            content: '';
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            text-align: center;
-            z-index: 2;
-            width: 100%;
-            padding: 0 20px;
+            width: 40%;
+            height: 40%;
+            border: 1px solid rgba(0,0,0,0.15);
+            border-radius: 2px;
         }
 
-        .card-status-overlay .lock-icon {
-            font-size: 2.5rem;
-            margin-bottom: 8px;
-            display: block;
+        .vc-logo {
+            font-size: 1.8rem;
+            font-weight: 900;
+            font-style: italic;
+            color: rgba(255,255,255,0.95);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            letter-spacing: 2px;
         }
 
-        .card-status-overlay p {
-            font-size: 1rem;
-            font-weight: 700;
+        .vc-number {
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: 4px;
+            margin-bottom: 25px;
+            font-family: 'Courier New', monospace;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
         }
 
-        .card-status-overlay .sub-text {
-            font-size: 0.8rem;
+        .vc-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            position: relative;
+            z-index: 1;
+        }
+
+        .vc-holder-label {
+            font-size: 0.6rem;
             opacity: 0.7;
-            margin-top: 5px;
-            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 3px;
+        }
+
+        .vc-holder-name {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .vc-expiry-group {
+            text-align: left;
+        }
+
+        .vc-expiry-label {
+            font-size: 0.6rem;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 3px;
+        }
+
+        .vc-expiry-value {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: white;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        /* Back Card Elements */
+        .vc-back-magnetic {
+            position: absolute;
+            top: 25px;
+            left: 0;
+            width: 100%;
+            height: 45px;
+            background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
+            z-index: 1;
+        }
+
+        .vc-back-cvv-area {
+            position: absolute;
+            top: 85px;
+            right: 25px;
+            z-index: 1;
+            text-align: left;
+        }
+
+        .vc-cvv-label {
+            font-size: 0.7rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+            color: white;
+        }
+
+        .vc-cvv-box {
+            background: white;
+            color: #1a2980;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            letter-spacing: 3px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .vc-back-signature {
+            position: absolute;
+            top: 85px;
+            left: 25px;
+            right: 100px;
+            height: 35px;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(255,255,255,0.1),
+                rgba(255,255,255,0.1) 2px,
+                transparent 2px,
+                transparent 4px
+            );
+            border-radius: 4px;
+            z-index: 1;
+        }
+
+        .vc-back-text {
+            position: absolute;
+            bottom: 20px;
+            left: 25px;
+            right: 25px;
+            font-size: 0.55rem;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.4;
+            text-align: justify;
+            z-index: 1;
+        }
+
+        .vc-back-logo {
+            position: absolute;
+            bottom: 20px;
+            left: 25px;
+            font-size: 1.5rem;
+            font-weight: 900;
+            font-style: italic;
+            color: rgba(255,255,255,0.9);
+            z-index: 1;
+        }
+
+        .vc-flip-hint {
+            text-align: center;
+            margin-top: 10px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
         }
 
         .card-balance-bar {
@@ -621,6 +772,12 @@
 
         .deposit-form {
             display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .deposit-form-row {
+            display: flex;
             gap: 12px;
             flex-wrap: wrap;
             align-items: flex-end;
@@ -797,11 +954,12 @@
             .badge { font-size: 0.7rem; padding: 4px 10px; }
             .logout-btn { padding: 6px 14px; font-size: 0.8rem; }
 
-            .visa-card { height: 200px; padding: 20px; max-width: 340px; }
-            .visa-number { font-size: 1.1rem; letter-spacing: 2px; }
-            .visa-logo { font-size: 1.2rem; }
-            .visa-chip { width: 38px; height: 28px; }
-            .visa-holder { font-size: 0.7rem; }
+            .visa-card-inner, .visa-card-locked { max-width: 340px; height: 210px; }
+            .vc-number { font-size: 1.2rem; letter-spacing: 2px; }
+            .vc-logo { font-size: 1.4rem; }
+            .vc-chip { width: 40px; height: 30px; }
+            .vc-holder-name { font-size: 0.75rem; }
+            .vc-cvv-box { font-size: 0.95rem; padding: 6px 12px; }
 
             .balance-pill { padding: 10px 18px; min-width: 120px; }
             .balance-pill .value { font-size: 1.2rem; }
@@ -816,7 +974,7 @@
             .stat-value { font-size: 1.2rem; }
             .stat-icon { width: 35px; height: 35px; font-size: 1rem; }
 
-            .deposit-form { flex-direction: column; }
+            .deposit-form-row { flex-direction: column; }
             .deposit-form .input-group { width: 100%; min-width: auto; }
             .deposit-btn { width: 100%; }
 
@@ -827,8 +985,8 @@
         }
 
         @media (max-width: 400px) {
-            .visa-card { max-width: 100%; height: 180px; }
-            .visa-number { font-size: 1rem; }
+            .visa-card-inner, .visa-card-locked { max-width: 100%; height: 190px; }
+            .vc-number { font-size: 1rem; letter-spacing: 1px; }
             .stats-grid { grid-template-columns: 1fr 1fr; }
         }
 
@@ -859,7 +1017,6 @@
             </div>
 
             <div class="auth-card">
-                <!-- Tabs -->
                 <div class="auth-tabs" id="authTabs">
                     <button class="auth-tab active" onclick="switchAuthTab('login')">🔑 دخول</button>
                     <button class="auth-tab" onclick="switchAuthTab('register')">📝 تسجيل</button>
@@ -947,6 +1104,7 @@
                         <tr>
                             <th>المرسل</th>
                             <th>المبلغ</th>
+                            <th>رقم العملية</th>
                             <th>التاريخ</th>
                             <th>الحالة</th>
                             <th>إجراء</th>
@@ -967,31 +1125,53 @@
                 <button class="logout-btn" onclick="logout()">🚪 خروج</button>
             </div>
 
-            <!-- VISA CARD - FIRST THING CLIENT SEES -->
+            <!-- VISA CARD - REALISTIC WITH FRONT/BACK -->
             <div class="visa-hero">
                 <div class="visa-card-wrapper">
-                    <div class="visa-card locked" id="visaCard">
-                        <div class="card-status-overlay" id="cardStatus">
-                            <span class="lock-icon">🔒</span>
-                            <p>البطاقة مقفلة</p>
-                            <p class="sub-text">أجرِ إيداعاً لإظهار الأرقام</p>
-                        </div>
-                        <div class="visa-content hidden" id="visaContent">
-                            <div class="visa-header">
-                                <div class="visa-chip"></div>
-                                <div class="visa-logo">VISA</div>
+                    <!-- LOCKED CARD -->
+                    <div class="visa-card-locked" id="visaCardLocked">
+                        <span class="lock-icon">🔒</span>
+                        <p>البطاقة مقفلة</p>
+                        <p class="sub-text">أجرِ إيداعاً لإظهار البطاقة</p>
+                    </div>
+
+                    <!-- ACTIVE CARD (Front/Back) -->
+                    <div class="visa-card-inner hidden" id="visaCardInner" onclick="flipCard()">
+                        <!-- FRONT -->
+                        <div class="visa-card-front" id="visaCardFront">
+                            <div class="vc-front-header">
+                                <div class="vc-chip"></div>
+                                <div class="vc-logo">VISA</div>
                             </div>
-                            <div class="visa-number" id="cardNumber">**** **** **** ****</div>
-                            <div class="visa-footer">
-                                <div class="visa-holder" id="cardHolder">CLIENT NAME</div>
-                                <div class="visa-expiry">
-                                    <div class="visa-expiry-label">VALID THRU</div>
-                                    <div class="visa-expiry-value" id="cardExpiry">12/28</div>
+                            <div class="vc-number" id="cardNumber">4532 8841 9923 7741</div>
+                            <div class="vc-footer">
+                                <div>
+                                    <div class="vc-holder-label">Card Holder</div>
+                                    <div class="vc-holder-name" id="cardHolder">CLIENT NAME</div>
+                                </div>
+                                <div class="vc-expiry-group">
+                                    <div class="vc-expiry-label">Expires</div>
+                                    <div class="vc-expiry-value" id="cardExpiry">09/27</div>
                                 </div>
                             </div>
                         </div>
+                        <!-- BACK -->
+                        <div class="visa-card-back" id="visaCardBack">
+                            <div class="vc-back-magnetic"></div>
+                            <div class="vc-back-signature"></div>
+                            <div class="vc-back-cvv-area">
+                                <div class="vc-cvv-label">CVV</div>
+                                <div class="vc-cvv-box" id="cardCVV">123</div>
+                            </div>
+                            <div class="vc-back-text">
+                                هذا البطاقة صادرة من VIRTUAL BANK وملكية البنك محفوظة. استخدام هذه البطاقة يخضع لشروط وأحكام البنك.
+                            </div>
+                            <div class="vc-back-logo">VISA</div>
+                        </div>
                     </div>
                 </div>
+
+                <div class="vc-flip-hint hidden" id="flipHint">👆 اضغط على البطاقة لرؤية CVV</div>
 
                 <div class="card-balance-bar">
                     <div class="balance-pill">
@@ -1030,14 +1210,20 @@
                     <div class="deposit-section">
                         <h3 class="section-title">💵 إيداع جديد</h3>
                         <div class="deposit-form">
-                            <div class="input-group">
-                                <label>المبلغ (USD)</label>
-                                <input type="number" id="depositAmount" placeholder="0.00" min="15" step="0.01">
+                            <div class="deposit-form-row">
+                                <div class="input-group">
+                                    <label>المبلغ (USD)</label>
+                                    <input type="number" id="depositAmount" placeholder="0.00" min="15" step="0.01">
+                                </div>
+                                <div class="input-group">
+                                    <label>رقم عملية التحويل *</label>
+                                    <input type="text" id="transactionId" placeholder="مثال: TXN123456789">
+                                </div>
                             </div>
                             <button class="deposit-btn" onclick="requestDeposit()">📤 إرسال طلب</button>
                         </div>
                         <div class="min-deposit-note">
-                            ⚠️ الحد الأدنى للإيداع: 15 دولار
+                            ⚠️ الحد الأدنى للإيداع: 15 دولار | يجب إدخال رقم عملية التحويل
                         </div>
                     </div>
 
@@ -1062,6 +1248,7 @@
                             <thead>
                                 <tr>
                                     <th>المبلغ</th>
+                                    <th>رقم العملية</th>
                                     <th>التاريخ</th>
                                     <th>الحالة</th>
                                 </tr>
@@ -1084,8 +1271,8 @@
             currentRole: null,
             authTab: 'login',
             clients: {
-                'ahmed': { name: 'أحمد محمد', password: '123456', balance: 0, cardActive: false, cardNumber: '4532 8841 9923 7741', expiry: '09/27' },
-                'sara': { name: 'سارة علي', password: '123456', balance: 0, cardActive: false, cardNumber: '4916 5234 8812 9903', expiry: '11/28' }
+                'ahmed': { name: 'أحمد محمد', password: '123456', balance: 0, cardActive: false, cardNumber: '4532 8841 9923 7741', expiry: '09/27', cvv: '847' },
+                'sara': { name: 'سارة علي', password: '123456', balance: 0, cardActive: false, cardNumber: '4916 5234 8812 9903', expiry: '11/28', cvv: '392' }
             },
             admin: { username: 'admin', password: 'admin123' },
             requests: [],
@@ -1148,9 +1335,9 @@
                 return;
             }
 
-            // Generate random card number
             const cardNum = generateCardNumber();
             const expiry = generateExpiry();
+            const cvv = generateCVV();
 
             store.clients[username] = {
                 name: fullName,
@@ -1158,7 +1345,8 @@
                 balance: 0,
                 cardActive: false,
                 cardNumber: cardNum,
-                expiry: expiry
+                expiry: expiry,
+                cvv: cvv
             };
 
             showToast('✅ تم إنشاء الحساب بنجاح! يمكنك تسجيل الدخول الآن', 'success');
@@ -1181,6 +1369,10 @@
             return month + '/' + year;
         }
 
+        function generateCVV() {
+            return String(Math.floor(100 + Math.random() * 900));
+        }
+
         // ========== COPY ACCOUNT NUMBER ==========
         function copyAccountNumber() {
             const accountNumber = document.getElementById('accountNumber').textContent;
@@ -1198,7 +1390,13 @@
             });
         }
 
-        // ========== LOGIN (Unified for Admin & Client) ==========
+        // ========== FLIP CARD ==========
+        function flipCard() {
+            const cardInner = document.getElementById('visaCardInner');
+            cardInner.classList.toggle('flipped');
+        }
+
+        // ========== LOGIN ==========
         function login() {
             const username = document.getElementById('loginUsername').value.trim().toLowerCase();
             const password = document.getElementById('loginPassword').value;
@@ -1208,7 +1406,6 @@
                 return;
             }
 
-            // Check Admin
             if (username === store.admin.username && password === store.admin.password) {
                 store.currentUser = 'admin';
                 store.currentRole = 'admin';
@@ -1217,7 +1414,6 @@
                 return;
             }
 
-            // Check Client
             const client = store.clients[username];
             if (client && client.password === password) {
                 store.currentUser = username;
@@ -1273,7 +1469,7 @@
             const pendingRequests = store.requests.filter(r => r.status === 'pending');
 
             if (pendingRequests.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--text-muted); padding: 30px;">لا توجد طلبات معلقة</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color: var(--text-muted); padding: 30px;">لا توجد طلبات معلقة</td></tr>';
                 return;
             }
 
@@ -1283,6 +1479,7 @@
                 row.innerHTML = `
                     <td style="font-weight:700;">${client ? client.name : req.client}</td>
                     <td style="font-weight:700; color: var(--accent-gold);">$${req.amount.toFixed(2)}</td>
+                    <td style="font-family: monospace; color: var(--accent);">${req.transactionId || '-'}</td>
                     <td>${new Date(req.date).toLocaleString('ar-SA')}</td>
                     <td><span class="status-badge status-pending">⏳ معلق</span></td>
                     <td>
@@ -1332,27 +1529,29 @@
             document.getElementById('clientRequests').textContent = userRequests.length;
             document.getElementById('clientApproved').textContent = userRequests.filter(r => r.status === 'approved').length;
 
-            // Visa Card - FIRST THING CLIENT SEES
-            const card = document.getElementById('visaCard');
-            const statusOverlay = document.getElementById('cardStatus');
-            const content = document.getElementById('visaContent');
+            // Visa Card
+            const cardLocked = document.getElementById('visaCardLocked');
+            const cardInner = document.getElementById('visaCardInner');
+            const flipHint = document.getElementById('flipHint');
             const statusDisplay = document.getElementById('cardStatusDisplay');
 
             if (client.cardActive && client.balance > 0) {
-                card.classList.remove('locked');
-                card.classList.add('active');
-                statusOverlay.classList.add('hidden');
-                content.classList.remove('hidden');
+                cardLocked.classList.add('hidden');
+                cardInner.classList.remove('hidden');
+                flipHint.classList.remove('hidden');
+
                 document.getElementById('cardNumber').textContent = client.cardNumber;
                 document.getElementById('cardHolder').textContent = client.name;
                 document.getElementById('cardExpiry').textContent = client.expiry;
+                document.getElementById('cardCVV').textContent = client.cvv;
+
                 statusDisplay.textContent = '✅ نشطة';
                 statusDisplay.style.color = '#10b981';
             } else {
-                card.classList.add('locked');
-                card.classList.remove('active');
-                statusOverlay.classList.remove('hidden');
-                content.classList.add('hidden');
+                cardLocked.classList.remove('hidden');
+                cardInner.classList.add('hidden');
+                flipHint.classList.add('hidden');
+
                 statusDisplay.textContent = '🔒 مقفلة';
                 statusDisplay.style.color = '#f59e0b';
             }
@@ -1362,7 +1561,7 @@
             tbody.innerHTML = '';
 
             if (userRequests.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--text-muted); padding: 20px;">لا توجد طلبات سابقة</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 20px;">لا توجد طلبات سابقة</td></tr>';
                 return;
             }
 
@@ -1384,6 +1583,7 @@
 
                 row.innerHTML = `
                     <td style="font-weight:600;">$${req.amount.toFixed(2)}</td>
+                    <td style="font-family: monospace; color: var(--accent);">${req.transactionId || '-'}</td>
                     <td>${new Date(req.date).toLocaleDateString('ar-SA')}</td>
                     <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                 `;
@@ -1393,9 +1593,15 @@
 
         function requestDeposit() {
             const amount = parseFloat(document.getElementById('depositAmount').value);
+            const transactionId = document.getElementById('transactionId').value.trim();
 
             if (isNaN(amount) || amount < 15) {
                 showToast('⚠️ الحد الأدنى للإيداع هو 15 دولار', 'warning');
+                return;
+            }
+
+            if (!transactionId) {
+                showToast('⚠️ يجب إدخال رقم عملية التحويل', 'warning');
                 return;
             }
 
@@ -1403,12 +1609,14 @@
                 id: store.requestIdCounter++,
                 client: store.currentUser,
                 amount: amount,
+                transactionId: transactionId,
                 status: 'pending',
                 date: new Date().toISOString()
             };
 
             store.requests.push(req);
             document.getElementById('depositAmount').value = '';
+            document.getElementById('transactionId').value = '';
             showToast('📤 تم إرسال طلب الإيداع للإدارة', 'success');
             renderClientDashboard();
         }
