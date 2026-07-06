@@ -255,6 +255,7 @@
     </style>
 <base target="_blank">
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
     <div class="particles" id="particles"></div>
@@ -412,34 +413,55 @@
             requests: [], requestIdCounter: 1
         };
 
-        let store = JSON.parse(JSON.stringify(DEFAULT_STORE));
-
-        function saveStore() {
-            try {
-                localStorage.setItem('virtualBankData', JSON.stringify({
-                    clients: store.clients, requests: store.requests, requestIdCounter: store.requestIdCounter,
-                    currentUser: store.currentUser, currentRole: store.currentRole
-                }));
-            } catch(e) { console.log('Storage not available'); }
-        }
+        // Initialize store from localStorage first, fallback to DEFAULT_STORE only if no saved data
+        let store = {};
 
         function loadStore() {
             try {
                 const saved = localStorage.getItem('virtualBankData');
                 if (saved) {
                     const data = JSON.parse(saved);
-                    store.clients = data.clients || store.clients;
-                    store.requests = data.requests || [];
-                    store.requestIdCounter = data.requestIdCounter || 1;
-                    if (data.currentUser && data.currentRole) {
-                        store.currentUser = data.currentUser;
-                        store.currentRole = data.currentRole;
-                    }
+                    // Use saved data - do NOT merge with defaults to prevent overwriting
+                    store = {
+                        currentUser: data.currentUser || null,
+                        currentRole: data.currentRole || null,
+                        authTab: 'login',
+                        clients: data.clients || {},
+                        admin: data.admin || DEFAULT_STORE.admin,
+                        requests: data.requests || [],
+                        requestIdCounter: data.requestIdCounter || 1
+                    };
+                    console.log('✅ Data loaded from localStorage');
+                    return true;
                 }
-            } catch(e) { console.log('Storage not available'); }
+            } catch(e) { 
+                console.log('Storage error:', e); 
+            }
+            // Only use defaults if localStorage is completely empty
+            store = JSON.parse(JSON.stringify(DEFAULT_STORE));
+            console.log('⚠️ No saved data found, using defaults');
+            return false;
         }
 
-        loadStore();
+        function saveStore() {
+            try {
+                const dataToSave = {
+                    clients: store.clients,
+                    admin: store.admin,
+                    requests: store.requests,
+                    requestIdCounter: store.requestIdCounter,
+                    currentUser: store.currentUser,
+                    currentRole: store.currentRole
+                };
+                localStorage.setItem('virtualBankData', JSON.stringify(dataToSave));
+                console.log('💾 Data saved to localStorage');
+            } catch(e) { 
+                console.log('Storage save error:', e); 
+            }
+        }
+
+        // Load data immediately
+        const hasExistingData = loadStore();
 
         // ========== INIT PARTICLES ==========
         function initParticles() {
