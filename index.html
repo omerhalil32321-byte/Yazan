@@ -254,6 +254,7 @@
         @media (max-width: 968px) { .two-col { grid-template-columns: 1fr; } }
     </style>
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
     <div class="particles" id="particles"></div>
@@ -416,7 +417,8 @@
         function saveStore() {
             try {
                 localStorage.setItem('virtualBankData', JSON.stringify({
-                    clients: store.clients, requests: store.requests, requestIdCounter: store.requestIdCounter
+                    clients: store.clients, requests: store.requests, requestIdCounter: store.requestIdCounter,
+                    currentUser: store.currentUser, currentRole: store.currentRole
                 }));
             } catch(e) { console.log('Storage not available'); }
         }
@@ -429,6 +431,10 @@
                     store.clients = data.clients || store.clients;
                     store.requests = data.requests || [];
                     store.requestIdCounter = data.requestIdCounter || 1;
+                    if (data.currentUser && data.currentRole) {
+                        store.currentUser = data.currentUser;
+                        store.currentRole = data.currentRole;
+                    }
                 }
             } catch(e) { console.log('Storage not available'); }
         }
@@ -524,6 +530,7 @@
 
         function logout() {
             store.currentUser = null; store.currentRole = null;
+            saveStore();
             document.getElementById('authScreen').style.display = 'flex';
             document.getElementById('adminDashboard').style.display = 'none';
             document.getElementById('clientDashboard').style.display = 'none';
@@ -538,6 +545,11 @@
             document.getElementById('clientDashboard').style.display = type === 'client' ? 'block' : 'none';
             if (type === 'admin') renderAdminDashboard();
             if (type === 'client') renderClientDashboard();
+        }
+
+        // ========== AUTO LOGIN ==========
+        if (store.currentUser && store.currentRole) {
+            showDashboard(store.currentRole);
         }
 
         // ========== ADMIN ==========
