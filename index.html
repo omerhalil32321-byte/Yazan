@@ -1,691 +1,1217 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>الفيزا الإفتراضي</title>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-:root{--primary:#0f172a;--secondary:#1e293b;--accent:#3b82f6;--accent-light:#60a5fa;--success:#10b981;--danger:#ef4444;--warning:#f59e0b;--gold:#fbbf24;--purple:#8b5cf6;--text:#f1f5f9;--text-muted:#94a3b8;--card-bg:#1e293b;--border:#334155;--gradient:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%)}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Tajawal',sans-serif;background:var(--gradient);color:var(--text);min-height:100vh;overflow-x:hidden}
-.auth-container{display:flex;justify-content:center;align-items:center;min-height:100vh;background:var(--gradient)}
-.auth-box{background:var(--card-bg);border:1px solid var(--border);border-radius:24px;padding:40px;width:100%;max-width:450px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5)}
-.auth-box h1{font-size:2rem;font-weight:800;margin-bottom:10px;text-align:center;background:linear-gradient(135deg,var(--accent-light),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.auth-box p{text-align:center;color:var(--text-muted);margin-bottom:30px}
-.input-group{margin-bottom:20px}
-.input-group label{display:block;margin-bottom:8px;font-weight:500;color:var(--text-muted)}
-.input-group input{width:100%;padding:14px 18px;border:1px solid var(--border);border-radius:12px;background:var(--primary);color:var(--text);font-family:'Tajawal',sans-serif;font-size:1rem}
-.btn{width:100%;padding:14px;border:none;border-radius:12px;font-family:'Tajawal',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:8px}
-.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent-light));color:white}
-.btn-success{background:linear-gradient(135deg,var(--success),#34d399);color:white}
-.auth-switch{text-align:center;margin-top:20px;color:var(--text-muted)}
-.auth-switch a{color:var(--accent-light);cursor:pointer;font-weight:600}
-.dashboard{display:none;min-height:100vh}
-.sidebar{position:fixed;right:0;top:0;width:280px;height:100vh;background:var(--secondary);border-left:1px solid var(--border);padding:30px 20px;overflow-y:auto;z-index:100}
-.logo{display:flex;align-items:center;gap:12px;margin-bottom:40px;padding-bottom:20px;border-bottom:1px solid var(--border)}
-.logo-icon{width:48px;height:48px;background:linear-gradient(135deg,var(--accent),var(--accent-light));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
-.logo-text{font-size:1.5rem;font-weight:800;background:linear-gradient(135deg,var(--accent-light),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.nav-menu{list-style:none}
-.nav-item{margin-bottom:8px}
-.nav-link{display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:12px;color:var(--text-muted);text-decoration:none;transition:all 0.3s;cursor:pointer;font-weight:500}
-.nav-link:hover,.nav-link.active{background:rgba(59,130,246,0.1);color:var(--accent-light)}
-.nav-link i{width:24px;text-align:center}
-.admin-badge{background:linear-gradient(135deg,var(--gold),#f59e0b);color:var(--primary);padding:2px 8px;border-radius:6px;font-size:0.7rem;font-weight:700;margin-right:auto}
-.main-content{margin-right:280px;padding:30px;min-height:100vh}
-.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;padding-bottom:20px;border-bottom:1px solid var(--border)}
-.header h2{font-size:1.8rem;font-weight:700}
-.user-info{display:flex;align-items:center;gap:15px}
-.user-avatar{width:45px;height:45px;background:linear-gradient(135deg,var(--accent),var(--accent-light));border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.2rem}
-.user-details h4{font-weight:600}
-.user-details span{color:var(--text-muted);font-size:0.85rem}
-.logout-btn{background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:8px 16px;border-radius:8px;cursor:pointer;font-family:'Tajawal',sans-serif}
-.logout-btn:hover{border-color:var(--danger);color:var(--danger)}
-.visa-card{width:100%;max-width:420px;height:260px;background:linear-gradient(135deg,#1e3a5f 0%,#0f172a 50%,#1e293b 100%);border-radius:20px;padding:30px;position:relative;overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);margin:0 auto}
-.visa-card::before{content:'';position:absolute;top:-50%;right:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(59,130,246,0.1) 0%,transparent 60%);animation:rotate 20s linear infinite}
-@keyframes rotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-.visa-chip{width:50px;height:40px;background:linear-gradient(135deg,#fbbf24,#f59e0b);border-radius:8px;margin-bottom:25px;position:relative;z-index:1;display:flex;align-items:center;justify-content:center}
-.visa-chip::before{content:'';width:35px;height:25px;border:1px solid rgba(0,0,0,0.3);border-radius:4px}
-.visa-number{font-size:1.6rem;font-weight:600;letter-spacing:3px;margin-bottom:20px;position:relative;z-index:1;font-family:'Courier New',monospace}
-.visa-details{display:flex;justify-content:space-between;position:relative;z-index:1}
-.visa-detail label{display:block;font-size:0.7rem;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase}
-.visa-detail span{font-weight:600;font-size:1rem}
-.visa-logo{position:absolute;top:30px;left:30px;font-size:1.1rem;font-weight:700;color:var(--gold);z-index:1;font-family:'Tajawal',sans-serif;letter-spacing:1px}
-.visa-status{position:absolute;bottom:30px;left:30px;z-index:1}
-.status-badge{padding:6px 14px;border-radius:20px;font-size:0.8rem;font-weight:600}
-.status-active{background:rgba(16,185,129,0.2);color:var(--success)}
-.status-frozen{background:rgba(239,68,68,0.2);color:var(--danger)}
-.visa-number-locked{filter:blur(4px);opacity:0.6;user-select:none;letter-spacing:4px}
-.visa-lock-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:8px}
-.visa-lock-overlay i{font-size:2.5rem;color:var(--gold)}
-.visa-lock-overlay span{font-size:0.85rem;color:var(--text-muted);font-weight:600}
-.card-actions{display:flex;gap:10px;margin-top:15px;flex-wrap:wrap;justify-content:center}
-.balance-bar{background:linear-gradient(135deg,rgba(59,130,246,0.1),rgba(139,92,246,0.1));border:1px solid var(--border);border-radius:20px;padding:25px 30px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-.balance-label{color:var(--text-muted);font-size:0.9rem;margin-bottom:5px}
-.balance-value{font-size:2.2rem;font-weight:900;color:var(--gold);text-shadow:0 0 20px rgba(251,191,36,0.3)}
-.icon-actions{display:flex;justify-content:center;gap:12px;margin-bottom:25px;flex-wrap:wrap}
-.icon-action{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:12px 18px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;transition:all 0.3s;color:var(--text);min-width:75px}
-.icon-action:hover{transform:translateY(-3px);border-color:var(--accent)}
-.icon-action i{font-size:1.1rem;width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center}
-.icon-action.deposit i{background:rgba(16,185,129,0.15);color:var(--success)}
-.icon-action.withdraw i{background:rgba(239,68,68,0.15);color:var(--danger)}
-.icon-action.transfer i{background:rgba(59,130,246,0.15);color:var(--accent-light)}
-.icon-action.account i{background:rgba(139,92,246,0.15);color:var(--purple)}
-.icon-action.visa i{background:rgba(251,191,36,0.15);color:var(--gold)}
-.icon-action span{font-size:0.75rem;font-weight:600}
-.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:25px}
-.stat-card{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:20px;position:relative;overflow:hidden}
-.stat-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent-light))}
-.stat-card.success::before{background:linear-gradient(90deg,var(--success),#34d399)}
-.stat-card.warning::before{background:linear-gradient(90deg,var(--warning),#fbbf24)}
-.stat-card.danger::before{background:linear-gradient(90deg,var(--danger),#f87171)}
-.stat-card.gold::before{background:linear-gradient(90deg,var(--gold),#f59e0b)}
-.stat-header{display:flex;justify-content:space-between;align-items:center}
-.stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
-.stat-icon.green{background:rgba(16,185,129,0.15);color:var(--success)}
-.stat-icon.orange{background:rgba(245,158,11,0.15);color:var(--warning)}
-.stat-icon.red{background:rgba(239,68,68,0.15);color:var(--danger)}
-.stat-icon.gold{background:rgba(251,191,36,0.15);color:var(--gold)}
-.stat-value{font-size:1.5rem;font-weight:800}
-.stat-label{color:var(--text-muted);font-size:0.8rem}
-.section-title{font-size:1.2rem;font-weight:700;margin:25px 0 15px;display:flex;align-items:center;gap:10px}
-.transactions-table{width:100%;background:var(--card-bg);border:1px solid var(--border);border-radius:16px;overflow:hidden}
-.transactions-table table{width:100%;border-collapse:collapse}
-.transactions-table th{background:var(--primary);padding:14px;text-align:right;font-weight:600;color:var(--text-muted);font-size:0.85rem}
-.transactions-table td{padding:14px;border-bottom:1px solid var(--border);font-size:0.9rem}
-.tx-type{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;font-size:0.8rem;font-weight:600}
-.tx-deposit{background:rgba(16,185,129,0.15);color:var(--success)}
-.tx-withdraw{background:rgba(239,68,68,0.15);color:var(--danger)}
-.tx-transfer{background:rgba(59,130,246,0.15);color:var(--accent-light)}
-.tx-amount{font-weight:700}
-.tx-positive{color:var(--success)}
-.tx-negative{color:var(--danger)}
-.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;justify-content:center;align-items:center;backdrop-filter:blur(5px)}
-.modal-overlay.active{display:flex}
-.modal{background:var(--card-bg);border:1px solid var(--border);border-radius:24px;padding:30px;width:90%;max-width:450px;max-height:90vh;overflow-y:auto}
-.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-.modal-header h3{font-size:1.2rem}
-.close-modal{background:none;border:none;color:var(--text-muted);font-size:1.5rem;cursor:pointer}
-.alert{background:rgba(245,158,11,0.1);border:1px solid var(--warning);border-radius:8px;padding:12px;margin-bottom:16px;color:var(--warning);font-size:0.85rem}
-.notification-container{position:fixed;top:20px;left:20px;z-index:2000;display:flex;flex-direction:column;gap:10px}
-.notification{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,0.3);animation:slideIn 0.4s ease;min-width:280px;font-size:0.9rem}
-@keyframes slideIn{from{transform:translateX(-100%);opacity:0}to{transform:translateX(0);opacity:1}}
-.notification.success{border-right:4px solid var(--success)}
-.notification.warning{border-right:4px solid var(--warning)}
-.notification.error{border-right:4px solid var(--danger)}
-.hidden{display:none!important}
-.page.hidden{display:none!important}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الفيزا الإفتراضي</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0f172a;
+            --secondary: #1e293b;
+            --accent: #3b82f6;
+            --accent-light: #60a5fa;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --gold: #fbbf24;
+            --purple: #8b5cf6;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --card-bg: #1e293b;
+            --border: #334155;
+            --gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Tajawal', sans-serif; background: var(--gradient); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+        .auth-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: var(--gradient); position: relative; }
+        .auth-container::before { content: ''; position: absolute; width: 400px; height: 400px; background: radial-gradient(circle, rgba(59,130,246,0.2) 0%, transparent 70%); top: -100px; right: -100px; border-radius: 50%; }
+        .auth-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 40px; width: 100%; max-width: 450px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); position: relative; z-index: 1; }
+        .auth-box h1 { font-size: 2rem; font-weight: 800; margin-bottom: 10px; text-align: center; background: linear-gradient(135deg, var(--accent-light), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .auth-box p { text-align: center; color: var(--text-muted); margin-bottom: 30px; }
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-muted); }
+        .input-group input, .input-group select { width: 100%; padding: 14px 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--primary); color: var(--text); font-family: 'Tajawal', sans-serif; font-size: 1rem; transition: all 0.3s; }
+        .input-group input:focus, .input-group select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-family: 'Tajawal', sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-light)); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(59,130,246,0.4); }
+        .btn-success { background: linear-gradient(135deg, var(--success), #34d399); color: white; }
+        .btn-danger { background: linear-gradient(135deg, var(--danger), #f87171); color: white; }
+        .btn-warning { background: linear-gradient(135deg, var(--warning), #fbbf24); color: var(--primary); }
+        .btn-purple { background: linear-gradient(135deg, var(--purple), #a78bfa); color: white; }
+        .btn-gold { background: linear-gradient(135deg, var(--gold), #f59e0b); color: var(--primary); }
+        .btn-sm { padding: 8px 16px; font-size: 0.85rem; width: auto; }
+        .btn-icon { width: 36px; height: 36px; padding: 0; border-radius: 8px; }
+        .auth-switch { text-align: center; margin-top: 20px; color: var(--text-muted); }
+        .auth-switch a { color: var(--accent-light); cursor: pointer; font-weight: 600; }
+        .dashboard { display: none; min-height: 100vh; }
+        .sidebar { position: fixed; right: 0; top: 0; width: 280px; height: 100vh; background: var(--secondary); border-left: 1px solid var(--border); padding: 30px 20px; overflow-y: auto; z-index: 100; }
+        .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .logo-icon { width: 48px; height: 48px; background: linear-gradient(135deg, var(--accent), var(--accent-light)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .logo-text { font-size: 1.5rem; font-weight: 800; background: linear-gradient(135deg, var(--accent-light), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-menu { list-style: none; }
+        .nav-item { margin-bottom: 8px; }
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; color: var(--text-muted); text-decoration: none; transition: all 0.3s; cursor: pointer; font-weight: 500; }
+        .nav-link:hover, .nav-link.active { background: rgba(59,130,246,0.1); color: var(--accent-light); }
+        .nav-link i { width: 24px; text-align: center; }
+        .admin-badge { background: linear-gradient(135deg, var(--gold), #f59e0b); color: var(--primary); padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; margin-right: auto; }
+        .main-content { margin-right: 280px; padding: 30px; min-height: 100vh; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .header h2 { font-size: 1.8rem; font-weight: 700; }
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .user-avatar { width: 45px; height: 45px; background: linear-gradient(135deg, var(--accent), var(--accent-light)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem; }
+        .user-details h4 { font-weight: 600; }
+        .user-details span { color: var(--text-muted); font-size: 0.85rem; }
+        .logout-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.3s; font-family: 'Tajawal', sans-serif; }
+        .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 25px; position: relative; overflow: hidden; }
+        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, var(--accent), var(--accent-light)); }
+        .stat-card.success::before { background: linear-gradient(90deg, var(--success), #34d399); }
+        .stat-card.warning::before { background: linear-gradient(90deg, var(--warning), #fbbf24); }
+        .stat-card.danger::before { background: linear-gradient(90deg, var(--danger), #f87171); }
+        .stat-card.purple::before { background: linear-gradient(90deg, var(--purple), #a78bfa); }
+        .stat-card.gold::before { background: linear-gradient(90deg, var(--gold), #f59e0b); }
+        .stat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+        .stat-icon.blue { background: rgba(59,130,246,0.15); color: var(--accent-light); }
+        .stat-icon.green { background: rgba(16,185,129,0.15); color: var(--success); }
+        .stat-icon.orange { background: rgba(245,158,11,0.15); color: var(--warning); }
+        .stat-icon.red { background: rgba(239,68,68,0.15); color: var(--danger); }
+        .stat-icon.purple { background: rgba(139,92,246,0.15); color: var(--purple); }
+        .stat-icon.gold { background: rgba(251,191,36,0.15); color: var(--gold); }
+        .stat-value { font-size: 2rem; font-weight: 800; margin-bottom: 5px; }
+        .stat-label { color: var(--text-muted); font-size: 0.9rem; }
+        .visa-section { margin-bottom: 30px; }
+        .visa-card { width: 100%; max-width: 420px; height: 260px; background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 50%, #1e293b 100%); border-radius: 20px; padding: 30px; position: relative; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); }
+        .visa-card::before { content: ''; position: absolute; top: -50%; right: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 60%); animation: rotate 20s linear infinite; }
+        .visa-card.locked { border: 1px solid rgba(255,255,255,0.1); }
+        .visa-card.locked::before { animation: rotate 20s linear infinite; }
+        .visa-number-locked { filter: blur(4px); opacity: 0.6; user-select: none; letter-spacing: 4px; }
+        .visa-lock-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .visa-lock-overlay i { font-size: 2.5rem; color: var(--gold); }
+        .visa-lock-overlay span { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .visa-chip { width: 50px; height: 40px; background: linear-gradient(135deg, #fbbf24, #f59e0b); border-radius: 8px; margin-bottom: 25px; position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; }
+        .visa-chip::before { content: ''; width: 35px; height: 25px; border: 1px solid rgba(0,0,0,0.3); border-radius: 4px; }
+        .visa-number { font-size: 1.6rem; font-weight: 600; letter-spacing: 3px; margin-bottom: 20px; position: relative; z-index: 1; font-family: 'Courier New', monospace; }
+        .visa-details { display: flex; justify-content: space-between; position: relative; z-index: 1; }
+        .visa-detail label { display: block; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; }
+        .visa-detail span { font-weight: 600; font-size: 1rem; }
+        .visa-logo { position: absolute; top: 30px; left: 30px; font-size: 2.5rem; color: var(--gold); z-index: 1; }
+        .visa-status { position: absolute; bottom: 30px; left: 30px; z-index: 1; }
+        .status-badge { padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        .status-active { background: rgba(16,185,129,0.2); color: var(--success); }
+        .status-frozen { background: rgba(239,68,68,0.2); color: var(--danger); }
+        .card-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        .card-actions .btn { width: auto; padding: 10px 20px; font-size: 0.9rem; }
+        .section-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .transactions-table { width: 100%; background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 20px; }
+        .transactions-table table { width: 100%; border-collapse: collapse; }
+        .transactions-table th { background: var(--primary); padding: 16px; text-align: right; font-weight: 600; color: var(--text-muted); font-size: 0.9rem; }
+        .transactions-table td { padding: 16px; border-bottom: 1px solid var(--border); }
+        .transactions-table tr:hover { background: rgba(59,130,246,0.05); }
+        .tx-type { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; }
+        .tx-deposit { background: rgba(16,185,129,0.15); color: var(--success); }
+        .tx-withdraw { background: rgba(239,68,68,0.15); color: var(--danger); }
+        .tx-transfer { background: rgba(59,130,246,0.15); color: var(--accent-light); }
+        .tx-manual { background: rgba(139,92,246,0.15); color: var(--purple); }
+        .tx-pending { background: rgba(245,158,11,0.15); color: var(--warning); }
+        .tx-amount { font-weight: 700; font-size: 1.1rem; }
+        .tx-positive { color: var(--success); }
+        .tx-negative { color: var(--danger); }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 30px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; animation: modalIn 0.3s ease; }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .modal-header h3 { font-size: 1.3rem; }
+        .close-modal { background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; transition: color 0.3s; }
+        .close-modal:hover { color: var(--danger); }
+        .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
+        .admin-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 25px; }
+        .admin-card h3 { margin-bottom: 20px; font-size: 1.1rem; color: var(--text-muted); }
+        .user-list-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: var(--primary); border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); }
+        .user-list-info h4 { font-weight: 600; margin-bottom: 4px; }
+        .user-list-info span { color: var(--text-muted); font-size: 0.85rem; }
+        .user-balance { font-weight: 700; color: var(--success); }
+        .user-actions { display: flex; gap: 8px; }
+        .pending-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: var(--primary); border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); border-right: 4px solid var(--warning); }
+        .pending-info h4 { font-weight: 600; margin-bottom: 4px; }
+        .pending-info span { color: var(--text-muted); font-size: 0.85rem; }
+        .pending-actions { display: flex; gap: 8px; }
+        .monitor-status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        .monitor-online { background: rgba(16,185,129,0.15); color: var(--success); }
+        .monitor-offline { background: rgba(239,68,68,0.15); color: var(--danger); }
+        .monitor-activity { max-height: 400px; overflow-y: auto; }
+        .activity-item { padding: 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+        .activity-icon.login { background: rgba(16,185,129,0.15); color: var(--success); }
+        .activity-icon.logout { background: rgba(239,68,68,0.15); color: var(--danger); }
+        .activity-icon.transaction { background: rgba(59,130,246,0.15); color: var(--accent-light); }
+        .activity-icon.warning { background: rgba(245,158,11,0.15); color: var(--warning); }
+        .activity-info { flex: 1; }
+        .activity-info h5 { font-size: 0.9rem; margin-bottom: 2px; }
+        .activity-info span { font-size: 0.75rem; color: var(--text-muted); }
+        .activity-time { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+        .notification-container { position: fixed; top: 20px; left: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; }
+        .notification { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: slideIn 0.4s ease; min-width: 300px; }
+        @keyframes slideIn { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .notification.success { border-right: 4px solid var(--success); }
+        .notification.error { border-right: 4px solid var(--danger); }
+        .notification.info { border-right: 4px solid var(--accent); }
+        .notification.warning { border-right: 4px solid var(--warning); }
+        .hidden { display: none !important; }
+        .page.hidden { display: none !important; }
+        @media (max-width: 1024px) { .home-layout { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .sidebar { width: 100%; transform: translateX(100%); transition: transform 0.3s; } .sidebar.open { transform: translateX(0); } .main-content { margin-right: 0; } .home-layout { grid-template-columns: 1fr; } }
+    </style>
+<base target="_blank">
 </head>
 <body>
 
-<div id="authScreen" class="auth-container">
-    <div class="auth-box" id="loginBox">
-        <h1><i class="fas fa-university"></i> الفيزا الإفتراضي</h1>
-        <p>بنك الفيزا الإفتراضي</p>
-        <div class="input-group">
-            <label>البريد الإلكتروني</label>
-            <input type="email" id="loginEmail" placeholder="email@example.com">
-        </div>
-        <div class="input-group">
-            <label>كلمة المرور</label>
-            <input type="password" id="loginPassword" placeholder="••••••••">
-        </div>
-        <button class="btn btn-primary" onclick="login()">
-            <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
-        </button>
-        <div class="auth-switch">
-            ليس لديك حساب؟ <a onclick="showRegister()">سجل الآن</a>
-        </div>
-    </div>
-
-    <div class="auth-box hidden" id="registerBox">
-        <h1><i class="fas fa-user-plus"></i> إنشاء حساب</h1>
-        <p>انضم إلى الفيزا الإفتراضي</p>
-        <div class="input-group">
-            <label>الاسم الكامل</label>
-            <input type="text" id="regName" placeholder="محمد أحمد">
-        </div>
-        <div class="input-group">
-            <label>البريد الإلكتروني</label>
-            <input type="email" id="regEmail" placeholder="email@example.com">
-        </div>
-        <div class="input-group">
-            <label>كلمة المرور</label>
-            <input type="password" id="regPassword" placeholder="••••••••">
-        </div>
-        <button class="btn btn-success" onclick="register()" style="width:100%">
-            <i class="fas fa-check"></i> إنشاء حساب
-        </button>
-        <div class="auth-switch">
-            لديك حساب؟ <a onclick="showLogin()">تسجيل الدخول</a>
-        </div>
-    </div>
-</div>
-
-<div id="dashboard" class="dashboard">
-    <div class="sidebar">
-        <div class="logo">
-            <div class="logo-icon"><i class="fas fa-university"></i></div>
-            <div class="logo-text">الفيزا الإفتراضي</div>
-        </div>
-        <ul class="nav-menu">
-            <li class="nav-item"><a class="nav-link active" onclick="showPage('home')"><i class="fas fa-home"></i> الرئيسية</a></li>
-            <li class="nav-item"><a class="nav-link" onclick="showPage('visa')"><i class="fas fa-credit-card"></i> الفيزا</a></li>
-            <li class="nav-item"><a class="nav-link" onclick="showPage('transactions')"><i class="fas fa-exchange-alt"></i> المعاملات</a></li>
-            <li class="nav-item"><a class="nav-link" onclick="showPage('transfer')"><i class="fas fa-paper-plane"></i> تحويل</a></li>
-            <li class="nav-item admin-only hidden"><a class="nav-link" onclick="showPage('admin')"><i class="fas fa-shield-alt"></i> الإدارة<span class="admin-badge">ADMIN</span></a></li>
-            <li class="nav-item admin-only hidden"><a class="nav-link" onclick="showPage('pending')"><i class="fas fa-clock"></i> طلبات الإيداع<span class="admin-badge">ADMIN</span></a></li>
-        </ul>
-    </div>
-
-    <div class="main-content">
-        <div id="page-home" class="page">
-            <div class="header">
-                <h2>مرحباً، <span id="userName">المستخدم</span> 👋</h2>
-                <div class="user-info">
-                    <div class="user-details">
-                        <h4 id="headerName">المستخدم</h4>
-                        <span id="headerEmail">email@example.com</span>
-                    </div>
-                    <div class="user-avatar" id="headerAvatar">م</div>
-                    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
-                </div>
+    <div id="authScreen" class="auth-container">
+        <div class="auth-box" id="loginBox">
+            <h1><i class="fas fa-university"></i> الفيزا الإفتراضي</h1>
+            <p>الفيزا الإفتراضي</p>
+            <div class="input-group">
+                <label>البريد الإلكتروني</label>
+                <input type="email" id="loginEmail" placeholder="email@example.com">
             </div>
+            <div class="input-group">
+                <label>كلمة المرور</label>
+                <input type="password" id="loginPassword" placeholder="••••••••">
+            </div>
+            <button class="btn btn-primary" onclick="login()">
+                <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+            </button>
+            <div class="auth-switch">
+                ليس لديك حساب؟ <a onclick="showRegister()">سجل الآن</a>
+            </div>
+        </div>
 
-            <div style="display:flex;justify-content:center;margin-bottom:20px">
-                <div style="width:100%;max-width:420px">
-                    <div class="visa-card" id="visaCard">
-                        <div class="visa-logo">الفيزا الإفتراضي</div>
-                        <div class="visa-chip"></div>
-                        <div class="visa-number" id="cardNumber"><span class="visa-number-locked" id="cardNumLocked">•••• •••• •••• ••••</span><span id="cardNumReal" style="display:none"></span></div>
-                        <div class="visa-details">
-                            <div class="visa-detail"><label>صاحب البطاقة</label><span id="cardHolder">---</span></div>
-                            <div class="visa-detail"><label>تاريخ الانتهاء</label><span id="cardExpiry">--/--</span></div>
-                            <div class="visa-detail"><label>CVV</label><span id="cardCVV">•••</span></div>
+        <div class="auth-box hidden" id="registerBox">
+            <h1><i class="fas fa-user-plus"></i> إنشاء حساب</h1>
+            <p>انضم إلى الفيزا الإفتراضي</p>
+            <div class="input-group">
+                <label>الاسم الكامل</label>
+                <input type="text" id="regName" placeholder="محمد أحمد">
+            </div>
+            <div class="input-group">
+                <label>البريد الإلكتروني</label>
+                <input type="email" id="regEmail" placeholder="email@example.com">
+            </div>
+            <div class="input-group">
+                <label>كلمة المرور</label>
+                <input type="password" id="regPassword" placeholder="••••••••">
+            </div>
+            <button class="btn btn-success" onclick="register()">
+                <i class="fas fa-check"></i> إنشاء حساب
+            </button>
+            <div class="auth-switch">
+                لديك حساب؟ <a onclick="showLogin()">تسجيل الدخول</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboard" class="dashboard">
+        <div class="sidebar">
+            <div class="logo">
+                <div class="logo-icon"><i class="fas fa-university"></i></div>
+                <div class="logo-text">الفيزا الإفتراضي</div>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a class="nav-link active" onclick="showPage('home', this)">
+                        <i class="fas fa-home"></i> الرئيسية
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="showPage('visa', this)">
+                        <i class="fas fa-credit-card"></i> الفيزا الافتراضية
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="showPage('transactions', this)">
+                        <i class="fas fa-exchange-alt"></i> المعاملات
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="showPage('transfer', this)">
+                        <i class="fas fa-paper-plane"></i> تحويل الأموال
+                    </a>
+                </li>
+                <li class="nav-item admin-only hidden">
+                    <a class="nav-link" onclick="showPage('admin', this)">
+                        <i class="fas fa-shield-alt"></i> لوحة الإدارة
+                        <span class="admin-badge">ADMIN</span>
+                    </a>
+                </li>
+                <li class="nav-item admin-only hidden">
+                    <a class="nav-link" onclick="showPage('monitoring', this)">
+                        <i class="fas fa-eye"></i> مراقبة الزبائن
+                        <span class="admin-badge">ADMIN</span>
+                    </a>
+                </li>
+                <li class="nav-item admin-only hidden">
+                    <a class="nav-link" onclick="showPage('pending', this)">
+                        <i class="fas fa-clock"></i> طلبات الإيداع
+                        <span class="admin-badge">ADMIN</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="main-content">
+            <!-- HOME PAGE -->
+            <div id="page-home" class="page">
+                <div class="header">
+                    <h2>مرحباً، <span id="userName">المستخدم</span> 👋</h2>
+                    <div class="user-info">
+                        <div class="user-details">
+                            <h4 id="headerName">المستخدم</h4>
+                            <span id="headerEmail">email@example.com</span>
                         </div>
-                        <div class="visa-status"><span class="status-badge status-frozen" id="cardStatus">مقفلة</span></div>
-                        <div class="visa-lock-overlay" id="lockOverlay"><i class="fas fa-lock"></i><span>أرقام مشفرة</span></div>
+                        <div class="user-avatar" id="headerAvatar">م</div>
+                        <button class="logout-btn" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
                     </div>
-                    <div class="card-actions">
-                        <button class="btn btn-danger" onclick="handleShowNumbers()" style="border-radius:50px;padding:10px 25px"><i class="fas fa-eye"></i> <span id="showBtnText">إظهار الأرقام</span></button>
+                </div>
+
+                <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+                    <div id="homeVisaContainer" style="width: 100%; max-width: 420px;"></div>
+                </div>
+
+                <div class="balance-bar" style="background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(139,92,246,0.1)); border: 1px solid var(--border); border-radius: 20px; padding: 25px 30px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: relative; overflow: hidden;">
+                    <div style="position: relative; z-index: 1;">
+                        <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 5px;"><i class="fas fa-wallet"></i> الرصيد الحالي</div>
+                        <div style="font-size: 2.2rem; font-weight: 900; color: var(--gold); text-shadow: 0 0 20px rgba(251,191,36,0.3);" id="homeBalance">$0.00</div>
+                        <div style="color: var(--text-muted); font-size: 0.85rem;">دولار أمريكي</div>
+                    </div>
+                    <div style="position: relative; z-index: 1; display: flex; gap: 10px;">
+                        <button class="btn btn-success btn-sm" onclick="openModal('depositModal')" style="padding: 10px 20px;"><i class="fas fa-plus"></i> شحن</button>
+                        <button class="btn btn-danger btn-sm" onclick="openModal('withdrawModal')" style="padding: 10px 20px;"><i class="fas fa-minus"></i> سحب</button>
+                    </div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.15)); border: 1px solid var(--border); border-radius: 16px; padding: 20px 25px; margin-bottom: 20px; text-align: center; position: relative; overflow: hidden;">
+                    <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;"><i class="fas fa-university"></i> حسابك في بنك الفيزا الإفتراضي</div>
+                    <div style="font-size: 1.3rem; font-weight: 800; color: var(--text); margin-bottom: 5px;">الفيزا الإفتراضي</div>
+                    <div style="font-size: 1rem; font-weight: 600; color: var(--gold); font-family: monospace; letter-spacing: 1px; background: var(--primary); padding: 8px 15px; border-radius: 8px; display: inline-block; cursor: pointer;" onclick="copyTransferNumber(this)" title="اضغط للنسخ">
+                        393919a1d9d1949ab86c322e11b0d47f
+                        <i class="fas fa-copy" style="font-size: 0.8rem; margin-right: 6px; color: var(--text-muted);"></i>
+                    </div>
+                    <div style="color: var(--text-muted); font-size: 0.75rem; margin-top: 8px;">استخدم هذا الرقم لاستقبال التحويلات</div>
+                </div>
+
+                <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 25px; flex-wrap: wrap;">
+                    <button onclick="openModal('depositModal')" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 12px 18px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: all 0.3s; color: var(--text); min-width: 75px;" onmouseover="this.style.borderColor='var(--success)';this.style.transform='translateY(-3px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='translateY(0)'">
+                        <div style="width: 40px; height: 40px; background: rgba(16,185,129,0.15); color: var(--success); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem;"><i class="fas fa-arrow-down"></i></div>
+                        <span style="font-size: 0.75rem; font-weight: 600;">شحن</span>
+                    </button>
+                    <button onclick="openModal('withdrawModal')" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 12px 18px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: all 0.3s; color: var(--text); min-width: 75px;" onmouseover="this.style.borderColor='var(--danger)';this.style.transform='translateY(-3px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='translateY(0)'">
+                        <div style="width: 40px; height: 40px; background: rgba(239,68,68,0.15); color: var(--danger); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem;"><i class="fas fa-arrow-up"></i></div>
+                        <span style="font-size: 0.75rem; font-weight: 600;">سحب</span>
+                    </button>
+                    <button onclick="showPage('transfer', this)" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 12px 18px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: all 0.3s; color: var(--text); min-width: 75px;" onmouseover="this.style.borderColor='var(--accent)';this.style.transform='translateY(-3px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='translateY(0)'">
+                        <div style="width: 40px; height: 40px; background: rgba(59,130,246,0.15); color: var(--accent-light); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem;"><i class="fas fa-paper-plane"></i></div>
+                        <span style="font-size: 0.75rem; font-weight: 600;">تحويل</span>
+                    </button>
+                    <button onclick="showPage('transactions', this)" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 12px 18px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: all 0.3s; color: var(--text); min-width: 75px;" onmouseover="this.style.borderColor='var(--purple)';this.style.transform='translateY(-3px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='translateY(0)'">
+                        <div style="width: 40px; height: 40px; background: rgba(139,92,246,0.15); color: var(--purple); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem;"><i class="fas fa-list-alt"></i></div>
+                        <span style="font-size: 0.75rem; font-weight: 600;">حساب</span>
+                    </button>
+                    <button onclick="showPage('visa', this)" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 12px 18px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: all 0.3s; color: var(--text); min-width: 75px;" onmouseover="this.style.borderColor='var(--gold)';this.style.transform='translateY(-3px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='translateY(0)'">
+                        <div style="width: 40px; height: 40px; background: rgba(251,191,36,0.15); color: var(--gold); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem;"><i class="fas fa-credit-card"></i></div>
+                        <span style="font-size: 0.75rem; font-weight: 600;">فيزا</span>
+                    </button>
+                </div>
+
+                <div class="cards-grid" style="margin-bottom: 25px;">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="statBalance">$0.00</div>
+                                <div class="stat-label">الرصيد الحالي</div>
+                            </div>
+                            <div class="stat-icon blue"><i class="fas fa-wallet"></i></div>
+                        </div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="statDeposits">$0.00</div>
+                                <div class="stat-label">إجمالي الشحن</div>
+                            </div>
+                            <div class="stat-icon green"><i class="fas fa-arrow-down"></i></div>
+                        </div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="statWithdrawals">$0.00</div>
+                                <div class="stat-label">إجمالي السحب</div>
+                            </div>
+                            <div class="stat-icon orange"><i class="fas fa-arrow-up"></i></div>
+                        </div>
+                    </div>
+                    <div class="stat-card danger">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="statTransactions">0</div>
+                                <div class="stat-label">المعاملات</div>
+                            </div>
+                            <div class="stat-icon red"><i class="fas fa-list"></i></div>
+                        </div>
+                    </div>
+                    <div class="stat-card gold">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="statPending">0</div>
+                                <div class="stat-label">معلق</div>
+                            </div>
+                            <div class="stat-icon gold"><i class="fas fa-clock"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-title"><i class="fas fa-history"></i> آخر المعاملات</div>
+                <div class="transactions-table">
+                    <table>
+                        <thead><tr><th>النوع</th><th>المبلغ</th><th>الوصف</th><th>الحالة</th><th>التاريخ</th></tr></thead>
+                        <tbody id="recentTransactions"><tr><td colspan="5" style="text-align:center; color: var(--text-muted);">لا توجد معاملات</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VISA PAGE -->
+            <div id="page-visa" class="page hidden">
+                <div class="header"><h2><i class="fas fa-credit-card"></i> الفيزا الافتراضية</h2></div>
+                <div id="visaContainer"></div>
+            </div>
+
+            <!-- TRANSACTIONS PAGE -->
+            <div id="page-transactions" class="page hidden">
+                <div class="header"><h2><i class="fas fa-exchange-alt"></i> المعاملات المالية</h2></div>
+                <div class="cards-grid" style="margin-bottom: 30px;">
+                    <div class="stat-card"><button class="btn btn-success" onclick="openModal('depositModal')" style="width: 100%;"><i class="fas fa-arrow-down"></i> إيداع</button></div>
+                    <div class="stat-card"><button class="btn btn-danger" onclick="openModal('withdrawModal')" style="width: 100%;"><i class="fas fa-arrow-up"></i> سحب</button></div>
+                </div>
+                <div class="section-title"><i class="fas fa-list"></i> سجل المعاملات</div>
+                <div class="transactions-table">
+                    <table>
+                        <thead><tr><th>النوع</th><th>المبلغ</th><th>الوصف</th><th>الحالة</th><th>التاريخ</th></tr></thead>
+                        <tbody id="allTransactions"><tr><td colspan="5" style="text-align:center; color: var(--text-muted);">لا توجد معاملات</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TRANSFER PAGE -->
+            <div id="page-transfer" class="page hidden">
+                <div class="header"><h2><i class="fas fa-paper-plane"></i> تحويل الأموال</h2></div>
+                <div class="admin-card" style="max-width: 500px;">
+                    <h3>تحويل إلى حساب آخر</h3>
+                    <div class="input-group"><label>البريد الإلكتروني للمستلم</label><input type="email" id="transferEmail" placeholder="email@example.com"></div>
+                    <div class="input-group"><label>المبلغ</label><input type="number" id="transferAmount" placeholder="0.00"></div>
+                    <div class="input-group"><label>الوصف</label><input type="text" id="transferDesc" placeholder="وصف التحويل"></div>
+                    <button class="btn btn-primary" onclick="transfer()"><i class="fas fa-paper-plane"></i> إرسال التحويل</button>
+                </div>
+            </div>
+
+            <!-- ADMIN PAGE -->
+            <div id="page-admin" class="page hidden">
+                <div class="header"><h2><i class="fas fa-shield-alt"></i> لوحة تحكم الإدارة</h2></div>
+                <div class="cards-grid">
+                    <div class="stat-card"><div class="stat-header"><div><div class="stat-value" id="adminTotalUsers">0</div><div class="stat-label">إجمالي المستخدمين</div></div><div class="stat-icon blue"><i class="fas fa-users"></i></div></div></div>
+                    <div class="stat-card success"><div class="stat-header"><div><div class="stat-value" id="adminTotalBalance">$0.00</div><div class="stat-label">إجمالي الأرصدة</div></div><div class="stat-icon green"><i class="fas fa-coins"></i></div></div></div>
+                    <div class="stat-card warning"><div class="stat-header"><div><div class="stat-value" id="adminTotalTransactions">0</div><div class="stat-label">إجمالي المعاملات</div></div><div class="stat-icon orange"><i class="fas fa-chart-line"></i></div></div></div>
+                    <div class="stat-card purple"><div class="stat-header"><div><div class="stat-value" id="adminPendingCount">0</div><div class="stat-label">طلبات معلقة</div></div><div class="stat-icon purple"><i class="fas fa-clock"></i></div></div></div>
+                </div>
+                <div class="admin-grid" style="margin-top: 30px;">
+                    <div class="admin-card">
+                        <h3><i class="fas fa-users"></i> قائمة العملاء</h3>
+                        <div id="adminUserList"></div>
+                    </div>
+                    <div class="admin-card">
+                        <h3><i class="fas fa-history"></i> آخر النشاطات</h3>
+                        <div id="adminActivity"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="balance-bar">
-                <div>
-                    <div class="balance-label"><i class="fas fa-wallet"></i> الرصيد الحالي</div>
-                    <div class="balance-value" id="homeBalance">$0.00</div>
-                    <div style="color:var(--text-muted);font-size:0.85rem">دولار أمريكي</div>
+            <!-- MONITORING PAGE -->
+            <div id="page-monitoring" class="page hidden">
+                <div class="header"><h2><i class="fas fa-eye"></i> مراقبة الزبائن</h2></div>
+                <div class="cards-grid">
+                    <div class="stat-card"><div class="stat-header"><div><div class="stat-value" id="monitorOnline">0</div><div class="stat-label">متصل الآن</div></div><div class="stat-icon green"><i class="fas fa-signal"></i></div></div></div>
+                    <div class="stat-card"><div class="stat-header"><div><div class="stat-value" id="monitorToday">0</div><div class="stat-label">زيارات اليوم</div></div><div class="stat-icon blue"><i class="fas fa-calendar-day"></i></div></div></div>
+                    <div class="stat-card warning"><div class="stat-header"><div><div class="stat-value" id="monitorActive">0</div><div class="stat-label">جلسات نشطة</div></div><div class="stat-icon orange"><i class="fas fa-bolt"></i></div></div></div>
                 </div>
-                <div style="display:flex;gap:10px">
-                    <button class="btn btn-success btn-sm" onclick="openModal('depositModal')"><i class="fas fa-plus"></i> شحن</button>
-                    <button class="btn btn-danger btn-sm" onclick="openModal('withdrawModal')"><i class="fas fa-minus"></i> سحب</button>
+                <div class="admin-grid" style="margin-top: 30px;">
+                    <div class="admin-card">
+                        <h3><i class="fas fa-users"></i> حالة الزبائن</h3>
+                        <div id="monitorUserList"></div>
+                    </div>
+                    <div class="admin-card">
+                        <h3><i class="fas fa-clipboard-list"></i> سجل المراقبة</h3>
+                        <div class="monitor-activity" id="monitorActivity"></div>
+                    </div>
                 </div>
             </div>
 
-            <div style="background:linear-gradient(135deg,rgba(59,130,246,0.15),rgba(139,92,246,0.15));border:1px solid var(--border);border-radius:16px;padding:20px 25px;margin-bottom:20px;text-align:center">
-                <div style="color:var(--text-muted);font-size:0.85rem;margin-bottom:10px"><i class="fas fa-university"></i> حسابك في بنك الفيزا الإفتراضي</div>
-                <div style="font-size:1.3rem;font-weight:800;color:var(--text);margin-bottom:5px">الفيزا الإفتراضي</div>
-                <div style="font-size:1rem;font-weight:600;color:var(--gold);font-family:monospace;letter-spacing:1px;background:var(--primary);padding:8px 15px;border-radius:8px;display:inline-block;cursor:pointer" onclick="copyTransferNumber(this)" title="اضغط للنسخ">393919a1d9d1949ab86c322e11b0d47f <i class="fas fa-copy" style="font-size:0.8rem;margin-right:6px;color:var(--text-muted)"></i></div>
-                <div style="color:var(--text-muted);font-size:0.75rem;margin-top:8px">استخدم هذا الرقم لاستقبال التحويلات</div>
-            </div>
-
-            <div class="icon-actions">
-                <div class="icon-action deposit" onclick="openModal('depositModal')"><i class="fas fa-arrow-down"></i><span>شحن</span></div>
-                <div class="icon-action withdraw" onclick="openModal('withdrawModal')"><i class="fas fa-arrow-up"></i><span>سحب</span></div>
-                <div class="icon-action transfer" onclick="showPage('transfer')"><i class="fas fa-paper-plane"></i><span>تحويل</span></div>
-                <div class="icon-action account" onclick="showPage('transactions')"><i class="fas fa-list-alt"></i><span>حساب</span></div>
-                <div class="icon-action visa" onclick="showPage('visa')"><i class="fas fa-credit-card"></i><span>فيزا</span></div>
-            </div>
-
-            <div class="cards-grid">
-                <div class="stat-card success"><div class="stat-header"><div><div class="stat-value" id="statDeposits">$0.00</div><div class="stat-label">إجمالي الشحن</div></div><div class="stat-icon green"><i class="fas fa-arrow-down"></i></div></div></div>
-                <div class="stat-card warning"><div class="stat-header"><div><div class="stat-value" id="statWithdrawals">$0.00</div><div class="stat-label">إجمالي السحب</div></div><div class="stat-icon orange"><i class="fas fa-arrow-up"></i></div></div></div>
-                <div class="stat-card danger"><div class="stat-header"><div><div class="stat-value" id="statTransactions">0</div><div class="stat-label">المعاملات</div></div><div class="stat-icon red"><i class="fas fa-list"></i></div></div></div>
-                <div class="stat-card gold"><div class="stat-header"><div><div class="stat-value" id="statPending">0</div><div class="stat-label">معلق</div></div><div class="stat-icon gold"><i class="fas fa-clock"></i></div></div></div>
-            </div>
-
-            <div class="section-title"><i class="fas fa-history"></i> آخر المعاملات</div>
-            <div class="transactions-table">
-                <table><thead><tr><th>النوع</th><th>المبلغ</th><th>الوصف</th><th>الحالة</th><th>التاريخ</th></tr></thead>
-                <tbody id="recentTransactions"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px">لا توجد معاملات</td></tr></tbody></table>
-            </div>
-        </div>
-
-        <div id="page-visa" class="page hidden"><div class="header"><h2><i class="fas fa-credit-card"></i> الفيزا الافتراضية</h2></div><div id="visaContainer"></div></div>
-        <div id="page-transactions" class="page hidden"><div class="header"><h2><i class="fas fa-exchange-alt"></i> المعاملات</h2></div>
-            <div class="cards-grid" style="margin-bottom:20px"><div class="stat-card"><button class="btn btn-success" onclick="openModal('depositModal')" style="width:100%"><i class="fas fa-arrow-down"></i> إيداع</button></div><div class="stat-card"><button class="btn btn-danger" onclick="openModal('withdrawModal')" style="width:100%"><i class="fas fa-arrow-up"></i> سحب</button></div></div>
-            <div class="section-title"><i class="fas fa-list"></i> سجل المعاملات</div>
-            <div class="transactions-table"><table><thead><tr><th>النوع</th><th>المبلغ</th><th>الوصف</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody id="allTransactions"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px">لا توجد معاملات</td></tr></tbody></table></div>
-        </div>
-        <div id="page-transfer" class="page hidden"><div class="header"><h2><i class="fas fa-paper-plane"></i> تحويل الأموال</h2></div>
-            <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:20px;padding:25px;max-width:500px;margin-bottom:20px">
-                <div style="background:linear-gradient(135deg,rgba(59,130,246,0.15),rgba(139,92,246,0.15));border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center">
-                    <div style="color:var(--text-muted);font-size:0.85rem;margin-bottom:8px"><i class="fas fa-university"></i> حسابك في بنك الفيزا الإفتراضي</div>
-                    <div style="font-size:1.3rem;font-weight:800;color:var(--text);margin-bottom:5px">الفيزا الإفتراضي</div>
-                    <div style="font-size:1rem;font-weight:600;color:var(--gold);font-family:monospace;letter-spacing:1px;background:var(--primary);padding:8px 15px;border-radius:8px;display:inline-block">393919a1d9d1949ab86c322e11b0d47f</div>
-                    <div style="color:var(--text-muted);font-size:0.75rem;margin-top:8px">شارك هذا الرقم لاستقبال التحويلات</div>
+            <!-- PENDING PAGE -->
+            <div id="page-pending" class="page hidden">
+                <div class="header"><h2><i class="fas fa-clock"></i> طلبات الإيداع المعلقة</h2></div>
+                <div class="admin-card">
+                    <h3><i class="fas fa-list"></i> قائمة الطلبات بانتظار الموافقة</h3>
+                    <div id="pendingDepositsList"></div>
                 </div>
-                <h3 style="margin-bottom:20px;color:var(--text-muted)">تحويل إلى حساب آخر</h3>
-                <div class="input-group"><label>البريد الإلكتروني للمستلم</label><input type="email" id="transferEmail" placeholder="email@example.com"></div>
-                <div class="input-group"><label>المبلغ</label><input type="number" id="transferAmount" placeholder="0.00"></div>
-                <div class="input-group"><label>الوصف</label><input type="text" id="transferDesc" placeholder="وصف التحويل"></div>
-                <button class="btn btn-primary" onclick="transfer()" style="width:100%"><i class="fas fa-paper-plane"></i> إرسال التحويل</button>
             </div>
-        </div>
-        <div id="page-admin" class="page hidden"><div class="header"><h2><i class="fas fa-shield-alt"></i> لوحة الإدارة</h2></div>
-            <div class="cards-grid">
-                <div class="stat-card"><div class="stat-header"><div><div class="stat-value" id="adminTotalUsers">0</div><div class="stat-label">المستخدمين</div></div><div class="stat-icon" style="background:rgba(59,130,246,0.15);color:var(--accent-light)"><i class="fas fa-users"></i></div></div></div>
-                <div class="stat-card success"><div class="stat-header"><div><div class="stat-value" id="adminTotalBalance">$0</div><div class="stat-label">الأرصدة</div></div><div class="stat-icon green"><i class="fas fa-coins"></i></div></div></div>
-                <div class="stat-card warning"><div class="stat-header"><div><div class="stat-value" id="adminTotalTransactions">0</div><div class="stat-label">المعاملات</div></div><div class="stat-icon orange"><i class="fas fa-chart-line"></i></div></div></div>
-                <div class="stat-card" style="position:relative;overflow:hidden"><div class="stat-header"><div><div class="stat-value" id="adminPendingCount">0</div><div class="stat-label">معلقة</div></div><div class="stat-icon" style="background:rgba(139,92,246,0.15);color:var(--purple)"><i class="fas fa-clock"></i></div></div></div>
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:20px;margin-top:20px">
-                <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:20px;padding:25px"><h3 style="margin-bottom:20px;color:var(--text-muted)"><i class="fas fa-users"></i> العملاء</h3><div id="adminUserList"></div></div>
-                <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:20px;padding:25px"><h3 style="margin-bottom:20px;color:var(--text-muted)"><i class="fas fa-history"></i> النشاطات</h3><div id="adminActivity"></div></div>
-            </div>
-        </div>
-        <div id="page-pending" class="page hidden"><div class="header"><h2><i class="fas fa-clock"></i> طلبات الإيداع</h2></div>
-            <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:20px;padding:25px"><h3 style="margin-bottom:20px;color:var(--text-muted)"><i class="fas fa-list"></i> بانتظار الموافقة</h3><div id="pendingDepositsList"></div></div>
         </div>
     </div>
-</div>
 
-<div class="modal-overlay" id="depositModal">
-    <div class="modal">
-        <div class="modal-header"><h3><i class="fas fa-arrow-down" style="color:var(--success)"></i> طلب إيداع</h3><button class="close-modal" onclick="closeModal('depositModal')">&times;</button></div>
-        <div style="background:linear-gradient(135deg,rgba(59,130,246,0.15),rgba(139,92,246,0.15));border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;text-align:center">
-            <div style="color:var(--text-muted);font-size:0.85rem;margin-bottom:10px"><i class="fas fa-university"></i> حساب المستلم (بنك الفيزا الإفتراضي)</div>
-            <div style="font-size:1.4rem;font-weight:800;color:var(--text);margin-bottom:5px">الفيزا الإفتراضي</div>
-            <div style="font-size:1rem;font-weight:600;color:var(--gold);font-family:monospace;letter-spacing:1px;background:var(--primary);padding:8px 15px;border-radius:8px;display:inline-block">393919a1d9d1949ab86c322e11b0d47f</div>
-            <div style="color:var(--text-muted);font-size:0.75rem;margin-top:8px">حوّل إلى هذا الحساب ثم أرسل الطلب</div>
+    <!-- MODALS -->
+    <div class="modal-overlay" id="depositModal">
+        <div class="modal">
+            <div class="modal-header"><h3><i class="fas fa-arrow-down" style="color: var(--success);"></i> طلب إيداع مبلغ</h3><button class="close-modal" onclick="closeModal('depositModal')">&times;</button></div>
+            <div class="alert" style="background: rgba(245,158,11,0.1); border: 1px solid var(--warning); border-radius: 8px; padding: 12px; margin-bottom: 20px; color: var(--warning); font-size: 0.9rem;">
+                <i class="fas fa-info-circle"></i> الإيداع يتطلب موافقة الإدارة أولاً. سيتم إضافة المبلغ بعد الموافقة.
+            </div>
+            <div class="input-group"><label>المبلغ (بالدولار)</label><input type="number" id="depositAmount" placeholder="0.00"></div>
+            <div class="input-group"><label>اسم الحساب المحول منه</label><input type="text" id="depositFromAccount" placeholder="مثال: حسابي في بنك الراجحي"></div>
+            <div class="input-group"><label>الوصف (اختياري)</label><input type="text" id="depositDesc" placeholder="إيداع نقدي"></div>
+            <button class="btn btn-success" onclick="requestDeposit()"><i class="fas fa-paper-plane"></i> إرسال طلب الإيداع</button>
         </div>
-        <div class="alert"><i class="fas fa-info-circle"></i> الحد الأدنى للإيداع <strong>10 دولار</strong>. يتطلب موافقة الإدارة.</div>
-        <div class="input-group"><label>المبلغ (دولار) <span style="color:var(--danger)">* الحد الأدنى $10</span></label><input type="number" id="depositAmount" placeholder="10.00" min="10"></div>
-        <div class="input-group"><label>الحساب المحول منه</label><input type="text" id="depositFromAccount" placeholder="مثال: بنك الراجحي"></div>
-        <div class="input-group"><label>رقم التحويل / الإيصال</label><input type="text" id="depositReceipt" placeholder="رقم الإيصال أو التحويل"></div>
-        <div class="input-group"><label>الوصف (اختياري)</label><input type="text" id="depositDesc" placeholder="إيداع"></div>
-        <button class="btn btn-success" onclick="requestDeposit()" style="width:100%"><i class="fas fa-paper-plane"></i> إرسال طلب الإيداع</button>
     </div>
-</div>
 
-<div class="modal-overlay" id="withdrawModal">
-    <div class="modal">
-        <div class="modal-header"><h3><i class="fas fa-arrow-up" style="color:var(--danger)"></i> سحب مبلغ</h3><button class="close-modal" onclick="closeModal('withdrawModal')">&times;</button></div>
-        <div class="input-group"><label>المبلغ (دولار)</label><input type="number" id="withdrawAmount" placeholder="0.00"></div>
-        <div class="input-group"><label>اسم البنك</label><input type="text" id="withdrawBankName" placeholder="بنك الراجحي"></div>
-        <div class="input-group"><label>رقم الحساب</label><input type="text" id="withdrawAccountNumber" placeholder="SA..."></div>
-        <div class="input-group"><label>صاحب الحساب</label><input type="text" id="withdrawAccountHolder" placeholder="محمد أحمد"></div>
-        <button class="btn btn-danger" onclick="withdraw()" style="width:100%"><i class="fas fa-check"></i> تأكيد</button>
+    <div class="modal-overlay" id="withdrawModal">
+        <div class="modal">
+            <div class="modal-header"><h3><i class="fas fa-arrow-up" style="color: var(--danger);"></i> سحب مبلغ</h3><button class="close-modal" onclick="closeModal('withdrawModal')">&times;</button></div>
+            <div class="input-group"><label>المبلغ (بالدولار)</label><input type="number" id="withdrawAmount" placeholder="0.00"></div>
+            <div class="input-group"><label>اسم البنك</label><input type="text" id="withdrawBankName" placeholder="مثال: بنك الراجحي"></div>
+            <div class="input-group"><label>رقم الحساب / IBAN</label><input type="text" id="withdrawAccountNumber" placeholder="SAXXXXXXXXXXXXXXXX"></div>
+            <div class="input-group"><label>اسم صاحب الحساب</label><input type="text" id="withdrawAccountHolder" placeholder="محمد أحمد"></div>
+            <div class="input-group"><label>الوصف (اختياري)</label><input type="text" id="withdrawDesc" placeholder="سحب نقدي"></div>
+            <button class="btn btn-danger" onclick="withdraw()"><i class="fas fa-check"></i> تأكيد السحب</button>
+        </div>
     </div>
-</div>
 
-<div class="notification-container" id="notifications"></div>
+    <div class="modal-overlay" id="editUserModal">
+        <div class="modal">
+            <div class="modal-header"><h3><i class="fas fa-user-edit" style="color: var(--accent);"></i> تعديل بيانات المستخدم</h3><button class="close-modal" onclick="closeModal('editUserModal')">&times;</button></div>
+            <input type="hidden" id="editUserId">
+            <div class="input-group"><label>الاسم</label><input type="text" id="editUserName"></div>
+            <div class="input-group"><label>البريد الإلكتروني</label><input type="email" id="editUserEmail"></div>
+            <div class="input-group"><label>نوع الحساب</label><select id="editUserType"><option value="client">عميل</option><option value="admin">مدير</option></select></div>
+            <div class="input-group"><label>الرصيد</label><input type="number" id="editUserBalance"></div>
+            <button class="btn btn-primary" onclick="saveUserEdit()"><i class="fas fa-save"></i> حفظ التعديلات</button>
+        </div>
+    </div>
 
-<script>
-let users=JSON.parse(localStorage.getItem('bank_users'))||[];
-let transactions=JSON.parse(localStorage.getItem('bank_transactions'))||[];
-let currentUser=JSON.parse(localStorage.getItem('bank_currentUser'))||null;
-let cards=JSON.parse(localStorage.getItem('bank_cards'))||{};
-let pendingDeposits=JSON.parse(localStorage.getItem('bank_pendingDeposits'))||[];
+    <div class="modal-overlay" id="addBalanceModal">
+        <div class="modal">
+            <div class="modal-header"><h3><i class="fas fa-coins" style="color: var(--gold);"></i> إضافة رصيد يدوي</h3><button class="close-modal" onclick="closeModal('addBalanceModal')">&times;</button></div>
+            <div class="input-group"><label>المستخدم</label><select id="addBalanceUser"></select></div>
+            <div class="input-group"><label>المبلغ (بالدولار)</label><input type="number" id="addBalanceAmount" placeholder="0.00"></div>
+            <div class="input-group"><label>السبب</label><input type="text" id="addBalanceReason" placeholder="مكافأة - تصحيح - إلخ"></div>
+            <button class="btn btn-success" onclick="addManualBalance()"><i class="fas fa-plus"></i> إضافة الرصيد</button>
+        </div>
+    </div>
 
-function saveUsers(){localStorage.setItem('bank_users',JSON.stringify(users))}
-function saveTransactions(){localStorage.setItem('bank_transactions',JSON.stringify(transactions))}
-function saveCards(){localStorage.setItem('bank_cards',JSON.stringify(cards))}
-function savePending(){localStorage.setItem('bank_pendingDeposits',JSON.stringify(pendingDeposits))}
+    <div class="notification-container" id="notifications"></div>
 
-function generateCard(userId){
-    const num='4'+Array(15).fill(0).map(()=>Math.floor(Math.random()*10)).join('');
-    const yr=Math.floor(Math.random()*6)+30;
-    const mo=String(Math.floor(Math.random()*12)+1).padStart(2,'0');
-    cards[userId]={number:num,expiry:mo+'/'+yr,cvv:String(Math.floor(Math.random()*900)+100),frozen:false};
-    saveCards();
-}
+    <script>
+        // DATA STORE
+        let users = JSON.parse(localStorage.getItem('bank_users')) || [];
+        let transactions = JSON.parse(localStorage.getItem('bank_transactions')) || [];
+        let currentUser = JSON.parse(localStorage.getItem('bank_currentUser')) || null;
+        let cards = JSON.parse(localStorage.getItem('bank_cards')) || {};
+        let monitorLogs = JSON.parse(localStorage.getItem('bank_monitorLogs')) || [];
+        let sessions = JSON.parse(localStorage.getItem('bank_sessions')) || {};
+        let pendingDeposits = JSON.parse(localStorage.getItem('bank_pendingDeposits')) || [];
 
-if(users.length===0){
-    users=[{id:1,name:'المدير',email:'admin@bankos.com',password:'admin123',type:'admin',balance:10000,status:'offline',createdAt:new Date().toISOString()},{id:2,name:'محمد أحمد',email:'mohamed@example.com',password:'123456',type:'client',balance:0,status:'offline',createdAt:new Date().toISOString()}];
-    saveUsers();generateCard(2);
-}
+        function saveUsers() { localStorage.setItem('bank_users', JSON.stringify(users)); }
+        function saveTransactions() { localStorage.setItem('bank_transactions', JSON.stringify(transactions)); }
+        function saveCards() { localStorage.setItem('bank_cards', JSON.stringify(cards)); }
+        function saveMonitorLogs() { localStorage.setItem('bank_monitorLogs', JSON.stringify(monitorLogs)); }
+        function saveSessions() { localStorage.setItem('bank_sessions', JSON.stringify(sessions)); }
+        function savePendingDeposits() { localStorage.setItem('bank_pendingDeposits', JSON.stringify(pendingDeposits)); }
 
-function hasApprovedDeposit(userId){return transactions.some(t=>t.userId===userId&&t.type==='deposit'&&t.status==='completed')}
+        function generateVisaForUser(userId) {
+            const cardNum = '4' + Array(15).fill(0).map(() => Math.floor(Math.random() * 10)).join('');
+            const year = Math.floor(Math.random() * 6) + 30;
+            const month = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
+            const expiry = month + '/' + year;
+            const cvv = String(Math.floor(Math.random() * 900) + 100);
+            cards[userId] = {
+                number: cardNum, expiry: expiry, cvv: cvv,
+                frozen: false, createdAt: new Date().toISOString()
+            };
+            saveCards();
+        }
 
-function showLogin(){document.getElementById('loginBox').classList.remove('hidden');document.getElementById('registerBox').classList.add('hidden')}
-function showRegister(){document.getElementById('loginBox').classList.add('hidden');document.getElementById('registerBox').classList.remove('hidden')}
+        if (users.length === 0) {
+            users = [
+                { id: 1, name: 'المدير الرئيسي', email: 'admin@bankos.com', password: 'admin123', type: 'admin', balance: 10000, status: 'offline', lastActive: null, createdAt: new Date().toISOString() },
+                { id: 2, name: 'محمد أحمد', email: 'mohamed@example.com', password: '123456', type: 'client', balance: 5000, status: 'offline', lastActive: null, createdAt: new Date().toISOString() },
+                { id: 3, name: 'سارة خالد', email: 'sara@example.com', password: '123456', type: 'client', balance: 3200, status: 'offline', lastActive: null, createdAt: new Date().toISOString() }
+            ];
+            saveUsers();
+            generateVisaForUser(2);
+            generateVisaForUser(3);
+        }
 
-function login(){
-    const email=document.getElementById('loginEmail').value;
-    const password=document.getElementById('loginPassword').value;
-    const user=users.find(u=>u.email===email&&u.password===password);
-    if(!user){showNotification('بيانات الدخول غير صحيحة!','error');return}
-    currentUser=user;
-    localStorage.setItem('bank_currentUser',JSON.stringify(currentUser));
-    showNotification('تم تسجيل الدخول!','success');
-    initDashboard();
-}
+        function logActivity(userId, action, details) {
+            const log = {
+                id: Date.now(),
+                userId: userId,
+                action: action,
+                details: details,
+                timestamp: new Date().toISOString(),
+                ip: '127.0.0.1'
+            };
+            monitorLogs.push(log);
+            if (monitorLogs.length > 500) monitorLogs = monitorLogs.slice(-500);
+            saveMonitorLogs();
+        }
 
-function register(){
-    const name=document.getElementById('regName').value;
-    const email=document.getElementById('regEmail').value;
-    const password=document.getElementById('regPassword').value;
-    if(!name||!email||!password){showNotification('املأ جميع الحقول!','error');return}
-    if(users.find(u=>u.email===email)){showNotification('البريد مستخدم!','error');return}
-    const newUser={id:Date.now(),name,email,password,type:'client',balance:0,status:'offline',createdAt:new Date().toISOString()};
-    users.push(newUser);
-    saveUsers();
-    generateCard(newUser.id);
-    showNotification('تم إنشاء الحساب!','success');
-    showLogin();
-}
+        function updateUserStatus(userId, status) {
+            const user = users.find(u => u.id === userId);
+            if (user) {
+                user.status = status;
+                user.lastActive = new Date().toISOString();
+                saveUsers();
+            }
+        }
 
-function logout(){
-    currentUser=null;
-    localStorage.removeItem('bank_currentUser');
-    document.getElementById('authScreen').style.display='flex';
-    document.getElementById('dashboard').style.display='none';
-    showNotification('تم تسجيل الخروج','info');
-}
+        function showLogin() {
+            document.getElementById('loginBox').classList.remove('hidden');
+            document.getElementById('registerBox').classList.add('hidden');
+        }
 
-function initDashboard(){
-    document.getElementById('authScreen').style.display='none';
-    document.getElementById('dashboard').style.display='block';
-    document.getElementById('userName').textContent=currentUser.name;
-    document.getElementById('headerName').textContent=currentUser.name;
-    document.getElementById('headerEmail').textContent=currentUser.email;
-    document.getElementById('headerAvatar').textContent=currentUser.name.charAt(0);
-    if(currentUser.type==='admin'){document.querySelectorAll('.admin-only').forEach(el=>el.classList.remove('hidden'))}
-    else{document.querySelectorAll('.admin-only').forEach(el=>el.classList.add('hidden'))}
-    updateVisaDisplay();
-    updateStats();
-    loadTransactions();
-}
+        function showRegister() {
+            document.getElementById('loginBox').classList.add('hidden');
+            document.getElementById('registerBox').classList.remove('hidden');
+        }
 
-function showPage(page){
-    document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
-    document.getElementById('page-'+page).classList.remove('hidden');
-    document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
-    if(event&&event.target)event.target.closest('.nav-link').classList.add('active');
-    if(page==='admin')updateAdminPanel();
-    if(page==='pending')updatePendingPanel();
-    if(page==='visa')updateVisaPage();
-}
+        function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const user = users.find(u => u.email === email && u.password === password);
+            if (!user) {
+                showNotification('بيانات الدخول غير صحيحة!', 'error');
+                return;
+            }
+            currentUser = user;
+            localStorage.setItem('bank_currentUser', JSON.stringify(currentUser));
+            updateUserStatus(user.id, 'online');
+            sessions[user.id] = { loginTime: new Date().toISOString(), active: true };
+            saveSessions();
+            logActivity(user.id, 'login', 'تسجيل دخول من النظام');
+            showNotification('تم تسجيل الدخول بنجاح!', 'success');
+            initDashboard();
+        }
 
-function updateVisaDisplay(){
-    const user=users.find(u=>u.id===currentUser.id);
-    if(!user)return;
-    if(!cards[currentUser.id]){generateCard(currentUser.id)}
-    const card=cards[currentUser.id];
-    const approved=hasApprovedDeposit(currentUser.id);
-    document.getElementById('cardHolder').textContent=user.name;
-    if(approved){
-        document.getElementById('cardNumLocked').style.display='none';
-        document.getElementById('cardNumReal').style.display='inline';
-        document.getElementById('cardNumReal').textContent=card.number.replace(/(.{4})/g,'$1 ').trim();
-        document.getElementById('cardExpiry').textContent=card.expiry;
-        document.getElementById('cardStatus').textContent=card.frozen?'مجمدة':'نشطة';
-        document.getElementById('cardStatus').className='status-badge '+(card.frozen?'status-frozen':'status-active');
-        document.getElementById('lockOverlay').style.display='none';
-        document.getElementById('showBtnText').textContent='عرض CVV';
-    }else{
-        document.getElementById('cardNumLocked').style.display='inline';
-        document.getElementById('cardNumReal').style.display='none';
-        document.getElementById('cardExpiry').textContent='--/--';
-        document.getElementById('cardStatus').textContent='مقفلة';
-        document.getElementById('cardStatus').className='status-badge status-frozen';
-        document.getElementById('lockOverlay').style.display='flex';
-        document.getElementById('showBtnText').textContent='إظهار الأرقام';
-    }
-}
+        function register() {
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            if (!name || !email || !password) {
+                showNotification('يرجى ملء جميع الحقول!', 'error');
+                return;
+            }
+            if (users.find(u => u.email === email)) {
+                showNotification('البريد الإلكتروني مستخدم بالفعل!', 'error');
+                return;
+            }
+            const newUser = {
+                id: Date.now(),
+                name: name, email: email, password: password,
+                type: 'client',
+                balance: 0,
+                status: 'offline',
+                lastActive: null,
+                createdAt: new Date().toISOString()
+            };
+            users.push(newUser);
+            saveUsers();
+            generateVisaForUser(newUser.id);
+            logActivity(newUser.id, 'register', 'إنشاء حساب جديد');
+            showNotification('تم إنشاء الحساب وإصدار الفيزا الافتراضية بنجاح!', 'success');
+            showLogin();
+        }
 
-function updateVisaPage(){
-    const container=document.getElementById('visaContainer');
-    if(!container)return;
-    const approved=hasApprovedDeposit(currentUser.id);
-    const card=cards[currentUser.id];
-    let html='<div style="display:flex;justify-content:center"><div style="width:100%;max-width:420px">';
-    html+='<div class="visa-card">';
-    html+='<div class="visa-logo">الفيزا الإفتراضي</div>';
-    html+='<div class="visa-chip"></div>';
-    if(approved&&card){html+='<div class="visa-number">'+card.number.replace(/(.{4})/g,'$1 ').trim()+'</div>'}
-    else{html+='<div class="visa-number"><span class="visa-number-locked">•••• •••• •••• ••••</span></div>'}
-    html+='<div class="visa-details">';
-    html+='<div class="visa-detail"><label>صاحب البطاقة</label><span>'+currentUser.name+'</span></div>';
-    html+='<div class="visa-detail"><label>تاريخ الانتهاء</label><span>'+(approved&&card?card.expiry:'--/--')+'</span></div>';
-    html+='<div class="visa-detail"><label>CVV</label><span>•••</span></div>';
-    html+='</div>';
-    html+='<div class="visa-status"><span class="status-badge '+(approved?'status-active':'status-frozen')+'">'+(approved?'نشطة':'مقفلة')+'</span></div>';
-    if(!approved){html+='<div class="visa-lock-overlay"><i class="fas fa-lock"></i><span>أرقام مشفرة</span></div>'}
-    html+='</div>';
-    html+='<div class="card-actions"><button class="btn btn-danger" onclick="handleShowNumbers()" style="border-radius:50px"><i class="fas fa-eye"></i> '+(approved?'عرض CVV':'إظهار الأرقام')+'</button></div>';
-    html+='</div></div>';
-    container.innerHTML=html;
-}
+        function logout() {
+            if (currentUser) {
+                updateUserStatus(currentUser.id, 'offline');
+                if (sessions[currentUser.id]) {
+                    sessions[currentUser.id].active = false;
+                    sessions[currentUser.id].logoutTime = new Date().toISOString();
+                }
+                saveSessions();
+                logActivity(currentUser.id, 'logout', 'تسجيل خروج');
+            }
+            currentUser = null;
+            localStorage.removeItem('bank_currentUser');
+            document.getElementById('authScreen').style.display = 'flex';
+            document.getElementById('dashboard').style.display = 'none';
+            showNotification('تم تسجيل الخروج', 'info');
+        }
 
-function handleShowNumbers(){
-    if(!hasApprovedDeposit(currentUser.id)){
-        showNotification('يجب إجراء إيداع أولاً وموافقة الإدارة!','warning');
-        setTimeout(()=>openModal('depositModal'),800);
-        return;
-    }
-    const card=cards[currentUser.id];
-    if(!card)return;
-    document.getElementById('cardCVV').textContent=card.cvv;
-    showNotification('CVV: '+card.cvv+' (يختفي بعد 5 ثوانٍ)','info');
-    setTimeout(()=>{document.getElementById('cardCVV').textContent='•••'},5000);
-}
+        function initDashboard() {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('headerName').textContent = currentUser.name;
+            document.getElementById('headerEmail').textContent = currentUser.email;
+            document.getElementById('headerAvatar').textContent = currentUser.name.charAt(0);
 
-function updateStats(){
-    const user=users.find(u=>u.id===currentUser.id);
-    currentUser=user;
-    document.getElementById('homeBalance').textContent='$'+user.balance.toFixed(2);
-    const userTx=transactions.filter(t=>t.userId===user.id);
-    const deposits=userTx.filter(t=>t.type==='deposit').reduce((a,b)=>a+b.amount,0);
-    const withdrawals=userTx.filter(t=>t.type==='withdraw').reduce((a,b)=>a+b.amount,0);
-    document.getElementById('statDeposits').textContent='$'+deposits.toFixed(2);
-    document.getElementById('statWithdrawals').textContent='$'+withdrawals.toFixed(2);
-    document.getElementById('statTransactions').textContent=userTx.length;
-    const pendingCount=pendingDeposits.filter(p=>p.userId===user.id&&p.status==='pending').length;
-    document.getElementById('statPending').textContent=pendingCount;
-}
+            if (currentUser.type === 'admin') {
+                document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+            } else {
+                document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+            }
 
-function requestDeposit(){
-    const amount=parseFloat(document.getElementById('depositAmount').value);
-    const fromAccount=document.getElementById('depositFromAccount').value;
-    const receipt=document.getElementById('depositReceipt').value;
-    const desc=document.getElementById('depositDesc').value||'إيداع';
-    if(!amount||amount<=0){showNotification('أدخل مبلغ صحيح!','error');return}
-    if(amount<10){showNotification('الحد الأدنى للإيداع هو 10 دولار!','error');return}
-    if(!fromAccount.trim()){showNotification('أدخل اسم الحساب المحول منه!','error');return}
-    if(!receipt.trim()){showNotification('أدخل رقم الإيصال أو التحويل!','error');return}
-    pendingDeposits.push({id:Date.now(),userId:currentUser.id,userName:currentUser.name,userEmail:currentUser.email,amount,fromAccount,receipt,description:desc,status:'pending',date:new Date().toISOString()});
-    savePending();
-    closeModal('depositModal');
-    showNotification('تم إرسال الطلب! بانتظار موافقة الإدارة.','warning');
-    document.getElementById('depositAmount').value='';
-    document.getElementById('depositFromAccount').value='';
-    document.getElementById('depositReceipt').value='';
-    document.getElementById('depositDesc').value='';
-    updateStats();
-}
+            updateStats();
+            loadTransactions();
+            renderHomeVisa();
+            showPage('home', document.querySelector('.nav-link.active'));
+        }
 
-function withdraw(){
-    const amount=parseFloat(document.getElementById('withdrawAmount').value);
-    const bankName=document.getElementById('withdrawBankName').value;
-    const accountNumber=document.getElementById('withdrawAccountNumber').value;
-    const accountHolder=document.getElementById('withdrawAccountHolder').value;
-    if(!amount||amount<=0){showNotification('مبلغ غير صحيح!','error');return}
-    if(!bankName.trim()||!accountNumber.trim()||!accountHolder.trim()){showNotification('املأ جميع الحقول!','error');return}
-    const user=users.find(u=>u.id===currentUser.id);
-    if(user.balance<amount){showNotification('رصيد غير كافٍ!','error');return}
-    user.balance-=amount;
-    saveUsers();
-    transactions.push({id:Date.now(),userId:currentUser.id,type:'withdraw',amount,description:'سحب إلى '+bankName+' - '+accountHolder,status:'completed',date:new Date().toISOString()});
-    saveTransactions();
-    closeModal('withdrawModal');
-    showNotification('تم السحب: $'+amount.toFixed(2),'success');
-    document.getElementById('withdrawAmount').value='';
-    document.getElementById('withdrawBankName').value='';
-    document.getElementById('withdrawAccountNumber').value='';
-    document.getElementById('withdrawAccountHolder').value='';
-    updateStats();
-    updateVisaDisplay();
-}
+        function showPage(page, clickedLink) {
+            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+            document.getElementById('page-' + page).classList.remove('hidden');
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            if (clickedLink) {
+                clickedLink.classList.add('active');
+            }
+            if (page === 'admin') updateAdminPanel();
+            if (page === 'monitoring') updateMonitoringPanel();
+            if (page === 'pending') updatePendingPanel();
+            if (page === 'visa') renderVisaPage();
+        }
 
-function transfer(){
-    const email=document.getElementById('transferEmail').value;
-    const amount=parseFloat(document.getElementById('transferAmount').value);
-    const desc=document.getElementById('transferDesc').value||'تحويل';
-    if(!email||!amount){showNotification('املأ جميع الحقول!','error');return}
-    const recipient=users.find(u=>u.email===email);
-    if(!recipient){showNotification('المستلم غير موجود!','error');return}
-    if(recipient.id===currentUser.id){showNotification('لا يمكن التحويل لنفسك!','error');return}
-    const sender=users.find(u=>u.id===currentUser.id);
-    if(sender.balance<amount){showNotification('رصيد غير كافٍ!','error');return}
-    sender.balance-=amount;
-    recipient.balance+=amount;
-    saveUsers();
-    transactions.push({id:Date.now(),userId:currentUser.id,type:'transfer',amount,description:desc+' إلى '+recipient.name,status:'completed',date:new Date().toISOString()});
-    transactions.push({id:Date.now()+1,userId:recipient.id,type:'deposit',amount,description:'تحويل وارد من '+sender.name,status:'completed',date:new Date().toISOString()});
-    saveTransactions();
-    showNotification('تم التحويل إلى '+recipient.name,'success');
-    document.getElementById('transferEmail').value='';
-    document.getElementById('transferAmount').value='';
-    document.getElementById('transferDesc').value='';
-    updateStats();
-}
+        function updateStats() {
+            const user = users.find(u => u.id === currentUser.id);
+            currentUser = user;
+            document.getElementById('statBalance').textContent = '$' + user.balance.toFixed(2);
+            document.getElementById('homeBalance').textContent = '$' + user.balance.toFixed(2);
 
-function loadTransactions(){
-    const userTx=transactions.filter(t=>t.userId===currentUser.id).reverse();
-    const recentTbody=document.getElementById('recentTransactions');
-    const allTbody=document.getElementById('allTransactions');
-    const renderRow=(t)=>{
-        const typeMap={deposit:'إيداع',withdraw:'سحب',transfer:'تحويل'};
-        const typeClass={deposit:'tx-deposit',withdraw:'tx-withdraw',transfer:'tx-transfer'};
-        const amountClass=t.type==='deposit'?'tx-positive':'tx-negative';
-        const sign=t.type==='deposit'?'+':'-';
-        const date=new Date(t.date).toLocaleDateString('ar-SA');
-        return '<tr><td><span class="tx-type '+(typeClass[t.type]||'tx-deposit')+'">'+(typeMap[t.type]||t.type)+'</span></td><td class="tx-amount '+amountClass+'">'+sign+'$'+t.amount.toFixed(2)+'</td><td>'+t.description+'</td><td style="color:var(--success);font-size:0.8rem"><i class="fas fa-check-circle"></i> مكتمل</td><td>'+date+'</td></tr>';
-    };
-    if(userTx.length===0){
-        const empty='<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px">لا توجد معاملات</td></tr>';
-        recentTbody.innerHTML=empty;allTbody.innerHTML=empty;
-    }else{
-        allTbody.innerHTML=userTx.map(renderRow).join('');
-        recentTbody.innerHTML=userTx.slice(0,5).map(renderRow).join('');
-    }
-}
+            const userTx = transactions.filter(t => t.userId === user.id);
+            const deposits = userTx.filter(t => t.type === 'deposit' || t.type === 'manual_add').reduce((a, b) => a + b.amount, 0);
+            const withdrawals = userTx.filter(t => t.type === 'withdraw').reduce((a, b) => a + b.amount, 0);
+            document.getElementById('statDeposits').textContent = '$' + deposits.toFixed(2);
+            document.getElementById('statWithdrawals').textContent = '$' + withdrawals.toFixed(2);
+            document.getElementById('statTransactions').textContent = userTx.length;
 
-function updateAdminPanel(){
-    document.getElementById('adminTotalUsers').textContent=users.length;
-    document.getElementById('adminTotalBalance').textContent='$'+users.reduce((a,u)=>a+u.balance,0).toFixed(0);
-    document.getElementById('adminTotalTransactions').textContent=transactions.length;
-    document.getElementById('adminPendingCount').textContent=pendingDeposits.length;
-    document.getElementById('adminUserList').innerHTML=users.map(u=>{
-        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:15px;background:var(--primary);border-radius:12px;margin-bottom:10px;border:1px solid var(--border)">'+
-            '<div><div style="font-weight:600">'+u.name+(u.type==='admin'?' <span style="color:var(--gold);font-size:0.7rem">ADMIN</span>':'')+'</div><div style="color:var(--text-muted);font-size:0.85rem">'+u.email+'</div></div>'+
-            '<div style="display:flex;align-items:center;gap:15px"><div style="font-weight:700;color:var(--success)">$'+u.balance.toFixed(2)+'</div>'+
-            '<button class="btn btn-success btn-sm" onclick="addBalanceDirect('+u.id+')"><i class="fas fa-coins"></i></button>'+
-            '<button class="btn btn-danger btn-sm" onclick="deleteUser('+u.id+')"><i class="fas fa-trash"></i></button></div></div>';
-    }).join('');
-    document.getElementById('adminActivity').innerHTML=transactions.slice(-10).reverse().map(t=>{
-        const u=users.find(x=>x.id===t.userId);
-        return '<div style="padding:12px;border-bottom:1px solid var(--border)"><div style="font-size:0.9rem">'+t.type+': $'+t.amount.toFixed(2)+'</div><div style="color:var(--text-muted);font-size:0.8rem">'+(u?u.name:'?')+' - '+new Date(t.date).toLocaleDateString('ar-SA')+'</div></div>';
-    }).join('');
-}
+            const pendingCount = pendingDeposits.filter(p => p.userId === user.id && p.status === 'pending').length;
+            document.getElementById('statPending').textContent = pendingCount;
+        }
 
-function updatePendingPanel(){
-    const list=document.getElementById('pendingDepositsList');
-    if(pendingDeposits.length===0){
-        list.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-muted)"><i class="fas fa-check-circle" style="font-size:3rem;color:var(--success)"></i><br>لا توجد طلبات</div>';
-        return;
-    }
-    list.innerHTML=pendingDeposits.map(p=>{
-        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:15px;background:var(--primary);border-radius:12px;margin-bottom:10px;border:1px solid var(--border);border-right:4px solid var(--warning)">'+
-            '<div><div style="font-weight:600">$'+p.amount.toFixed(2)+' - '+p.userName+'</div>'+
-            '<div style="color:var(--text-muted);font-size:0.8rem">'+p.userEmail+'</div>'+
-            '<div style="color:var(--text-muted);font-size:0.75rem">من: '+p.fromAccount+' | إيصال: '+(p.receipt||'-')+'</div></div>'+
-            '<div style="display:flex;gap:8px">'+
-            '<button class="btn btn-success btn-sm" onclick="approveDeposit('+p.id+')"><i class="fas fa-check"></i></button>'+
-            '<button class="btn btn-danger btn-sm" onclick="rejectDeposit('+p.id+')"><i class="fas fa-times"></i></button></div></div>';
-    }).join('');
-}
+        function hasApprovedDeposit(userId) {
+            const userTx = transactions.filter(t => t.userId === userId && t.type === 'deposit' && t.status === 'completed');
+            return userTx.length > 0;
+        }
 
-function approveDeposit(pendingId){
-    const p=pendingDeposits.find(x=>x.id===pendingId);
-    if(!p)return;
-    const user=users.find(u=>u.id===p.userId);
-    if(user){user.balance+=p.amount;saveUsers()}
-    transactions.push({id:Date.now(),userId:p.userId,type:'deposit',amount:p.amount,description:p.description+' (من: '+p.fromAccount+')',status:'completed',date:new Date().toISOString()});
-    saveTransactions();
-    pendingDeposits=pendingDeposits.filter(x=>x.id!==pendingId);
-    savePending();
-    updatePendingPanel();
-    updateAdminPanel();
-    showNotification('تمت الموافقة على الإيداع!','success');
-    if(currentUser&&currentUser.id===p.userId){updateVisaDisplay();updateStats()}
-}
+        function getVisaHTML(userId, isHome) {
+            const user = users.find(u => u.id === userId);
+            if (!user) return '<div style="color:red; padding:20px;">خطأ: المستخدم غير موجود</div>';
 
-function rejectDeposit(pendingId){
-    pendingDeposits=pendingDeposits.filter(x=>x.id!==pendingId);
-    savePending();
-    updatePendingPanel();
-    updateAdminPanel();
-    showNotification('تم رفض الطلب','error');
-}
+            if (!cards[userId]) {
+                generateVisaForUser(userId);
+            }
+            const card = cards[userId];
+            const approved = hasApprovedDeposit(userId);
+            const isLocked = !approved;
 
-function addBalanceDirect(userId){
-    const amount=parseFloat(prompt('المبلغ لإضافته:'));
-    if(!amount||amount<=0)return;
-    const user=users.find(u=>u.id===userId);
-    if(!user)return;
-    user.balance+=amount;
-    saveUsers();
-    transactions.push({id:Date.now(),userId,type:'deposit',amount,description:'إضافة يدوية من الإدارة',status:'completed',date:new Date().toISOString()});
-    saveTransactions();
-    updateAdminPanel();
-    showNotification('تم إضافة $'+amount+' لـ '+user.name,'success');
-}
+            const cardNum = card ? card.number.replace(/(.{4})/g, '$1 ').trim() : '•••• •••• •••• ••••';
+            const cardNumberDisplay = isLocked 
+                ? '<span class="visa-number-locked">•••• •••• •••• ••••</span>'
+                : cardNum;
 
-function deleteUser(userId){
-    if(!confirm('حذف المستخدم نهائياً؟'))return;
-    users=users.filter(u=>u.id!==userId);
-    transactions=transactions.filter(t=>t.userId!==userId);
-    pendingDeposits=pendingDeposits.filter(p=>p.userId!==userId);
-    delete cards[userId];
-    saveUsers();saveTransactions();savePending();saveCards();
-    updateAdminPanel();
-    showNotification('تم الحذف','success');
-}
+            const cvvDisplay = isLocked ? '•••' : '•••';
+            const expiryDisplay = isLocked ? '--/--' : (card ? card.expiry : '--/--');
+            const statusText = isLocked ? 'مقفلة' : (card && card.frozen ? 'مجمدة' : 'نشطة');
+            const statusClass = isLocked ? 'status-frozen' : (card && card.frozen ? 'status-frozen' : 'status-active');
 
-function openModal(id){document.getElementById(id).classList.add('active')}
-function closeModal(id){document.getElementById(id).classList.remove('active')}
+            let lockOverlay = '';
+            if (isLocked) {
+                lockOverlay = '<div class="visa-lock-overlay"><i class="fas fa-lock"></i><span>أرقام مشفرة</span></div>';
+            }
 
-function showNotification(message,type){
-    const container=document.getElementById('notifications');
-    const notif=document.createElement('div');
-    notif.className='notification '+type;
-    const iconMap={success:'fa-check-circle',error:'fa-exclamation-circle',warning:'fa-exclamation-triangle',info:'fa-info-circle'};
-    notif.innerHTML='<i class="fas '+(iconMap[type]||'fa-info-circle')+'" style="font-size:1.2rem"></i> <span>'+message+'</span>';
-    container.appendChild(notif);
-    setTimeout(()=>notif.remove(),4000);
-}
+            const btnText = isLocked ? 'إظهار الأرقام' : 'عرض CVV';
+            const isAdmin = currentUser && currentUser.type === 'admin';
 
-function copyTransferNumber(el){
-    navigator.clipboard.writeText('393919a1d9d1949ab86c322e11b0d47f').then(()=>{
-        showNotification('تم نسخ رقم التحويل!','success');
-    }).catch(()=>{
-        const textarea=document.createElement('textarea');
-        textarea.value='393919a1d9d1949ab86c322e11b0d47f';
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        showNotification('تم نسخ رقم التحويل!','success');
-    });
-}
+            let adminButtons = '';
+            if (isAdmin) {
+                adminButtons = '<button class="btn btn-primary btn-sm" onclick="generateVisa()"><i class="fas fa-plus"></i> بطاقة جديدة</button>' +
+                    '<button class="btn btn-warning btn-sm" onclick="toggleFreeze()" id="freezeBtn"><i class="fas fa-snowflake"></i> ' + 
+                    (card && card.frozen ? 'فك التجميد' : 'تجميد') + '</button>';
+            }
 
-if(currentUser){initDashboard()}
-</script>
+            return '<div class="visa-card ' + (isLocked ? 'locked' : '') + '" id="visaCard">' +
+                '<div class="visa-logo" style="font-size: 1.1rem; font-weight: 700; color: var(--gold); font-family: 'Tajawal', sans-serif; letter-spacing: 1px;">الفيزا الإفتراضي</div>' +
+                '<div class="visa-chip"></div>' +
+                '<div class="visa-number" id="cardNumber">' + cardNumberDisplay + '</div>' +
+                '<div class="visa-details">' +
+                    '<div class="visa-detail"><label>صاحب البطاقة</label><span id="cardHolder">' + user.name + '</span></div>' +
+                    '<div class="visa-detail"><label>تاريخ الانتهاء</label><span id="cardExpiry">' + expiryDisplay + '</span></div>' +
+                    '<div class="visa-detail"><label>CVV</label><span id="cardCVV">' + cvvDisplay + '</span></div>' +
+                '</div>' +
+                '<div class="visa-status"><span class="status-badge ' + statusClass + '" id="cardStatus">' + statusText + '</span></div>' +
+                lockOverlay +
+            '</div>' +
+            '<div class="card-actions" id="visaActions" style="justify-content: center;">' +
+                '<button class="btn btn-danger" onclick="handleShowNumbers()" style="border-radius: 50px; padding: 10px 25px;">' +
+                    '<i class="fas fa-eye"></i> ' + btnText +
+                '</button>' +
+                adminButtons +
+            '</div>';
+        }
+
+        function handleShowNumbers() {
+            if (!hasApprovedDeposit(currentUser.id)) {
+                showNotification('يجب إجراء إيداع أولاً والحصول على موافقة الإدارة!', 'warning');
+                setTimeout(() => { openModal('depositModal'); }, 800);
+                return;
+            }
+            showCVV();
+        }
+
+        function renderHomeVisa() {
+            const container = document.getElementById('homeVisaContainer');
+            if (container && currentUser) {
+                container.innerHTML = getVisaHTML(currentUser.id, true);
+            }
+        }
+
+        function renderVisaPage() {
+            const container = document.getElementById('visaContainer');
+            if (container && currentUser) {
+                container.innerHTML = '<div class="visa-section">' + getVisaHTML(currentUser.id, false) + '</div>';
+            }
+        }
+
+        function generateVisa() {
+            if (currentUser.type === 'client') {
+                showNotification('لا يمكنك إصدار بطاقة جديدة! تواصل مع الإدارة.', 'error');
+                return;
+            }
+            generateVisaForUser(currentUser.id);
+            renderHomeVisa();
+            renderVisaPage();
+            logActivity(currentUser.id, 'visa_created', 'إصدار بطاقة فيزا افتراضية');
+            showNotification('تم إصدار البطاقة الافتراضية بنجاح!', 'success');
+        }
+
+        function toggleFreeze() {
+            if (currentUser.type === 'client') {
+                showNotification('لا يمكنك تجميد البطاقة! تواصل مع الإدارة.', 'error');
+                return;
+            }
+            const card = cards[currentUser.id];
+            if (!card) { showNotification('لا توجد بطاقة!', 'error'); return; }
+            card.frozen = !card.frozen;
+            saveCards();
+            renderHomeVisa();
+            renderVisaPage();
+            logActivity(currentUser.id, card.frozen ? 'visa_frozen' : 'visa_unfrozen', 'تغيير حالة البطاقة');
+            showNotification(card.frozen ? 'تم تجميد البطاقة' : 'تم فك تجميد البطاقة', 'info');
+        }
+
+        function showCVV() {
+            const card = cards[currentUser.id];
+            if (!card) { showNotification('لا توجد بطاقة!', 'error'); return; }
+
+            const cvvEl = document.getElementById('cardCVV');
+            const numEl = document.getElementById('cardNumber');
+            const expEl = document.getElementById('cardExpiry');
+
+            if (cvvEl) cvvEl.textContent = card.cvv;
+            if (numEl) numEl.textContent = card.number.replace(/(.{4})/g, '$1 ').trim();
+            if (expEl) expEl.textContent = card.expiry;
+
+            showNotification('تم إظهار الأرقام! سيتم إخفاؤها خلال 5 ثوانٍ', 'info');
+
+            setTimeout(() => { 
+                if(cvvEl) cvvEl.textContent = '•••'; 
+                if(numEl) numEl.innerHTML = '<span class="visa-number-locked">•••• •••• •••• ••••</span>';
+                if(expEl) expEl.textContent = '--/--';
+            }, 5000);
+        }
+
+        function addTransaction(type, amount, desc, fromUserId, toUserId, extraData) {
+            const tx = {
+                id: Date.now(),
+                userId: fromUserId || currentUser.id,
+                toUserId: toUserId || null,
+                type: type, amount: parseFloat(amount),
+                description: desc,
+                extraData: extraData || null,
+                status: 'completed',
+                date: new Date().toISOString()
+            };
+            transactions.push(tx);
+            saveTransactions();
+            const user = users.find(u => u.id === (fromUserId || currentUser.id));
+            if (type === 'deposit' || type === 'manual_add') user.balance += parseFloat(amount);
+            else if (type === 'withdraw') user.balance -= parseFloat(amount);
+            else if (type === 'transfer') user.balance -= parseFloat(amount);
+            saveUsers();
+            updateStats();
+            loadTransactions();
+            renderHomeVisa();
+        }
+
+        function requestDeposit() {
+            const amount = document.getElementById('depositAmount').value;
+            const fromAccount = document.getElementById('depositFromAccount').value;
+            const desc = document.getElementById('depositDesc').value || 'إيداع نقدي';
+
+            if (!amount || amount <= 0) { showNotification('يرجى إدخال مبلغ صحيح!', 'error'); return; }
+            if (!fromAccount.trim()) { showNotification('يرجى إدخال اسم الحساب المحول منه!', 'error'); return; }
+
+            const pending = {
+                id: Date.now(),
+                userId: currentUser.id,
+                userName: currentUser.name,
+                userEmail: currentUser.email,
+                amount: parseFloat(amount),
+                fromAccount: fromAccount,
+                description: desc,
+                status: 'pending',
+                date: new Date().toISOString()
+            };
+
+            pendingDeposits.push(pending);
+            savePendingDeposits();
+
+            closeModal('depositModal');
+            logActivity(currentUser.id, 'deposit_request', 'طلب إيداع: $' + amount + ' من ' + fromAccount);
+            showNotification('تم إرسال طلب الإيداع! في انتظار موافقة الإدارة.', 'warning');
+
+            document.getElementById('depositAmount').value = '';
+            document.getElementById('depositFromAccount').value = '';
+            document.getElementById('depositDesc').value = '';
+
+            updateStats();
+        }
+
+        function approveDeposit(pendingId) {
+            const pending = pendingDeposits.find(p => p.id === pendingId);
+            if (!pending) return;
+
+            const user = users.find(u => u.id === pending.userId);
+            if (user) {
+                user.balance += pending.amount;
+                saveUsers();
+            }
+
+            transactions.push({
+                id: Date.now(),
+                userId: pending.userId,
+                type: 'deposit',
+                amount: pending.amount,
+                description: pending.description + ' (من: ' + pending.fromAccount + ')',
+                extraData: { fromAccount: pending.fromAccount },
+                status: 'completed',
+                date: new Date().toISOString()
+            });
+            saveTransactions();
+
+            pendingDeposits = pendingDeposits.filter(p => p.id !== pendingId);
+            savePendingDeposits();
+
+            updatePendingPanel();
+            updateAdminPanel();
+
+            if (currentUser && currentUser.id === pending.userId) {
+                renderHomeVisa();
+                renderVisaPage();
+                showNotification('تمت الموافقة على إيداعك! يمكنك الآن رؤية أرقام الفيزا.', 'success');
+            } else {
+                showNotification('تمت الموافقة على الإيداع وإضافة المبلغ!', 'success');
+            }
+
+            logActivity(currentUser.id, 'deposit_approved', 'موافقة على إيداع: $' + pending.amount + ' للمستخدم ' + pending.userName);
+        }
+
+        function rejectDeposit(pendingId) {
+            const pending = pendingDeposits.find(p => p.id === pendingId);
+            if (!pending) return;
+
+            pendingDeposits = pendingDeposits.filter(p => p.id !== pendingId);
+            savePendingDeposits();
+
+            updatePendingPanel();
+            updateAdminPanel();
+            logActivity(currentUser.id, 'deposit_rejected', 'رفض إيداع: $' + pending.amount + ' للمستخدم ' + pending.userName);
+            showNotification('تم رفض طلب الإيداع', 'error');
+        }
+
+        function withdraw() {
+            const amount = document.getElementById('withdrawAmount').value;
+            const bankName = document.getElementById('withdrawBankName').value;
+            const accountNumber = document.getElementById('withdrawAccountNumber').value;
+            const accountHolder = document.getElementById('withdrawAccountHolder').value;
+            const desc = document.getElementById('withdrawDesc').value || 'سحب نقدي';
+
+            if (!amount || amount <= 0) { showNotification('يرجى إدخال مبلغ صحيح!', 'error'); return; }
+            if (!bankName.trim()) { showNotification('يرجى إدخال اسم البنك!', 'error'); return; }
+            if (!accountNumber.trim()) { showNotification('يرجى إدخال رقم الحساب!', 'error'); return; }
+            if (!accountHolder.trim()) { showNotification('يرجى إدخال اسم صاحب الحساب!', 'error'); return; }
+
+            const user = users.find(u => u.id === currentUser.id);
+            if (user.balance < amount) { showNotification('رصيد غير كافٍ!', 'error'); return; }
+
+            const extraData = { bankName: bankName, accountNumber: accountNumber, accountHolder: accountHolder };
+            addTransaction('withdraw', amount, desc + ' (إلى: ' + bankName + ' - ' + accountHolder + ')', null, null, extraData);
+
+            closeModal('withdrawModal');
+            logActivity(currentUser.id, 'withdraw', 'سحب مبلغ: $' + amount + ' إلى ' + bankName);
+            showNotification('تم السحب بنجاح: $' + parseFloat(amount).toFixed(2), 'success');
+
+            document.getElementById('withdrawAmount').value = '';
+            document.getElementById('withdrawBankName').value = '';
+            document.getElementById('withdrawAccountNumber').value = '';
+            document.getElementById('withdrawAccountHolder').value = '';
+            document.getElementById('withdrawDesc').value = '';
+        }
+
+        function transfer() {
+            const email = document.getElementById('transferEmail').value;
+            const amount = document.getElementById('transferAmount').value;
+            const desc = document.getElementById('transferDesc').value || 'تحويل';
+
+            if (!email || !amount) { showNotification('يرجى ملء جميع الحقول!', 'error'); return; }
+
+            const recipient = users.find(u => u.email === email);
+            if (!recipient) { showNotification('المستلم غير موجود!', 'error'); return; }
+            if (recipient.id === currentUser.id) { showNotification('لا يمكن التحويل لنفسك!', 'error'); return; }
+
+            const sender = users.find(u => u.id === currentUser.id);
+            if (sender.balance < amount) { showNotification('رصيد غير كافٍ!', 'error'); return; }
+
+            sender.balance -= parseFloat(amount);
+            addTransaction('transfer', amount, desc + ' إلى ' + recipient.name, currentUser.id, recipient.id);
+
+            recipient.balance += parseFloat(amount);
+            transactions.push({
+                id: Date.now() + 1, userId: recipient.id, fromUserId: currentUser.id,
+                type: 'deposit', amount: parseFloat(amount),
+                description: 'تحويل وارد من ' + sender.name, status: 'completed', date: new Date().toISOString()
+            });
+            saveUsers(); saveTransactions();
+
+            logActivity(currentUser.id, 'transfer', 'تحويل إلى ' + recipient.name + ': $' + amount);
+            showNotification('تم التحويل بنجاح إلى ' + recipient.name, 'success');
+            document.getElementById('transferEmail').value = '';
+            document.getElementById('transferAmount').value = '';
+            document.getElementById('transferDesc').value = '';
+        }
+
+        function loadTransactions() {
+            const userTx = transactions.filter(t => t.userId === currentUser.id).reverse();
+            const tbody = document.getElementById('allTransactions');
+            const recentTbody = document.getElementById('recentTransactions');
+
+            const renderRow = (t) => {
+                const typeMap = { deposit: 'إيداع', withdraw: 'سحب', transfer: 'تحويل', manual_add: 'إضافة يدوية' };
+                const typeClassMap = { deposit: 'tx-deposit', withdraw: 'tx-withdraw', transfer: 'tx-transfer', manual_add: 'tx-manual' };
+                const typeClass = typeClassMap[t.type] || 'tx-deposit';
+                const typeText = typeMap[t.type] || t.type;
+                const amountClass = (t.type === 'deposit' || t.type === 'manual_add') ? 'tx-positive' : 'tx-negative';
+                const sign = (t.type === 'deposit' || t.type === 'manual_add') ? '+' : '-';
+                const date = new Date(t.date).toLocaleDateString('ar-SA');
+                const statusBadge = t.status === 'completed' ? '<span style="color: var(--success); font-size: 0.8rem;"><i class="fas fa-check-circle"></i> مكتمل</span>' : '<span style="color: var(--warning); font-size: 0.8rem;"><i class="fas fa-clock"></i> معلق</span>';
+
+                return '<tr><td><span class="tx-type ' + typeClass + '">' + typeText + '</span></td><td class="tx-amount ' + amountClass + '">' + sign + '$' + t.amount.toFixed(2) + '</td><td>' + t.description + '</td><td>' + statusBadge + '</td><td>' + date + '</td></tr>';
+            };
+
+            if (userTx.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">لا توجد معاملات</td></tr>';
+                recentTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">لا توجد معاملات</td></tr>';
+            } else {
+                tbody.innerHTML = userTx.map(renderRow).join('');
+                recentTbody.innerHTML = userTx.slice(0, 5).map(renderRow).join('');
+            }
+        }
+
+        function updateAdminPanel() {
+            document.getElementById('adminTotalUsers').textContent = users.length;
+            document.getElementById('adminTotalBalance').textContent = '$' + users.reduce((a, u) => a + u.balance, 0).toFixed(2);
+            document.getElementById('adminTotalTransactions').textContent = transactions.length;
+            document.getElementById('adminPendingCount').textContent = pendingDeposits.length;
+
+            const userList = document.getElementById('adminUserList');
+            userList.innerHTML = users.map(u => {
+                return '<div class="user-list-item"><div class="user-list-info"><h4>' + u.name + (u.type === 'admin' ? ' <span style="color: var(--gold); font-size: 0.7rem;">ADMIN</span>' : '') + '</h4><span>' + u.email + ' - ' + (u.type === 'client' ? 'عميل' : 'مدير') + '</span></div><div style="display: flex; align-items: center; gap: 15px;"><div class="user-balance">$' + u.balance.toFixed(2) + '</div><div class="user-actions"><button class="btn btn-primary btn-sm btn-icon" onclick="openEditUser(' + u.id + ')"><i class="fas fa-edit"></i></button><button class="btn btn-success btn-sm btn-icon" onclick="openAddBalance(' + u.id + ')"><i class="fas fa-coins"></i></button><button class="btn btn-danger btn-sm btn-icon" onclick="deleteUser(' + u.id + ')"><i class="fas fa-trash"></i></button></div></div></div>';
+            }).join('');
+
+            const activity = document.getElementById('adminActivity');
+            activity.innerHTML = transactions.slice(-10).reverse().map(t => {
+                const user = users.find(u => u.id === t.userId);
+                const typeMap = { deposit: 'إيداع', withdraw: 'سحب', transfer: 'تحويل', manual_add: 'إضافة يدوية' };
+                return '<div class="user-list-item" style="margin-bottom: 8px;"><div class="user-list-info"><h4 style="font-size: 0.9rem;">' + (typeMap[t.type] || t.type) + ': $' + t.amount.toFixed(2) + '</h4><span>' + (user ? user.name : 'unknown') + ' - ' + new Date(t.date).toLocaleDateString('ar-SA') + '</span></div></div>';
+            }).join('');
+        }
+
+        function updatePendingPanel() {
+            const list = document.getElementById('pendingDepositsList');
+            if (pendingDeposits.length === 0) {
+                list.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-muted);"><i class="fas fa-check-circle" style="font-size: 3rem; margin-bottom: 15px; color: var(--success);"></i><br>لا توجد طلبات إيداع معلقة</div>';
+                return;
+            }
+
+            list.innerHTML = pendingDeposits.map(p => {
+                return '<div class="pending-item"><div class="pending-info"><h4>$' + p.amount.toFixed(2) + ' - ' + p.userName + '</h4><span>' + p.userEmail + ' | من: ' + p.fromAccount + ' | ' + new Date(p.date).toLocaleDateString('ar-SA') + '</span></div><div class="pending-actions"><button class="btn btn-success btn-sm" onclick="approveDeposit(' + p.id + ')"><i class="fas fa-check"></i> موافقة</button><button class="btn btn-danger btn-sm" onclick="rejectDeposit(' + p.id + ')"><i class="fas fa-times"></i> رفض</button></div></div>';
+            }).join('');
+        }
+
+        function openEditUser(userId) {
+            const user = users.find(u => u.id === userId);
+            if (!user) return;
+            document.getElementById('editUserId').value = user.id;
+            document.getElementById('editUserName').value = user.name;
+            document.getElementById('editUserEmail').value = user.email;
+            document.getElementById('editUserType').value = user.type;
+            document.getElementById('editUserBalance').value = user.balance;
+            openModal('editUserModal');
+        }
+
+        function saveUserEdit() {
+            const id = parseInt(document.getElementById('editUserId').value);
+            const user = users.find(u => u.id === id);
+            if (!user) return;
+            user.name = document.getElementById('editUserName').value;
+            user.email = document.getElementById('editUserEmail').value;
+            user.type = document.getElementById('editUserType').value;
+            user.balance = parseFloat(document.getElementById('editUserBalance').value) || 0;
+            saveUsers();
+            updateAdminPanel();
+            closeModal('editUserModal');
+            logActivity(currentUser.id, 'user_edited', 'تعديل بيانات المستخدم: ' + user.name);
+            showNotification('تم حفظ التعديلات بنجاح!', 'success');
+        }
+
+        function deleteUser(userId) {
+            if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟ سيتم حذف جميع بياناته!')) return;
+            users = users.filter(u => u.id !== userId);
+            transactions = transactions.filter(t => t.userId !== userId);
+            pendingDeposits = pendingDeposits.filter(p => p.userId !== userId);
+            delete cards[userId];
+            saveUsers(); saveTransactions(); savePendingDeposits(); saveCards();
+            updateAdminPanel();
+            logActivity(currentUser.id, 'user_deleted', 'حذف مستخدم: ' + userId);
+            showNotification('تم حذف المستخدم بنجاح', 'success');
+        }
+
+        function openAddBalance(userId) {
+            const select = document.getElementById('addBalanceUser');
+            select.innerHTML = users.map(u => '<option value="' + u.id + '"' + (u.id === userId ? ' selected' : '') + '>' + u.name + ' (' + u.email + ')</option>').join('');
+            openModal('addBalanceModal');
+        }
+
+        function addManualBalance() {
+            const userId = parseInt(document.getElementById('addBalanceUser').value);
+            const amount = parseFloat(document.getElementById('addBalanceAmount').value);
+            const reason = document.getElementById('addBalanceReason').value || 'إضافة رصيد يدوي';
+            if (!amount || amount <= 0) { showNotification('يرجى إدخال مبلغ صحيح!', 'error'); return; }
+            const user = users.find(u => u.id === userId);
+            if (!user) { showNotification('المستخدم غير موجود!', 'error'); return; }
+            user.balance += amount;
+            saveUsers();
+            transactions.push({
+                id: Date.now(), userId: userId, type: 'manual_add',
+                amount: amount, description: reason + ' (يدوي من الإدارة)',
+                status: 'completed', date: new Date().toISOString()
+            });
+            saveTransactions();
+            updateAdminPanel();
+            closeModal('addBalanceModal');
+            document.getElementById('addBalanceAmount').value = '';
+            document.getElementById('addBalanceReason').value = '';
+            logActivity(currentUser.id, 'manual_balance', 'إضافة رصيد يدوي لـ ' + user.name + ': $' + amount);
+            showNotification('تم إضافة $' + amount.toFixed(2) + ' إلى ' + user.name, 'success');
+        }
+
+        function updateMonitoringPanel() {
+            const onlineUsers = users.filter(u => u.status === 'online').length;
+            const activeSessions = Object.values(sessions).filter(s => s.active).length;
+            document.getElementById('monitorOnline').textContent = onlineUsers;
+            document.getElementById('monitorActive').textContent = activeSessions;
+            const today = new Date().toDateString();
+            const todayVisits = monitorLogs.filter(l => new Date(l.timestamp).toDateString() === today && l.action === 'login').length;
+            document.getElementById('monitorToday').textContent = todayVisits;
+
+            const userList = document.getElementById('monitorUserList');
+            userList.innerHTML = users.map(u => {
+                const statusClass = u.status === 'online' ? 'monitor-online' : 'monitor-offline';
+                const statusText = u.status === 'online' ? 'متصل' : 'غير متصل';
+                const lastActive = u.lastActive ? new Date(u.lastActive).toLocaleTimeString('ar-SA') : 'غير معروف';
+                const session = sessions[u.id];
+                const sessionTime = session && session.loginTime ? Math.floor((new Date() - new Date(session.loginTime)) / 60000) + ' دقيقة' : '-';
+                return '<div class="user-list-item"><div class="user-list-info"><h4>' + u.name + (u.type === 'admin' ? ' <span style="color: var(--gold); font-size: 0.7rem;">ADMIN</span>' : '') + '</h4><span>' + u.email + '</span></div><div style="text-align: left;"><span class="monitor-status ' + statusClass + '"><i class="fas fa-circle" style="font-size: 0.5rem;"></i> ' + statusText + '</span><div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">آخر نشاط: ' + lastActive + '</div><div style="font-size: 0.75rem; color: var(--text-muted);">مدة الجلسة: ' + sessionTime + '</div></div></div>';
+            }).join('');
+
+            const activity = document.getElementById('monitorActivity');
+            activity.innerHTML = monitorLogs.slice(-20).reverse().map(l => {
+                const user = users.find(u => u.id === l.userId);
+                const actionMap = {
+                    login: { icon: 'login', text: 'تسجيل دخول' },
+                    logout: { icon: 'logout', text: 'تسجيل خروج' },
+                    deposit: { icon: 'transaction', text: 'إيداع' },
+                    withdraw: { icon: 'transaction', text: 'سحب' },
+                    transfer: { icon: 'transaction', text: 'تحويل' },
+                    deposit_request: { icon: 'warning', text: 'طلب إيداع' },
+                    deposit_approved: { icon: 'success', text: 'موافقة إيداع' },
+                    deposit_rejected: { icon: 'error', text: 'رفض إيداع' },
+                    visa_created: { icon: 'transaction', text: 'إصدار فيزا' },
+                    user_edited: { icon: 'warning', text: 'تعديل مستخدم' },
+                    manual_balance: { icon: 'warning', text: 'إضافة رصيد يدوي' }
+                };
+                const action = actionMap[l.action] || { icon: 'transaction', text: l.action };
+                const time = new Date(l.timestamp).toLocaleTimeString('ar-SA');
+                const iconMap = { login: 'sign-in-alt', logout: 'sign-out-alt', transaction: 'exchange-alt', warning: 'exclamation-triangle', success: 'check-circle', error: 'times-circle' };
+                return '<div class="activity-item"><div class="activity-icon ' + action.icon + '"><i class="fas fa-' + iconMap[action.icon] + '"></i></div><div class="activity-info"><h5>' + action.text + '</h5><span>' + (user ? user.name : 'unknown') + ' - ' + l.details + '</span></div><div class="activity-time">' + time + '</div></div>';
+            }).join('');
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        function copyTransferNumber(el) {
+            navigator.clipboard.writeText('393919a1d9d1949ab86c322e11b0d47f').then(() => {
+                showNotification('تم نسخ رقم التحويل!', 'success');
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = '393919a1d9d1949ab86c322e11b0d47f';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showNotification('تم نسخ رقم التحويل!', 'success');
+            });
+        }
+
+        function showNotification(message, type) {
+            const container = document.getElementById('notifications');
+            const notif = document.createElement('div');
+            notif.className = 'notification ' + type;
+            const iconMap = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+            const icon = iconMap[type] || 'fa-info-circle';
+            notif.innerHTML = '<i class="fas ' + icon + '" style="font-size: 1.2rem;"></i> <span>' + message + '</span>';
+            container.appendChild(notif);
+            setTimeout(() => notif.remove(), 4000);
+        }
+
+        if (currentUser) {
+            initDashboard();
+        }
+    </script>
 </body>
 </html>
