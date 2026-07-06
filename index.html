@@ -141,6 +141,72 @@
         .deposit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6); }
         .min-deposit-note { color: var(--accent-gold); font-size: 0.85rem; margin-top: 12px; display: flex; align-items: center; gap: 5px; }
 
+        /* WhatsApp Support Button - UNDER DEPOSIT */
+        .whatsapp-support-box {
+            background: linear-gradient(135deg, rgba(37, 211, 102, 0.15), rgba(18, 140, 126, 0.1));
+            border: 1px solid rgba(37, 211, 102, 0.3);
+            border-radius: 20px;
+            padding: 20px 25px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .whatsapp-support-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .whatsapp-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #25d366, #128c7e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+        }
+
+        .whatsapp-text h4 {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #25d366;
+            margin-bottom: 2px;
+        }
+
+        .whatsapp-text p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .whatsapp-btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #25d366, #128c7e);
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .whatsapp-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.6);
+        }
+
         /* Tables */
         .table-container { background: var(--card-bg); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; overflow-x: auto; margin-bottom: 25px; }
         table { width: 100%; border-collapse: collapse; min-width: 600px; }
@@ -155,14 +221,6 @@
         .btn-approve { padding: 6px 12px; border: none; border-radius: 8px; background: var(--success); color: white; cursor: pointer; font-weight: 600; transition: all 0.2s; font-size: 0.8rem; }
         .btn-reject { padding: 6px 12px; border: none; border-radius: 8px; background: var(--danger); color: white; cursor: pointer; font-weight: 600; transition: all 0.2s; font-size: 0.8rem; }
         .btn-approve:hover, .btn-reject:hover { transform: scale(1.05); filter: brightness(1.2); }
-
-        /* WhatsApp Float */
-        .whatsapp-float { position: fixed; bottom: 25px; left: 25px; z-index: 100; display: flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #25d366, #128c7e); color: white; padding: 12px 20px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 0.9rem; box-shadow: 0 8px 25px rgba(37, 211, 102, 0.4); transition: all 0.3s; cursor: pointer; border: none; }
-        .whatsapp-float:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 12px 35px rgba(37, 211, 102, 0.6); }
-        .whatsapp-float .wa-icon { font-size: 1.4rem; }
-        .whatsapp-float .wa-text { display: flex; flex-direction: column; line-height: 1.2; }
-        .whatsapp-float .wa-label { font-size: 0.7rem; opacity: 0.9; }
-        .whatsapp-float .wa-number { font-size: 0.85rem; font-weight: 800; }
 
         /* Toast */
         .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); padding: 14px 28px; border-radius: 12px; background: var(--secondary); border: 1px solid rgba(255,255,255,0.1); color: white; font-weight: 600; z-index: 1000; transition: all 0.4s; box-shadow: 0 10px 40px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 10px; font-size: 0.9rem; max-width: 90%; }
@@ -183,8 +241,8 @@
             .deposit-form-row { flex-direction: column; }
             .deposit-form .input-group { width: 100%; min-width: auto; }
             .deposit-btn { width: 100%; }
-            .whatsapp-float .wa-text { display: none; }
-            .whatsapp-float { bottom: 15px; left: 15px; padding: 10px 16px; }
+            .whatsapp-support-box { flex-direction: column; text-align: center; }
+            .whatsapp-support-info { flex-direction: column; }
         }
         @media (max-width: 400px) {
             .visa-card-inner, .visa-card-locked { max-width: 100%; height: 190px; }
@@ -297,6 +355,7 @@
 
             <div class="two-col">
                 <div>
+                    <!-- DEPOSIT SECTION -->
                     <div class="deposit-section">
                         <h3 class="section-title">💵 إيداع جديد</h3>
                         <div class="deposit-form">
@@ -307,7 +366,22 @@
                             <button class="deposit-btn" onclick="requestDeposit()">📤 إرسال طلب</button>
                         </div>
                         <div class="min-deposit-note">⚠️ الحد الأدنى للإيداع: 15 دولار | يجب إدخال رقم عملية التحويل</div>
+
+                        <!-- WHATSAPP SUPPORT - UNDER DEPOSIT -->
+                        <div class="whatsapp-support-box">
+                            <div class="whatsapp-support-info">
+                                <div class="whatsapp-icon">💬</div>
+                                <div class="whatsapp-text">
+                                    <h4>هل تحتاج مساعدة؟</h4>
+                                    <p>تواصل مع خدمة العملاء عبر واتساب</p>
+                                </div>
+                            </div>
+                            <a class="whatsapp-btn" href="https://wa.me/963984734089" target="_blank">
+                                <span>📱</span> تواصل معنا
+                            </a>
+                        </div>
                     </div>
+
                     <div class="stats-grid">
                         <div class="stat-card"><div class="stat-icon green">📋</div><div class="stat-value" id="clientRequests">0</div><div class="stat-label">طلباتك</div></div>
                         <div class="stat-card"><div class="stat-icon blue">✅</div><div class="stat-value" id="clientApproved">0</div><div class="stat-label">مقبولة</div></div>
@@ -322,12 +396,6 @@
             </div>
         </div>
     </div>
-
-    <!-- WhatsApp Support -->
-    <a class="whatsapp-float" href="https://wa.me/963984734089" target="_blank">
-        <span class="wa-icon">💬</span>
-        <span class="wa-text"><span class="wa-label">خدمة العملاء</span><span class="wa-number">+963 984 734 089</span></span>
-    </a>
 
     <div class="toast" id="toast"></div>
 
