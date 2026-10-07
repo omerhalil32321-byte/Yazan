@@ -1,4 +1,4 @@
-const TOKEN = "YOUR_TELEGRAM_BOT_TOKEN";
+const TOKEN = "8889976501:AAGqPijRKckYZDhuxUss1KPXTS6TFWtLyu0";
 const DOMAIN = "https://dank-0.vercel.app";
 
 const HTML_CONTENT = `<!DOCTYPE html>
