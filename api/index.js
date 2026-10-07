@@ -1,4 +1,4 @@
-const TOKEN = "8889976501:AAGqPijRKckYZDhuxUs1KPXTS6TFWtLyu0";
+const TOKEN = "YOUR_TELEGRAM_BOT_TOKEN";
 const DOMAIN = "https://dank-0.vercel.app";
 
 const HTML_CONTENT = `<!DOCTYPE html>
@@ -27,13 +27,11 @@ const HTML_CONTENT = `<!DOCTYPE html>
 </html>`;
 
 export default async function handler(req, res) {
-    // 1. عند فتح الرابط في المتصفح عرض صفحة الـ HTML
     if (req.method === 'GET') {
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         return res.status(200).send(HTML_CONTENT);
     }
 
-    // 2. عند استقبال طلب من تيليجرام (Webhook)
     if (req.method === 'POST') {
         const update = req.body;
         if (update && update.message) {
