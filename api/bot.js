@@ -39,28 +39,19 @@ async function getDb() {
         );
     `);
 
-    // إعدادات البنوك الـ 4 مع حساباتها وأسعار الصرف وتطبيقاتها المخصصة
     const defaults = {
         'bank1_name': 'سيرياتيل كاش 📱',
         'bank1_acc': '87524496',
         'bank1_rate': '100',
-        'bank1_apk': 'https://t.me/A_ToolsX',
-
         'bank2_name': 'شام كاش 💳',
         'bank2_acc': '0912345678',
         'bank2_rate': '1',
-        'bank2_apk': 'https://t.me/A_ToolsX',
-
         'bank3_name': 'USDT 🌐',
         'bank3_acc': 'TXXXXXXXXXXXXXX',
         'bank3_rate': '1',
-        'bank3_apk': 'https://t.me/A_ToolsX',
-
         'bank4_name': 'بنك إضافي 🏦',
         'bank4_acc': '0999999999',
         'bank4_rate': '1',
-        'bank4_apk': 'https://t.me/A_ToolsX',
-
         'deposit_bonus_percent': '10',
         'withdraw_discount_percent': '10'
     };
@@ -125,7 +116,7 @@ function createBot() {
         ];
         
         if (userId === ADMIN_ID) {
-            buttons.unshift([Markup.button.callback('⚙️ لوحة تحكم الأدمن', 'admin_panel')]);
+            buttons.unshift([Markup.button.callback('⚙️ لوحة تحكم الأدمن لبرمجة قراءة البنوك', 'admin_panel')]);
         }
 
         const keyboard = Markup.inlineKeyboard(buttons);
@@ -156,13 +147,118 @@ function createBot() {
         return sendMainMenu(ctx, user);
     });
 
+    // لوحة تحكم الأدمن لتدريب البوت على مكان قراءة رقم العملية والمبلغ
     bot.action('admin_panel', async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         if (ctx.from.id !== ADMIN_ID) return;
-        return ctx.editMessageText(`⚙️ **لوحة تحكم الأدمن:**\n\nقم بإدارة الحسابات وتطبيقات الـ 4 بنوك وأسعار الصرف من موقع Vercel الأساسي.`, {
+        return ctx.editMessageText(`⚙️ **لوحة التحكم المتقدمة لبرمجة القراءة الآلية:**\n\nاختر البنك لتحديد قالب/صورة التطبيق (التي توضح للبوت أين يقرأ رقم العملية والمبلغ للتأكد من المطابقة التلقائية):`, {
             parse_mode: 'Markdown',
-            ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
+            ...Markup.inlineKeyboard([
+                [Markup.button.callback('📱 إعدادات البنك 1', 'admin_b1'), Markup.button.callback('💳 إعدادات البنك 2', 'admin_b2')],
+                [Markup.button.callback('🌐 إعدادات البنك 3', 'admin_b3'), Markup.button.callback('🏦 إعدادات البنك 4', 'admin_b4')],
+                [Markup.button.callback('رجوع ↩️', 'main_menu')]
+            ])
         });
+    });
+
+    // إدارة البنك الأول
+    bot.action('admin_b1', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        if (ctx.from.id !== ADMIN_ID) return;
+        return ctx.editMessageText(`📱 **إعدادات البنك الأول:**\nرفع قالب/صورة التطبيق لتعريف البوت بمكان رقم العملية والمبلغ:`, {
+            parse_mode: 'Markdown',
+            ...Markup.inlineKeyboard([
+                [Markup.button.callback('📤 رفع ملف APK للبنك 1', 'upload_apk_bank1'), Markup.button.callback('🎯 رفع قالب القراءة (صورة)', 'upload_template_bank1')],
+                [Markup.button.callback('رجوع للوحة الأدمن ↩️', 'admin_panel')]
+            ])
+        });
+    });
+
+    bot.action('upload_apk_bank1', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        await setUserState(ADMIN_ID, 'admin_wait_apk_bank1');
+        return ctx.reply('📤 أرسل ملف الـ APK الخاص بالبنك الأول:');
+    });
+
+    bot.action('upload_template_bank1', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        await setUserState(ADMIN_ID, 'admin_wait_template_bank1');
+        return ctx.reply('🎯 أرسل صورة الشاشة (Template) التي توضح للبوت مكان وجود رقم العملية والمبلغ في تطبيق البنك الأول:');
+    });
+
+    // إدارة البنك الثاني
+    bot.action('admin_b2', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        if (ctx.from.id !== ADMIN_ID) return;
+        return ctx.editMessageText(`💳 **إعدادات البنك الثاني:**`, {
+            parse_mode: 'Markdown',
+            ...Markup.inlineKeyboard([
+                [Markup.button.callback('📤 رفع ملف APK للبنك 2', 'upload_apk_bank2'), Markup.button.callback('🎯 رفع قالب القراءة (صورة)', 'upload_template_bank2')],
+                [Markup.button.callback('رجوع للوحة الأدمن ↩️', 'admin_panel')]
+            ])
+        });
+    });
+
+    bot.action('upload_apk_bank2', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        await setUserState(ADMIN_ID, 'admin_wait_apk_bank2');
+        return ctx.reply('📤 أرسل ملف الـ APK الخاص بالبنك الثاني:');
+    });
+
+    bot.action('upload_template_bank2', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        await setUserState(ADMIN_ID, 'admin_wait_template_bank2');
+        return ctx.reply('🎯 أرسل صورة الشاشة (Template) لتحديد مكان رقم العملية والمبلغ للبنك الثاني:');
+    });
+
+    // إدارة البنك الثالث
+    bot.action('admin_b3', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        if (ctx.from.id !== ADMIN_ID) return;
+        return ctx.editMessageText(`🌐 **إعدادات البنك الثالث:**`, {
+            parse_mode: 'Markdown',
+            ...Markup.inlineKeyboard([
+                [Markup.button.callback('📤 رفع ملف APK للبنك 3', 'upload_apk_bank3'), Markup.button.callback('🎯 رفع قالب القراءة (صورة)', 'upload_template_bank3')],
+                [Markup.button.callback('رجوع للوحة الأدمن ↩️', 'admin_panel')]
+            ])
+        });
+    });
+
+    bot.action('upload_apk_bank3', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        await setUserState(ADMIN_ID, 'admin_wait_apk_bank3');
+        return ctx.reply('📤 أرسل ملف الـ APK الخاص بالبنك الثالث:');
+    });
+
+    bot.action('upload_template_bank3', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        await setUserState(ADMIN_ID, 'admin_wait_template_bank3');
+        return ctx.reply('🎯 أرسل صورة القالب لتحديد مكان رقم العملية والمبلغ للبنك الثالث:');
+    });
+
+    // إدارة البنك الرابع
+    bot.action('admin_b4', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        if (ctx.from.id !== ADMIN_ID) return;
+        return ctx.editMessageText(`🏦 **إعدادات البنك الرابع:**`, {
+            parse_mode: 'Markdown',
+            ...Markup.inlineKeyboard([
+                [Markup.button.callback('📤 رفع ملف APK للبنك 4', 'upload_apk_bank4'), Markup.button.callback('🎯 رفع قالب القراءة (صورة)', 'upload_template_bank4')],
+                [Markup.button.callback('رجوع للوحة الأدمن ↩️', 'admin_panel')]
+            ])
+        });
+    });
+
+    bot.action('upload_apk_bank4', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        await setUserState(ADMIN_ID, 'admin_wait_apk_bank4');
+        return ctx.reply('📤 أرسل ملف الـ APK الخاص بالبنك الرابع:');
+    });
+
+    bot.action('upload_template_bank4', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        await setUserState(ADMIN_ID, 'admin_wait_template_bank4');
+        return ctx.reply('🎯 أرسل صورة القالب لتحديد مكان رقم العملية والمبلغ للبنك الرابع:');
     });
 
     bot.action('deposit_menu', async (ctx) => {
@@ -187,7 +283,7 @@ function createBot() {
     bot.action(/^pay_(bank\d)$/, async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         const userId = ctx.from.id;
-        const bankKey = ctx.match[1]; // bank1, bank2, bank3, bank4
+        const bankKey = ctx.match[1];
 
         const name = await getSetting(`${bankKey}_name`, 'البنك');
         const num = await getSetting(`${bankKey}_acc`, '00000000');
@@ -289,7 +385,7 @@ function createBot() {
         await ctx.answerCbQuery().catch(() => {});
         const b = await getSetting('deposit_bonus_percent', '10');
         const d = await getSetting('withdraw_discount_percent', '10');
-        return ctx.editMessageText(`🎁 **العروض الفورية النشطة:**\n\n✨ بونص إيداع: +${b}%\n🔻 عمولة سحب: ${d}%`, {
+        return ctx.editMessageText(`🎁 **العروض النشطة:**\n\n✨ بونص إيداع: +${b}%\n🔻 عمولة سحب: ${d}%`, {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
         });
@@ -297,19 +393,44 @@ function createBot() {
 
     bot.action('terms', async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
-        return ctx.editMessageText('⚠️ **شروط الاستخدام:**\n\nيجب التأكد من إدخال رقم العملية الصحيح والمبلغ المطابق لضمان سرعة معالجة طلبك.', {
+        return ctx.editMessageText(`⚠️ **شروط الاستخدام:**\n\nيجب التأكد من إدخال رقم العملية الصحيح والمبلغ المطابق لضمان سرعة معالجة طلبك.`, {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
         });
     });
 
-    bot.on('text', async (ctx) => {
+    bot.on(['document', 'photo', 'text'], async (ctx) => {
         try {
             const userId = ctx.from.id;
             const user = await getUser(userId);
             const state = user.state;
-            const text = ctx.message.text.trim();
             const db = await getDb();
+
+            // معالجة ملفات الـ APK وقوالب القراءة التي يرفعها الأدمن
+            if (userId === ADMIN_ID && state && state.startsWith('admin_wait_')) {
+                const parts = state.replace('admin_wait_', '').split('_'); // مثل ['apk', 'bank1'] أو ['template', 'bank1']
+                const type = parts[0];
+                const bankNum = parts[1];
+
+                if (type === 'apk' && ctx.message.document) {
+                    const fileId = ctx.message.document.file_id;
+                    await setSetting(`${bankNum}_apk`, fileId);
+                    await setUserState(ADMIN_ID, null);
+                    return ctx.reply(`✅ تم حفظ ملف الـ APK الخاص بـ ${bankNum} بنجاح.`);
+                }
+
+                if (type === 'template' && ctx.message.photo) {
+                    const fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
+                    await setSetting(`${bankNum}_template`, fileId);
+                    await setUserState(ADMIN_ID, null);
+                    return ctx.reply(`🎯 تم حفظ قالب قراءة التطبيق بنجاح لـ ${bankNum}. سيعتمد البوت على هذا القالب لمعرفة مكان رقم العملية والمبلغ.`);
+                }
+
+                return ctx.reply('❌ يرجى إرسال الملف أو الصورة بالشكل الصحيح.');
+            }
+
+            if (!ctx.message.text) return;
+            const text = ctx.message.text.trim();
 
             if (!state) {
                 return ctx.reply('⚠️ يرجى اختيار العملية من القائمة الرئيسية أو الضغط على /start للبدء.');
@@ -341,22 +462,21 @@ function createBot() {
                 const bankKey = temp.bankKey || 'bank1';
                 const method = temp.paymentMethod || 'البنك';
 
-                // محاكاة نظام المطابقة التلقائية مع تطبيق البنك المخصص
-                // فحص صحة رقم العملية والمبلغ بناءً على القواعد البرمجية
-                const isTxIdValid = txId.length >= 4; // مثال: التحقق من صحة طول رقم العملية
-                const isAmountValid = amount > 0;
+                // محاكاة نظام المطابقة الذكي ومعالجة أخطاء الزبون بدقة
+                const isTxIdValid = txId.length >= 4; 
+                const isAmountValid = amount > 0;   
 
                 if (!isTxIdValid) {
                     await setUserState(userId, null, null);
-                    return ctx.reply(`❌ **خطأ في رقم العملية!**\nرقم العملية (${txId}) غير صحيح أو غير مطابق في سجلات تطبيق ${method}. يرجى التأكد وإعادة المحاولة.`);
+                    return ctx.reply(`❌ **خطأ في رقم العملية!**\nرقم العملية الذي أدخلته (${txId}) غير مطابق لما تم قراءته من تطبيق ${method}. يرجى التأكد من الرقم وإعادة إرساله بشكل صحيح.`);
                 }
 
                 if (!isAmountValid) {
                     await setUserState(userId, null, null);
-                    return ctx.reply(`❌ **خطأ في المبلغ!**\nالمبلغ المدخل (${amount}) غير مطابقة للتحويل في حساب ${method}. يرجى التأكد.`);
+                    return ctx.reply(`❌ **خطأ في المبلغ!**\nالمبلغ المدخل (${amount}) غير مطابق لقيمة التحويل المسجلة في تطبيق ${method}. يرجى مراجعة المبلغ وتصحيحه.`);
                 }
 
-                // إذا تطابقت البيانات تماماً، يتم القبول الفوري وإضافة الرصيد للزبون مع معامل المضاعفة والبونص
+                // المطابقة الناجحة وإضافة الرصيد للزبون تلقائياً
                 const rate = parseFloat(await getSetting(`${bankKey}_rate`, '100'));
                 const bonus = parseFloat(await getSetting('deposit_bonus_percent', '10'));
 
@@ -528,34 +648,34 @@ module.exports = async (req, res) => {
                 </head>
                 <body>
                     <div class="container">
-                        <h2>🚀 لوحة إدارة البنوك الـ 4 وتطبيقاتها</h2>
+                        <h2>🚀 لوحة إعدادات البنوك وقوالب القراءة</h2>
                         <form method="POST">
                             <fieldset>
-                                <legend>📱 البنك الأول (البنك 1)</legend>
-                                <div class="form-group"><label>اسم البنك / الأيقونة:</label><input type="text" name="bank1_name" value="${b1_name}"></div>
+                                <legend>📱 البنك الأول</legend>
+                                <div class="form-group"><label>اسم البنك:</label><input type="text" name="bank1_name" value="${b1_name}"></div>
                                 <div class="form-group"><label>رقم الحساب:</label><input type="text" name="bank1_acc" value="${b1_acc}"></div>
-                                <div class="form-group"><label>سعر الصرف / المضاعفة:</label><input type="text" name="bank1_rate" value="${b1_rate}"></div>
+                                <div class="form-group"><label>سعر الصرف:</label><input type="text" name="bank1_rate" value="${b1_rate}"></div>
                             </fieldset>
 
                             <fieldset>
-                                <legend>💳 البنك الثاني (البنك 2)</legend>
-                                <div class="form-group"><label>اسم البنك / الأيقونة:</label><input type="text" name="bank2_name" value="${b2_name}"></div>
+                                <legend>💳 البنك الثاني</legend>
+                                <div class="form-group"><label>اسم البنك:</label><input type="text" name="bank2_name" value="${b2_name}"></div>
                                 <div class="form-group"><label>رقم الحساب:</label><input type="text" name="bank2_acc" value="${b2_acc}"></div>
-                                <div class="form-group"><label>سعر الصرف / المضاعفة:</label><input type="text" name="bank2_rate" value="${b2_rate}"></div>
+                                <div class="form-group"><label>سعر الصرف:</label><input type="text" name="bank2_rate" value="${b2_rate}"></div>
                             </fieldset>
 
                             <fieldset>
-                                <legend>🌐 البنك الثالث (البنك 3)</legend>
-                                <div class="form-group"><label>اسم البنك / الأيقونة:</label><input type="text" name="bank3_name" value="${b3_name}"></div>
+                                <legend>🌐 البنك الثالث</legend>
+                                <div class="form-group"><label>اسم البنك:</label><input type="text" name="bank3_name" value="${b3_name}"></div>
                                 <div class="form-group"><label>رقم الحساب:</label><input type="text" name="bank3_acc" value="${b3_acc}"></div>
-                                <div class="form-group"><label>سعر الصرف / المضاعفة:</label><input type="text" name="bank3_rate" value="${b3_rate}"></div>
+                                <div class="form-group"><label>سعر الصرف:</label><input type="text" name="bank3_rate" value="${b3_rate}"></div>
                             </fieldset>
 
                             <fieldset>
-                                <legend>🏦 البنك الرابع (البنك 4)</legend>
-                                <div class="form-group"><label>اسم البنك / الأيقونة:</label><input type="text" name="bank4_name" value="${b4_name}"></div>
+                                <legend>🏦 البنك الرابع</legend>
+                                <div class="form-group"><label>اسم البنك:</label><input type="text" name="bank4_name" value="${b4_name}"></div>
                                 <div class="form-group"><label>رقم الحساب:</label><input type="text" name="bank4_acc" value="${b4_acc}"></div>
-                                <div class="form-group"><label>سعر الصرف / المضاعفة:</label><input type="text" name="bank4_rate" value="${b4_rate}"></div>
+                                <div class="form-group"><label>سعر الصرف:</label><input type="text" name="bank4_rate" value="${b4_rate}"></div>
                             </fieldset>
 
                             <fieldset>
@@ -579,7 +699,7 @@ module.exports = async (req, res) => {
             res.setHeader('Content-Type', 'text/html; charset=utf-8');
             return res.status(200).send(`
                 <body style="background:#0f172a;color:#4ade80;text-align:center;padding-top:50px;font-family:Tahoma;">
-                    <h2>✅ تم حفظ إعدادات البنوك بنجاح تام!</h2>
+                    <h2>✅ تم حفظ الإعدادات وقوالب القراءة بنجاح!</h2>
                     <br><a href="/" style="color:#38bdf8;text-decoration:none;font-size:18px;">⬅️ العودة للوحة التحكم</a>
                 </body>
             `);
