@@ -2,7 +2,7 @@ const { Telegraf, Markup } = require('telegraf');
 const sqlite3 = require('sqlite3').verbose();
 const { open } = require('sqlite');
 
-const BOT_TOKEN = process.env.BOT_TOKEN || '8947458303:AAHTU5hlyre5kVNSxYxnGe7bFaUBbcVw_bk';
+const BOT_TOKEN = process.env.BOT_TOKEN || '8991565390:AAGLlPEM2rf4EDZ5DIUHSdZoURy23-yKivk';
 const ADMIN_ID = parseInt(process.env.ADMIN_ID || '7074242190');
 
 let botInstance = null;
@@ -11,7 +11,7 @@ let dbInstance = null;
 async function getDb() {
     if (dbInstance) return dbInstance;
     dbInstance = await open({
-        filename: '/tmp/database.sqlite', // مسار مؤقت آمن لـ Vercel
+        filename: '/tmp/database.sqlite',
         driver: sqlite3.Database
     });
 
@@ -68,22 +68,6 @@ function getBot() {
         return user;
     }
 
-    async function updateBalance(userId, amount) {
-        const db = await getDb();
-        db.run('UPDATE users SET balance = balance + ? WHERE user_id = ?', [amount, userId]);
-    }
-
-    async function getSetting(key, def = '') {
-        const db = await getDb();
-        const row = await db.get('SELECT setting_value FROM settings WHERE setting_key = ?', [key]);
-        return (row && row.setting_value) ? row.setting_value : def;
-    }
-
-    async function setSetting(key, val) {
-        const db = await getDb();
-        await db.run('INSERT OR REPLACE INTO settings (setting_key, setting_value) VALUES (?, ?)', [key, val]);
-    }
-
     async function sendMainMenu(ctx, user) {
         const userId = ctx.from.id;
         const msg = `📋 **قائمة الخيارات الرئيسية** \n\n💰 الرصيد الحالي: ${user.balance || 0} SYP\n🆔 أيدي حسابك: \`${userId}\``;
@@ -120,7 +104,6 @@ function getBot() {
     return bot;
 }
 
-// التصدير القياسي لـ Vercel Serverless Function
 module.exports = async (req, res) => {
     try {
         await getDb();
