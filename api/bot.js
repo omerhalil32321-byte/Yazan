@@ -60,7 +60,7 @@ async function getDb() {
 async function getSetting(key, def = '') {
     const db = await getDb();
     const row = await db.get('SELECT setting_value FROM settings WHERE setting_key = ?', [key]);
-    return (row && row.setting_value) ? row.setting_value : def;
+    return (row && row.setting_value !== undefined) ? row.setting_value : def;
 }
 
 async function setSetting(key, val) {
@@ -113,6 +113,7 @@ function getBot() {
     }
 
     async function renderAdmin(ctx, isEdit = true) {
+        // قراءة مباشرة وفورية من قاعدة البيانات في كل مرة تعرض اللوحة
         const s = await getSetting('syriatel', '87524496');
         const sh = await getSetting('shamcash', '0912345678');
         const us = await getSetting('usdt', 'TXXXXXXXXXXXXXX');
