@@ -113,7 +113,6 @@ function getBot() {
     }
 
     async function renderAdmin(ctx, isEdit = true) {
-        // قراءة مباشرة وفورية من قاعدة البيانات في كل مرة تعرض اللوحة
         const s = await getSetting('syriatel', '87524496');
         const sh = await getSetting('shamcash', '0912345678');
         const us = await getSetting('usdt', 'TXXXXXXXXXXXXXX');
@@ -184,7 +183,7 @@ function getBot() {
 
     bot.action('deposit_menu', async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
-        return ctx.editMessageText('اختر طريقة الشحن الفوري المتاحة:', Markup.inlineKeyboard([
+        return ctx.editMessageText('اختر طريقة الشحن المتاحة:', Markup.inlineKeyboard([
             [Markup.button.callback('سيرياتيل كاش 📱', 'pay_syriatel')],
             [Markup.button.callback('شام كاش 💳', 'pay_shamcash')],
             [Markup.button.callback('USDT 🌐', 'pay_usdt')],
@@ -192,6 +191,7 @@ function getBot() {
         ]));
     });
 
+    // جلب أرقام وحسابات الشحن مباشرة من قاعدة البيانات عند ضغط الزبون
     bot.action(/^pay_/, async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         const userId = ctx.from.id;
@@ -199,9 +199,19 @@ function getBot() {
         userStates[userId] = 'awaiting_transaction_number';
         pendingDeposits[userId] = {};
 
-        let num = method === 'pay_syriatel' ? await getSetting('syriatel', '87524496') :
-                  method === 'pay_shamcash' ? await getSetting('shamcash', '0912345678') : await getSetting('usdt', 'TXXXXXXXXXXXXXX');
-        let name = method === 'pay_syriatel' ? 'سيرياتيل كاش' : method === 'pay_shamcash' ? 'شام كاش' : 'USDT';
+        let num = '';
+        let name = '';
+
+        if (method === 'pay_syriatel') {
+            num = await getSetting('syriatel', '87524496');
+            name = 'سيرياتيل كاش';
+        } else if (method === 'pay_shamcash') {
+            num = await getSetting('shamcash', '0912345678');
+            name = 'شام كاش';
+        } else if (method === 'pay_usdt') {
+            num = await getSetting('usdt', 'TXXXXXXXXXXXXXX');
+            name = 'USDT';
+        }
 
         return ctx.editMessageText(`⚡ قم بالتحويل الفوري عبر **${name}** إلى الرقم التالي:\n\n\`${num}\`\n\nأدخل رقم العملية لتأكيد الشحن:`, {
             parse_mode: 'Markdown',
