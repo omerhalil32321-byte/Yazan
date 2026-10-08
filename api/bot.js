@@ -39,7 +39,6 @@ async function getDb() {
         );
     `);
 
-    // إدخال القيم الافتراضية إذا لم تكن موجودة
     const defaults = {
         'syriatel': '87524496',
         'shamcash': '0912345678',
@@ -120,13 +119,13 @@ function getBot() {
         const bo = await getSetting('deposit_bonus_percent', '10');
         const di = await getSetting('withdraw_discount_percent', '10');
 
-        const text = `⚙️ **لوحة التحكم والإعدادات الحالية:**\n\n` +
+        const text = `⚙️ **لوحة التحكم والإعدادات الفورية:**\n\n` +
             `📱 سيرياتيل كاش: \`${s}\`\n` +
             `💳 شام كاش: \`${sh}\`\n` +
             `🌐 USDT: \`${us}\`\n` +
             `🎁 بونص الإيداع: **%${bo}**\n` +
             `🔻 عمولة السحب: **%${di}**\n\n` +
-            `اضغط على الزر لتعديل قيمته عبر الدردشة:`;
+            `👇 اضغط على الزر لتعديل القيمة فوراً في قاعدة البيانات:`;
 
         const kb = Markup.inlineKeyboard([
             [Markup.button.callback('تعديل سيرياتيل 📱', 'set_syriatel'), Markup.button.callback('تعديل شام كاش 💳', 'set_shamcash')],
@@ -173,9 +172,9 @@ function getBot() {
         const action = ctx.match[0];
         userStates[ADMIN_ID] = action;
         const p = {
-            'set_syriatel': '📱 أرسل رقم سيرياتيل كاش الجديد:',
-            'set_shamcash': '💳 أرسل رقم شام كاش الجديد:',
-            'set_usdt': '🌐 أرسل عنوان محفظة USDT الجديد:',
+            'set_syriatel': '📱 أرسل الرقم الجديد لسيرياتيل كاش في رسالة الآن:',
+            'set_shamcash': '💳 أرسل الرقم الجديد لشام كاش في رسالة الآن:',
+            'set_usdt': '🌐 أرسل عنوان USDT الجديد في رسالة الآن:',
             'set_bonus': '🎁 أرسل نسبة بونص الإيداع الجديدة (رقم فقط):',
             'set_discount': '🔻 أرسل نسبة عمولة السحب الجديدة (رقم فقط):'
         };
@@ -184,7 +183,7 @@ function getBot() {
 
     bot.action('deposit_menu', async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
-        return ctx.editMessageText('اختر طريقة الشحن المتاحة:', Markup.inlineKeyboard([
+        return ctx.editMessageText('اختر طريقة الشحن الفوري المتاحة:', Markup.inlineKeyboard([
             [Markup.button.callback('سيرياتيل كاش 📱', 'pay_syriatel')],
             [Markup.button.callback('شام كاش 💳', 'pay_shamcash')],
             [Markup.button.callback('USDT 🌐', 'pay_usdt')],
@@ -203,7 +202,7 @@ function getBot() {
                   method === 'pay_shamcash' ? await getSetting('shamcash', '0912345678') : await getSetting('usdt', 'TXXXXXXXXXXXXXX');
         let name = method === 'pay_syriatel' ? 'سيرياتيل كاش' : method === 'pay_shamcash' ? 'شام كاش' : 'USDT';
 
-        return ctx.editMessageText(`قم بالتحويل عبر **${name}** إلى الرقم التالي:\n\n\`${num}\`\n\nأدخل رقم العملية الآن:`, {
+        return ctx.editMessageText(`⚡ قم بالتحويل الفوري عبر **${name}** إلى الرقم التالي:\n\n\`${num}\`\n\nأدخل رقم العملية لتأكيد الشحن:`, {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([[Markup.button.callback('إلغاء ❌', 'main_menu')]])
         });
@@ -215,11 +214,11 @@ function getBot() {
         const user = await getUser(userId);
         if (!user.ichancy_user) {
             userStates[userId] = 'awaiting_account_creation';
-            return ctx.editMessageText('أدخل اسم المستخدم المراد إنشاؤه على آيسانسي:', Markup.inlineKeyboard([
+            return ctx.editMessageText('⚡ أدخل اسم المستخدم المراد إنشاؤه فوراً على آيسانسي:', Markup.inlineKeyboard([
                 [Markup.button.callback('إلغاء ↩️', 'main_menu')]
             ]));
         } else {
-            return ctx.editMessageText(`حسابك على آيسانسي:\n\nالمستخدم: \`${user.ichancy_user}\`\nكلمة المرور: \`${user.ichancy_pass}\``, {
+            return ctx.editMessageText(`⚡ تفاصيل حسابك الفوري على آيسانسي:\n\nالمستخدم: \`${user.ichancy_user}\`\nكلمة المرور: \`${user.ichancy_pass}\``, {
                 parse_mode: 'Markdown',
                 ...Markup.inlineKeyboard([
                     [Markup.button.callback('سحب رصيد 💸', 'withdraw_menu'), Markup.button.callback('شحن رصيد 🪙', 'deposit_menu')],
@@ -233,7 +232,7 @@ function getBot() {
         await ctx.answerCbQuery().catch(() => {});
         userStates[ctx.from.id] = 'awaiting_withdraw_account';
         pendingWithdrawals[ctx.from.id] = {};
-        return ctx.editMessageText('أدخل رقم الحساب أو المحفظة المراد السحب إليها:', Markup.inlineKeyboard([
+        return ctx.editMessageText('⚡ أدخل رقم الحساب أو المحفظة المراد السحب إليها فوراً:', Markup.inlineKeyboard([
             [Markup.button.callback('إلغاء ❌', 'main_menu')]
         ]));
     });
@@ -242,7 +241,7 @@ function getBot() {
         await ctx.answerCbQuery().catch(() => {});
         userStates[ctx.from.id] = 'awaiting_gift_target_id';
         pendingGifts[ctx.from.id] = {};
-        return ctx.editMessageText('🎁 أدخل أيدي (ID) الصديق المراد إرسال الهدية له:', Markup.inlineKeyboard([
+        return ctx.editMessageText('🎁 أدخل أيدي (ID) الصديق المراد إرسال الهدية له فوراً:', Markup.inlineKeyboard([
             [Markup.button.callback('إلغاء ❌', 'main_menu')]
         ]));
     });
@@ -251,7 +250,7 @@ function getBot() {
         await ctx.answerCbQuery().catch(() => {});
         const b = await getSetting('deposit_bonus_percent', '10');
         const d = await getSetting('withdraw_discount_percent', '10');
-        return ctx.editMessageText(`🎁 **العروض النشطة:**\n\n✨ بونص إيداع: +${b}\%\n🔻 عمولة سحب: ${d}%`, {
+        return ctx.editMessageText(`🎁 **العروض الفورية النشطة:**\n\n✨ بونص إيداع: +${b}\%\n🔻 عمولة سحب: ${d}%`, {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
         });
@@ -262,7 +261,7 @@ function getBot() {
         const userId = ctx.from.id;
         const db = await getDb();
         const row = await db.get('SELECT COUNT(*) as count FROM users WHERE referrer_id = ?', [userId]);
-        return ctx.editMessageText(`👥 **الإحالات**\n\nعدد إحالاتك: ${row ? row.count : 0}`, {
+        return ctx.editMessageText(`👥 **الإحالات الفورية**\n\nعدد إحالاتك: ${row ? row.count : 0}`, {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
         });
@@ -271,7 +270,7 @@ function getBot() {
     bot.action('support_menu', async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         userStates[ctx.from.id] = 'awaiting_support_message';
-        return ctx.editMessageText('💬 أكتب رسالتك وستصل إلى الإدارة فوراً:', Markup.inlineKeyboard([
+        return ctx.editMessageText('💬 أكتب رسالتك للدعم وستصل للإدارة فوراً:', Markup.inlineKeyboard([
             [Markup.button.callback('إلغاء ❌', 'main_menu')]
         ]));
     });
@@ -293,7 +292,7 @@ function getBot() {
                 };
                 await setSetting(map[state], text);
                 delete userStates[ADMIN_ID];
-                await ctx.reply(`✅ تم تحديث وحفظ القيمة في قاعدة البيانات بنجاح إلى: \`${text}\``, { parse_mode: 'Markdown' });
+                await ctx.reply(`✅ تم الحفظ والتحديث في قاعدة البيانات فوراً إلى: \`${text}\``, { parse_mode: 'Markdown' });
                 return renderAdmin(ctx, false);
             }
 
@@ -326,11 +325,11 @@ function getBot() {
                     [userId, amount, net, txId]
                 );
 
-                await ctx.reply('⏳ تم إرسال طلب الشحن إلى الإدارة للمراجعة.');
+                await ctx.reply('⏳ تم إرسال طلب الشحن للإدارة للمراجعة الفورية.');
                 await bot.telegram.sendMessage(ADMIN_ID, `📥 **طلب شحن جديد (#${res.lastID})**\n\n👤 ID: \`${userId}\`\n🔢 العملية: \`${txId}\`\n💰 المبلغ: ${amount}\n🎁 مع البونص: **${net}**`, {
                     parse_mode: 'Markdown',
                     ...Markup.inlineKeyboard([
-                        [Markup.button.callback(`✅ موافقة (${net})`, `approve_dep_${res.lastID}`), Markup.button.callback('❌ رفض', `reject_dep_${res.lastID}`)]
+                        [Markup.button.callback(`✅ موافقة وشحن فوراً (${net})`, `approve_dep_${res.lastID}`), Markup.button.callback('❌ رفض', `reject_dep_${res.lastID}`)]
                     ])
                 });
                 return sendMainMenu(ctx, await getUser(userId));
@@ -363,11 +362,11 @@ function getBot() {
                     [userId, amount, net, acc]
                 );
 
-                await ctx.reply(`✅ تم خصم ${amount} وإرسال طلب السحب للإدارة.`);
+                await ctx.reply(`✅ تم خصم ${amount} وإرسال طلب السحب للإدارة للمراجعة.`);
                 await bot.telegram.sendMessage(ADMIN_ID, `📤 **طلب سحب جديد (#${res.lastID})**\n\n👤 ID: \`${userId}\`\n🏦 الحساب: \`${acc}\`\n💵 الصافي: **${net}**`, {
                     parse_mode: 'Markdown',
                     ...Markup.inlineKeyboard([
-                        [Markup.button.callback('✅ تأكيد السحب', `approve_with_${res.lastID}`), Markup.button.callback('❌ رفض وإعادة الرصيد', `reject_with_${res.lastID}`)]
+                        [Markup.button.callback('✅ تأكيد السحب فوراً', `approve_with_${res.lastID}`), Markup.button.callback('❌ رفض وإعادة الرصيد', `reject_with_${res.lastID}`)]
                     ])
                 });
                 return sendMainMenu(ctx, await getUser(userId));
@@ -395,14 +394,14 @@ function getBot() {
                 delete userStates[userId];
                 delete pendingGifts[userId];
 
-                await ctx.reply(`🎉 تم إرسال الهدية بنجاح!`);
-                await bot.telegram.sendMessage(targetId, `🎁 **وصلتك هدية جديدة!**\nتم تحويل ${amount} إلى حسابك.`).catch(() => {});
+                await ctx.reply(`🎉 تم إرسال الهدية فوراً بنجاح!`);
+                await bot.telegram.sendMessage(targetId, `🎁 **وصلتك هدية جديدة!**\nتم تحويل ${amount} إلى حسابك فوراً.`).catch(() => {});
                 return sendMainMenu(ctx, await getUser(userId));
             }
 
             if (state === 'awaiting_support_message') {
                 delete userStates[userId];
-                await bot.telegram.sendMessage(ADMIN_ID, `💬 **رسالة دعم**\n\n👤 ID: \`${userId}\`\n\n${text}`, { parse_mode: 'Markdown' });
+                await bot.telegram.sendMessage(ADMIN_ID, `💬 **رسالة دعم فورية**\n\n👤 ID: \`${userId}\`\n\n${text}`, { parse_mode: 'Markdown' });
                 await ctx.reply('✅ تم إرسال رسالتك للإدارة بنجاح.');
                 return sendMainMenu(ctx, await getUser(userId));
             }
@@ -417,7 +416,7 @@ function getBot() {
         if (tx) {
             await updateBalance(tx.user_id, tx.net_amount);
             await db.run('UPDATE transactions SET status = "approved" WHERE id = ?', [txId]);
-            await ctx.editMessageText(`${ctx.callbackQuery.message.text}\n\n✅ **تمت الموافقة وشحن الرصيد.**`);
+            await ctx.editMessageText(`${ctx.callbackQuery.message.text}\n\n✅ **تمت الموافقة وشحن الرصيد فوراً.**`);
             await bot.telegram.sendMessage(tx.user_id, `🎉 تم شحن حسابك بمبلغ ${tx.net_amount} بنجاح!`).catch(() => {});
         }
     });
@@ -441,7 +440,7 @@ function getBot() {
         const tx = await db.get('SELECT * FROM transactions WHERE id = ? AND status = "pending"', [txId]);
         if (tx) {
             await db.run('UPDATE transactions SET status = "approved" WHERE id = ?', [txId]);
-            await ctx.editMessageText(`${ctx.callbackQuery.message.text}\n\n✅ **تم تأكيد السحب.**`);
+            await ctx.editMessageText(`${ctx.callbackQuery.message.text}\n\n✅ **تم تأكيد السحب فوراً.**`);
             await bot.telegram.sendMessage(tx.user_id, `🎉 تم إتمام وتحويل عملية السحب بنجاح!`).catch(() => {});
         }
     });
@@ -454,7 +453,7 @@ function getBot() {
         if (tx) {
             await updateBalance(tx.user_id, tx.amount);
             await db.run('UPDATE transactions SET status = "rejected" WHERE id = ?', [txId]);
-            await ctx.editMessageText(`${ctx.callbackQuery.message.text}\n\n❌ **تم رفض السحب وإعادة المبلغ للرصيد.**`);
+            await ctx.editMessageText(`${ctx.callbackQuery.message.text}\n\n❌ **تم رفض السحب وإعادة المبلغ للرصيد فوراً.**`);
             await bot.telegram.sendMessage(tx.user_id, `❌ تم رفض السحب وإعادة مبلغ ${tx.amount} إلى رصيدك.`).catch(() => {});
         }
     });
