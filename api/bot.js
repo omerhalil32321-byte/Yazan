@@ -168,34 +168,31 @@ function createBot() {
         ]));
     });
 
-    bot.action(/^pay_/, async (ctx) => {
+    // تم إصلاح الـ Regex هنا لاستخراج المفتاح بدقة وتجنب أي تعليق
+    bot.action(/^pay_(.+)$/, async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         const userId = ctx.from.id;
-        const method = ctx.match[0];
-        
+        const methodKey = ctx.match[1]; // استخراج المفتاح الصحيح مثل syriatel, shamcash, usdt
+
         let num = '';
         let name = '';
         let apkUrl = '';
         let videoUrl = '';
-        let methodKey = '';
 
-        if (method === 'pay_syriatel') {
+        if (methodKey === 'syriatel') {
             num = await getSetting('syriatel', '87524496');
             apkUrl = await getSetting('syriatel_apk', 'https://t.me/A_ToolsX');
             videoUrl = await getSetting('syriatel_video', 'https://t.me/A_ToolsX');
-            methodKey = 'syriatel';
             name = 'سيرياتيل كاش';
-        } else if (method === 'pay_shamcash') {
+        } else if (methodKey === 'shamcash') {
             num = await getSetting('shamcash', '0912345678');
             apkUrl = await getSetting('shamcash_apk', 'https://t.me/A_ToolsX');
             videoUrl = await getSetting('shamcash_video', 'https://t.me/A_ToolsX');
-            methodKey = 'shamcash';
             name = 'شام كاش';
-        } else if (method === 'pay_usdt') {
+        } else if (methodKey === 'usdt') {
             num = await getSetting('usdt', 'TXXXXXXXXXXXXXX');
             apkUrl = await getSetting('usdt_apk', 'https://t.me/A_ToolsX');
             videoUrl = await getSetting('usdt_video', 'https://t.me/A_ToolsX');
-            methodKey = 'usdt';
             name = 'USDT';
         }
 
