@@ -84,9 +84,7 @@ function getBot() {
     if (botInstance) return botInstance;
     const bot = new Telegraf(BOT_TOKEN);
     const userStates = {};
-    const pendingDeposits = {};
-    const pendingWithdrawals = {};
-    const pendingGifts = {};
+    const pendingData = {};
 
     async function getUser(userId) {
         const db = await getDb();
@@ -105,6 +103,9 @@ function getBot() {
 
     async function sendMainMenu(ctx, user) {
         const userId = ctx.from.id;
+        delete userStates[userId];
+        delete pendingData[userId];
+
         const msg = `📋 **قائمة الخيارات الرئيسية** \n\n💰 الرصيد الحالي: ${user.balance || 0} SYP\n🆔 أيدي حسابك: \`${userId}\``;
         
         const buttons = [
@@ -133,7 +134,6 @@ function getBot() {
 
     bot.start(async (ctx) => {
         const userId = ctx.from.id;
-        delete userStates[userId];
         const user = await getUser(userId);
         return sendMainMenu(ctx, user);
     });
@@ -143,24 +143,26 @@ function getBot() {
         return sendMainMenu(ctx, user);
     });
 
+    // استجابة فورية لجميع أزرار الـ Callback بدون أي تأخير
     bot.action('main_menu', async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
-        delete userStates[ctx.from.id];
+        await ctx.answerCbQuery('القائمة الرئيسية 🏠').catch(() => {});
         const user = await getUser(ctx.from.id);
         return sendMainMenu(ctx, user);
     });
 
     bot.action('admin_panel', async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
+        await ctx.answerCbQuery('لوحة التحكم ⚙️').catch(() => {});
         if (ctx.from.id !== ADMIN_ID) return;
-        return ctx.editMessageText(`⚙️ **لوحة تحكم الأدمن:**\n\nلإدارة وتعديل الحسابات وأسعار الصرف، قم بفتح **رابط موقعك على Vercel** من متصفح الإنترنت.`, {
+        return ctx.editMessageText(`⚙️ **لوحة تحكم الأدمن:**\n\nلإدارة وتعديل الحسابات وأسعار الصرف، قم بفتح موقعك على Vercel من متصفح الإنترنت.`, {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
         });
     });
 
     bot.action('deposit_menu', async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
+        await ctx.answerCbQuery('شحن الرصيد 📥').catch(() => {});
+        userStates[ctx.from.id] = null;
+        pendingData[ctx.from.id] = {};
         return ctx.editMessageText('اختر طريقة الشحن المتاحة:', Markup.inlineKeyboard([
             [Markup.button.callback('سيرياتيل كاش 📱', 'pay_syriatel')],
             [Markup.button.callback('شام كاش 💳', 'pay_shamcash')],
@@ -170,7 +172,7 @@ function getBot() {
     });
 
     bot.action(/^pay_/, async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
+        await ctx.answerCbQuery('جاري تحميل تفاصيل الحساب...').catch(() => {});
         const userId = ctx.from.id;
         const method = ctx.match[0];
         
@@ -178,28 +180,32 @@ function getBot() {
         let name = '';
         let apkUrl = '';
         let videoUrl = '';
+        let methodKey = '';
 
         if (method === 'pay_syriatel') {
             num = await getSetting('syriatel', '87524496');
             apkUrl = await getSetting('syriatel_apk', 'https://t.me/A_ToolsX');
             videoUrl = await getSetting('syriatel_video', 'https://t.me/A_ToolsX');
+            methodKey = 'syriatel';
             name = 'سيرياتيل كاش';
         } else if (method === 'pay_shamcash') {
             num = await getSetting('shamcash', '0912345678');
             apkUrl = await getSetting('shamcash_apk', 'https://t.me/A_ToolsX');
             videoUrl = await getSetting('shamcash_video', 'https://t.me/A_ToolsX');
+            methodKey = 'shamcash';
             name = 'شام كاش';
         } else if (method === 'pay_usdt') {
             num = await getSetting('usdt', 'TXXXXXXXXXXXXXX');
             apkUrl = await getSetting('usdt_apk', 'https://t.me/A_ToolsX');
             videoUrl = await getSetting('usdt_video', 'https://t.me/A_ToolsX');
+            methodKey = 'usdt';
             name = 'USDT';
         }
 
-        userStates[userId] = 'awaiting_transaction_number';
-        pendingDeposits[userId] = { paymentMethod: name, methodKey: method.replace('pay_', '') };
+        userStates[userId] = 'awaiting_transaction_id';
+        pendingData[userId] = { paymentMethod: name, methodKey: methodKey };
 
-        const text = `⚡ قم بالتحويل عبر **${name}** إلى الحساب التالي:\n\n\`${num}\`\n\nأدخل رقم العملية لتأكيد الشحن:`;
+        const text = `⚡ قم بالتحويل عبر **${name}** إلى الحساب التالي:\n\n\`${num}\`\n\n👇 **الخطوة الأولى:** أرسل **رقم العملية** الآن في رسالة:`;
         
         try {
             return await ctx.editMessageText(text, {
@@ -221,7 +227,7 @@ function getBot() {
     });
 
     bot.action('account_menu', async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
+        await ctx.answerCbQuery('حساب آيسانسي ⚡').catch(() => {});
         const userId = ctx.from.id;
         const user = await getUser(userId);
         if (!user.ichancy_user) {
@@ -241,9 +247,9 @@ function getBot() {
     });
 
     bot.action('withdraw_menu', async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
+        await ctx.answerCbQuery('سحب رصيد 📤').catch(() => {});
         userStates[ctx.from.id] = 'awaiting_withdraw_account';
-        pendingWithdrawals[ctx.from.id] = {};
+        pendingData[ctx.from.id] = {};
         return ctx.editMessageText('⚡ أدخل رقم الحساب أو المحفظة المراد السحب إليها فوراً:', Markup.inlineKeyboard([
             [Markup.button.callback('رجوع ↩️', 'main_menu')]
         ]));
@@ -254,16 +260,16 @@ function getBot() {
     });
 
     bot.action('gift_menu', async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
+        await ctx.answerCbQuery('إهداء صديق 🎁').catch(() => {});
         userStates[ctx.from.id] = 'awaiting_gift_target_id';
-        pendingGifts[ctx.from.id] = {};
+        pendingData[ctx.from.id] = {};
         return ctx.editMessageText('🎁 أدخل أيدي (ID) الصديق المراد إرسال الهدية له فوراً:', Markup.inlineKeyboard([
             [Markup.button.callback('رجوع ↩️', 'main_menu')]
         ]));
     });
 
     bot.action('referrals_menu', async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
+        await ctx.answerCbQuery('الإحالات 💰').catch(() => {});
         const userId = ctx.from.id;
         const db = await getDb();
         const row = await db.get('SELECT COUNT(*) as count FROM users WHERE referrer_id = ?', [userId]);
@@ -274,7 +280,7 @@ function getBot() {
     });
 
     bot.action('support_menu', async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
+        await ctx.answerCbQuery('الدعم الفني 💬').catch(() => {});
         userStates[ctx.from.id] = 'awaiting_support_message';
         return ctx.editMessageText('💬 أكتب رسالتك للدعم وستصل للإدارة فوراً:', Markup.inlineKeyboard([
             [Markup.button.callback('رجوع ↩️', 'main_menu')]
@@ -282,7 +288,7 @@ function getBot() {
     });
 
     bot.action('logs_menu', async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
+        await ctx.answerCbQuery('السجلات 📄').catch(() => {});
         const userId = ctx.from.id;
         const db = await getDb();
         const txs = await db.all('SELECT * FROM transactions WHERE user_id = ? ORDER BY id DESC LIMIT 5', [userId]);
@@ -301,7 +307,7 @@ function getBot() {
     });
 
     bot.action('offers', async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
+        await ctx.answerCbQuery('العروض النشطة 🎁').catch(() => {});
         const b = await getSetting('deposit_bonus_percent', '10');
         const d = await getSetting('withdraw_discount_percent', '10');
         return ctx.editMessageText(`🎁 **العروض الفورية النشطة:**\n\n✨ بونص إيداع: +${b}%\n🔻 عمولة سحب: ${d}%`, {
@@ -311,19 +317,24 @@ function getBot() {
     });
 
     bot.action('terms', async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
+        await ctx.answerCbQuery('شروط الاستخدام ⚠️').catch(() => {});
         return ctx.editMessageText('⚠️ **شروط الاستخدام:**\n\nيجب التأكد من إدخال رقم العملية الصحيح والمبلغ المطابق لضمان سرعة معالجة طلبك.', {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
         });
     });
 
+    // معالجة النصوص بالترتيب السليم
     bot.on('text', async (ctx) => {
         try {
             const userId = ctx.from.id;
             const state = userStates[userId];
             const text = ctx.message.text.trim();
             const db = await getDb();
+
+            if (!state) {
+                return ctx.reply('⚠️ يرجى اختيار العملية من القائمة الرئيسية أو الضغط على /start للبدء.');
+            }
 
             if (state === 'awaiting_account_creation') {
                 const pass = Math.random().toString(36).slice(-6);
@@ -333,30 +344,32 @@ function getBot() {
                 return sendMainMenu(ctx, await getUser(userId));
             }
 
-            if (state === 'awaiting_transaction_number') {
-                if (!pendingDeposits[userId]) pendingDeposits[userId] = {};
-                pendingDeposits[userId].transactionId = text;
+            if (state === 'awaiting_transaction_id') {
+                if (!pendingData[userId]) pendingData[userId] = {};
+                pendingData[userId].transactionId = text;
                 userStates[userId] = 'awaiting_deposit_amount';
-                return ctx.reply('✅ تم استلام رقم العملية. أدخل المبلغ المراد شحنه (المبلغ المرسل):');
+                return ctx.reply(`✅ تم حفظ رقم العملية (\`${text}\`).\n\n👇 **الخطوة الثانية:** الآن أرسل **المبلغ** المراد شحنه (رقم فقط):`, { parse_mode: 'Markdown' });
             }
 
             if (state === 'awaiting_deposit_amount') {
                 const amount = parseFloat(text);
-                if (isNaN(amount) || amount <= 0) return ctx.reply('❌ يرجى إدخال مبلغ صحيح.');
-                
-                const depositData = pendingDeposits[userId] || {};
-                const txId = depositData.transactionId || 'غير محدد';
-                const methodKey = depositData.methodKey || 'syriatel';
-                const method = depositData.paymentMethod || 'سيرياتيل كاش';
+                if (isNaN(amount) || amount <= 0) {
+                    return ctx.reply('❌ يرجى إدخال مبلغ صحيح (أرقام فقط):');
+                }
 
-                const rate = parseFloat(await getSetting(`${methodKey}_rate`, '1'));
+                const data = pendingData[userId] || {};
+                const txId = data.transactionId || 'غير محدد';
+                const methodKey = data.methodKey || 'syriatel';
+                const method = data.paymentMethod || 'سيرياتيل كاش';
+
+                const rate = parseFloat(await getSetting(`${methodKey}_rate`, '100'));
                 const bonus = parseFloat(await getSetting('deposit_bonus_percent', '10'));
 
                 const multipliedAmount = amount * rate;
                 const net = multipliedAmount + (multipliedAmount * (bonus / 100));
 
                 delete userStates[userId];
-                delete pendingDeposits[userId];
+                delete pendingData[userId];
 
                 await updateBalance(userId, net);
 
@@ -365,9 +378,9 @@ function getBot() {
                     [userId, amount, net, txId, method]
                 );
 
-                await ctx.reply(`✅ **تم شحن حسابك تلقائياً بنجاح!**\n\n💵 المبلغ المدخل: ${amount}\n🔄 معامل الصرف/المضاعفة: x${rate}\n🎁 مع بونص الإيداع (%${bonus}): **${net} SYP**`);
+                await ctx.reply(`✅ **تم شحن حسابك تلقائياً بنجاح!**\n\n💵 المبلغ المدخل: ${amount}\n🔄 معامل الصرف: x${rate}\n🎁 مع بونص الإيداع (%${bonus}): **${net} SYP**`);
                 
-                await bot.telegram.sendMessage(ADMIN_ID, `⚡ **عملية شحن تلقائية ناجحة (#${res.lastID})**\n\n👤 ID: \`${userId}\`\n💳 البنك: \`${method}\`\n🔢 العملية: \`${txId}\`\n💰 الأساسي: ${amount} -> المضاعف: ${multipliedAmount}\n🎁 النهائي المضاف: **${net}**`, {
+                await bot.telegram.sendMessage(ADMIN_ID, `⚡ **عملية شحن تلقائية ناجحة (#${res.lastID})**\n\n👤 ID: \`${userId}\`\n💳 البنك: \`${method}\`\n🔢 رقم العملية: \`${txId}\`\n💰 الأساسي: ${amount} -> المضاعف: ${multipliedAmount}\n🎁 النهائي المضاف: **${net}**`, {
                     parse_mode: 'Markdown'
                 });
 
@@ -375,7 +388,7 @@ function getBot() {
             }
 
             if (state === 'awaiting_withdraw_account') {
-                pendingWithdrawals[userId] = { targetAccount: text };
+                pendingData[userId] = { targetAccount: text };
                 userStates[userId] = 'awaiting_withdraw_amount';
                 return ctx.reply('✅ تم حفظ الحساب. أدخل المبلغ المراد سحبه:');
             }
@@ -390,11 +403,11 @@ function getBot() {
                 }
                 const discount = parseFloat(await getSetting('withdraw_discount_percent', '10'));
                 const net = amount - (amount * (discount / 100));
-                const acc = pendingWithdrawals[userId].targetAccount;
+                const acc = pendingData[userId].targetAccount;
 
                 await updateBalance(userId, -amount);
                 delete userStates[userId];
-                delete pendingWithdrawals[userId];
+                delete pendingData[userId];
 
                 const res = await db.run(
                     'INSERT INTO transactions (user_id, type, amount, net_amount, target_account, status) VALUES (?, "withdraw", ?, ?, ?, "pending")',
@@ -412,7 +425,7 @@ function getBot() {
             }
 
             if (state === 'awaiting_gift_target_id') {
-                pendingGifts[userId] = { targetId: text };
+                pendingData[userId] = { targetId: text };
                 userStates[userId] = 'awaiting_gift_amount';
                 return ctx.reply(`أدخل المبلغ المراد إهداؤه لـ \`${text}\`:`, { parse_mode: 'Markdown' });
             }
@@ -420,7 +433,7 @@ function getBot() {
             if (state === 'awaiting_gift_amount') {
                 const amount = parseFloat(text);
                 const user = await getUser(userId);
-                const targetId = pendingGifts[userId].targetId;
+                const targetId = pendingData[userId].targetId;
 
                 if (isNaN(amount) || amount <= 0 || user.balance < amount) {
                     delete userStates[userId];
@@ -431,7 +444,7 @@ function getBot() {
                 await updateBalance(userId, -amount);
                 await updateBalance(targetId, amount);
                 delete userStates[userId];
-                delete pendingGifts[userId];
+                delete pendingData[userId];
 
                 await ctx.reply(`🎉 تم إرسال الهدية فوراً بنجاح!`);
                 await bot.telegram.sendMessage(targetId, `🎁 **وصلتك هدية جديدة!**\nتم تحويل ${amount} إلى حسابك فوراً.`).catch(() => {});
@@ -448,7 +461,7 @@ function getBot() {
     });
 
     bot.action(/^approve_with_(\d+)$/, async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
+        await ctx.answerCbQuery('تم تأكيد السحب').catch(() => {});
         const txId = ctx.match[1];
         const db = await getDb();
         const tx = await db.get('SELECT * FROM transactions WHERE id = ? AND status = "pending"', [txId]);
@@ -460,7 +473,7 @@ function getBot() {
     });
 
     bot.action(/^reject_with_(\d+)$/, async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
+        await ctx.answerCbQuery('تم رفض السحب').catch(() => {});
         const txId = ctx.match[1];
         const db = await getDb();
         const tx = await db.get('SELECT * FROM transactions WHERE id = ? AND status = "pending"', [txId]);
@@ -526,7 +539,7 @@ module.exports = async (req, res) => {
                 </head>
                 <body>
                     <div class="container">
-                        <h2>🚀 لوحة إدارة بوت سوخوي (الحسابات، التطبيقات، وأسعار الصرف)</h2>
+                        <h2>🚀 لوحة إدارة بوت سوخوي (الإعدادات وأسعار الصرف)</h2>
                         <form method="POST">
                             <fieldset>
                                 <legend>📱 سيرياتيل كاش</legend>
@@ -573,7 +586,7 @@ module.exports = async (req, res) => {
             res.setHeader('Content-Type', 'text/html; charset=utf-8');
             return res.status(200).send(`
                 <body style="background:#0f172a;color:#4ade80;text-align:center;padding-top:50px;font-family:Tahoma;">
-                    <h2>✅ تم حفظ الإعدادات والحسابات وأسعار الصرف بنجاح تام!</h2>
+                    <h2>✅ تم حفظ الإعدادات بنجاح تام!</h2>
                     <br><a href="/" style="color:#38bdf8;text-decoration:none;font-size:18px;">⬅️ العودة للوحة التحكم</a>
                 </body>
             `);
