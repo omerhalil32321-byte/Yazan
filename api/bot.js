@@ -144,27 +144,12 @@ function createBot() {
     bot.action('admin_panel', async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         if (ctx.from.id !== ADMIN_ID) return;
-        return ctx.editMessageText(`⚙️ **لوحة تحكم الأدمن الخاصة:**\n\n- يمكنك إرسال ملفات APK أو فيديوهات الشرح مباشرة إلى البوت ليتم حفظها.\n- يمكنك إدارة أسعار الصرف وحسابات الاستلام من موقع Vercel.`, {
+        return ctx.editMessageText(`⚙️ **لوحة تحكم الأدمن:**\n\n- إدارة الحسابات وأسعار الصرف تتم عبر موقع Vercel.\n- تنبيهات الحوالات والقبول الفوري تعمل هنا بنظام مباشر.`, {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([
-                [Markup.button.callback('📤 رفع ملف APK جديد', 'admin_upload_apk'), Markup.button.callback('🎬 رفع فيديو الشرح', 'admin_upload_video')],
                 [Markup.button.callback('رجوع ↩️', 'main_menu')]
             ])
         });
-    });
-
-    bot.action('admin_upload_apk', async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
-        if (ctx.from.id !== ADMIN_ID) return;
-        await setUserState(ADMIN_ID, 'admin_waiting_apk');
-        return ctx.reply('📱 أرسل ملف الـ (APK) الآن في رسالة وسأقوم بحفظه للأدمن فقط:');
-    });
-
-    bot.action('admin_upload_video', async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
-        if (ctx.from.id !== ADMIN_ID) return;
-        await setUserState(ADMIN_ID, 'admin_waiting_video');
-        return ctx.reply('🎬 أرسل فيديو الشرح (الذي يوضح مكان رقم العملية والمبلغ) الآن في رسالة:');
     });
 
     bot.action('deposit_menu', async (ctx) => {
@@ -309,40 +294,13 @@ function createBot() {
         });
     });
 
-    // معالجة استقبال الملفات والفيديوهات الخاصة بالأدمن فقط
-    bot.on(['document', 'video', 'text'], async (ctx) => {
+    bot.on('text', async (ctx) => {
         try {
             const userId = ctx.from.id;
             const user = await getUser(userId);
             const state = user.state;
-            const db = await getDb();
-
-            // معالجة رفع الأدمن للـ APK
-            if (userId === ADMIN_ID && state === 'admin_waiting_apk') {
-                if (ctx.message.document) {
-                    const fileId = ctx.message.document.file_id;
-                    await setSetting('admin_apk_file_id', fileId);
-                    await setUserState(ADMIN_ID, null);
-                    return ctx.reply('✅ تم حفظ ملف الـ APK بنجاح للأدمن!');
-                } else {
-                    return ctx.reply('❌ يرجى إرسال ملف APK (Document) صالح.');
-                }
-            }
-
-            // معالجة رفع الأدمن لفيديو الشرح
-            if (userId === ADMIN_ID && state === 'admin_waiting_video') {
-                if (ctx.message.video || ctx.message.document) {
-                    const fileId = ctx.message.video ? ctx.message.video.file_id : ctx.message.document.file_id;
-                    await setSetting('admin_video_file_id', fileId);
-                    await setUserState(ADMIN_ID, null);
-                    return ctx.reply('✅ تم حفظ فيديو الشرح (الذي يوضح مكان رقم العملية والمبلغ) بنجاح للأدمن!');
-                } else {
-                    return ctx.reply('❌ يرجى إرسال فيديو صالح.');
-                }
-            }
-
-            if (!ctx.message.text) return;
             const text = ctx.message.text.trim();
+            const db = await getDb();
 
             if (!state) {
                 return ctx.reply('⚠️ يرجى اختيار العملية من القائمة الرئيسية أو الضغط على /start للبدء.');
@@ -374,24 +332,21 @@ function createBot() {
                 const methodKey = temp.methodKey || 'syriatel';
                 const method = temp.paymentMethod || 'سيرياتيل كاش';
 
-                const rate = parseFloat(await getSetting(`${methodKey}_rate`, '100'));
-                const bonus = parseFloat(await getSetting('deposit_bonus_percent', '10'));
-
-                const multipliedAmount = amount * rate;
-                const net = multipliedAmount + (multipliedAmount * (bonus / 100));
-
                 await setUserState(userId, null, null);
-                await updateBalance(userId, net);
 
+                // إرسال تنبيه فوري للأدمن مع أزرار القبول الفوري لإضافة الرصيد للزبون
                 const res = await db.run(
-                    'INSERT INTO transactions (user_id, type, amount, net_amount, transaction_id, target_account, status) VALUES (?, "deposit", ?, ?, ?, ?, "approved")',
-                    [userId, amount, net, txId, method]
+                    'INSERT INTO transactions (user_id, type, amount, net_amount, transaction_id, target_account, status) VALUES (?, "deposit", ?, 0, ?, ?, "pending")',
+                    [userId, amount, txId, method]
                 );
 
-                await ctx.reply(`✅ **تم شحن حسابك تلقائياً بنجاح!**\n\n💵 المبلغ المدخل: ${amount}\n🔄 معامل الصرف: x${rate}\n🎁 مع بونص الإيداع (%${bonus}): **${net} SYP**`);
+                await ctx.reply(`✅ **تم إرسال طلب الشحن بنجاح!**\n\n⏳ طلبك قيد المراجعة الفورية من قبل الإدارة وسيتم إضافة الرصيد خلال لحظات.`);
                 
-                await bot.telegram.sendMessage(ADMIN_ID, `⚡ **عملية شحن تلقائية ناجحة (#${res.lastID})**\n\n👤 ID: \`${userId}\`\n💳 البنك: \`${method}\`\n🔢 رقم العملية: \`${txId}\`\n💰 الأساسي: ${amount} -> المضاعف: ${multipliedAmount}\n🎁 النهائي المضاف: **${net}**`, {
-                    parse_mode: 'Markdown'
+                await bot.telegram.sendMessage(ADMIN_ID, `📥 **طلب شحن جديد للمراجعة والقَبول (#${res.lastID})**\n\n👤 ID: \`${userId}\`\n💳 البنك: \`${method}\`\n🔢 رقم العملية: \`${txId}\`\n💵 المبلغ: **${amount} SYP**`, {
+                    parse_mode: 'Markdown',
+                    ...Markup.inlineKeyboard([
+                        [Markup.button.callback('✅ قبول وإضافة الرصيد فوراً', `approve_dep_${res.lastID}`), Markup.button.callback('❌ رفض', `reject_dep_${res.lastID}`)]
+                    ])
                 });
 
                 return sendMainMenu(ctx, await getUser(userId));
@@ -464,6 +419,43 @@ function createBot() {
                 return sendMainMenu(ctx, await getUser(userId));
             }
         } catch (e) { console.error(e); }
+    });
+
+    // معالجة قبول الأدمن للإيداع وشحن الرصيد للزبون فوراً مع احتساب المضاعفة والبونص
+    bot.action(/^approve_dep_(\d+)$/, async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        const txId = ctx.match[1];
+        const db = await getDb();
+        const tx = await db.get('SELECT * FROM transactions WHERE id = ? AND status = "pending"', [txId]);
+        if (tx) {
+            let methodKey = 'syriatel';
+            if (tx.target_account.includes('شام')) methodKey = 'shamcash';
+            if (tx.target_account.includes('USDT')) methodKey = 'usdt';
+
+            const rate = parseFloat(await getSetting(`${methodKey}_rate`, '100'));
+            const bonus = parseFloat(await getSetting('deposit_bonus_percent', '10'));
+
+            const multipliedAmount = tx.amount * rate;
+            const net = multipliedAmount + (multipliedAmount * (bonus / 100));
+
+            await db.run('UPDATE transactions SET status = "approved", net_amount = ? WHERE id = ?', [net, txId]);
+            await updateBalance(tx.user_id, net);
+
+            await ctx.editMessageText(`${ctx.callbackQuery.message.text}\n\n✅ **تم قبول الشحن وإضافة مبلغ ${net} SYP لرصيد الزبون بنجاح.**`);
+            await bot.telegram.sendMessage(tx.user_id, `🎉 **تم قبول وتأكيد عملية الشحن بنجاح!**\n\n💰 تمت إضافة **${net} SYP** إلى رصيدك.`);
+        }
+    });
+
+    bot.action(/^reject_dep_(\d+)$/, async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        const txId = ctx.match[1];
+        const db = await getDb();
+        const tx = await db.get('SELECT * FROM transactions WHERE id = ? AND status = "pending"', [txId]);
+        if (tx) {
+            await db.run('UPDATE transactions SET status = "rejected" WHERE id = ?', [txId]);
+            await ctx.editMessageText(`${ctx.callbackQuery.message.text}\n\n❌ **تم رفض عملية الشحن.**`);
+            await bot.telegram.sendMessage(tx.user_id, `❌ نعتذر، تم رفض عملية الشحن لعدم صحة رقم العملية أو المبلغ.`);
+        }
     });
 
     bot.action(/^approve_with_(\d+)$/, async (ctx) => {
