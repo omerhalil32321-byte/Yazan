@@ -41,16 +41,10 @@ async function getDb() {
 
     const defaults = {
         'syriatel': '87524496',
-        'syriatel_apk': 'https://t.me/A_ToolsX',
-        'syriatel_video': 'https://t.me/A_ToolsX',
         'syriatel_rate': '100',
         'shamcash': '0912345678',
-        'shamcash_apk': 'https://t.me/A_ToolsX',
-        'shamcash_video': 'https://t.me/A_ToolsX',
         'shamcash_rate': '1',
         'usdt': 'TXXXXXXXXXXXXXX',
-        'usdt_apk': 'https://t.me/A_ToolsX',
-        'usdt_video': 'https://t.me/A_ToolsX',
         'usdt_rate': '1',
         'deposit_bonus_percent': '10',
         'withdraw_discount_percent': '10'
@@ -150,10 +144,27 @@ function createBot() {
     bot.action('admin_panel', async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         if (ctx.from.id !== ADMIN_ID) return;
-        return ctx.editMessageText(`⚙️ **لوحة تحكم الأدمن:**\n\nافتح موقعك على Vercel من المتصفح لإدارة الحسابات وأسعار الصرف.`, {
+        return ctx.editMessageText(`⚙️ **لوحة تحكم الأدمن الخاصة:**\n\n- يمكنك إرسال ملفات APK أو فيديوهات الشرح مباشرة إلى البوت ليتم حفظها.\n- يمكنك إدارة أسعار الصرف وحسابات الاستلام من موقع Vercel.`, {
             parse_mode: 'Markdown',
-            ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
+            ...Markup.inlineKeyboard([
+                [Markup.button.callback('📤 رفع ملف APK جديد', 'admin_upload_apk'), Markup.button.callback('🎬 رفع فيديو الشرح', 'admin_upload_video')],
+                [Markup.button.callback('رجوع ↩️', 'main_menu')]
+            ])
         });
+    });
+
+    bot.action('admin_upload_apk', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        if (ctx.from.id !== ADMIN_ID) return;
+        await setUserState(ADMIN_ID, 'admin_waiting_apk');
+        return ctx.reply('📱 أرسل ملف الـ (APK) الآن في رسالة وسأقوم بحفظه للأدمن فقط:');
+    });
+
+    bot.action('admin_upload_video', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        if (ctx.from.id !== ADMIN_ID) return;
+        await setUserState(ADMIN_ID, 'admin_waiting_video');
+        return ctx.reply('🎬 أرسل فيديو الشرح (الذي يوضح مكان رقم العملية والمبلغ) الآن في رسالة:');
     });
 
     bot.action('deposit_menu', async (ctx) => {
@@ -168,31 +179,22 @@ function createBot() {
         ]));
     });
 
-    // تم إصلاح الـ Regex هنا لاستخراج المفتاح بدقة وتجنب أي تعليق
     bot.action(/^pay_(.+)$/, async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         const userId = ctx.from.id;
-        const methodKey = ctx.match[1]; // استخراج المفتاح الصحيح مثل syriatel, shamcash, usdt
+        const methodKey = ctx.match[1];
 
         let num = '';
         let name = '';
-        let apkUrl = '';
-        let videoUrl = '';
 
         if (methodKey === 'syriatel') {
             num = await getSetting('syriatel', '87524496');
-            apkUrl = await getSetting('syriatel_apk', 'https://t.me/A_ToolsX');
-            videoUrl = await getSetting('syriatel_video', 'https://t.me/A_ToolsX');
             name = 'سيرياتيل كاش';
         } else if (methodKey === 'shamcash') {
             num = await getSetting('shamcash', '0912345678');
-            apkUrl = await getSetting('shamcash_apk', 'https://t.me/A_ToolsX');
-            videoUrl = await getSetting('shamcash_video', 'https://t.me/A_ToolsX');
             name = 'شام كاش';
         } else if (methodKey === 'usdt') {
             num = await getSetting('usdt', 'TXXXXXXXXXXXXXX');
-            apkUrl = await getSetting('usdt_apk', 'https://t.me/A_ToolsX');
-            videoUrl = await getSetting('usdt_video', 'https://t.me/A_ToolsX');
             name = 'USDT';
         }
 
@@ -203,7 +205,6 @@ function createBot() {
         return ctx.reply(text, {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([
-                [Markup.button.url(`تحميل تطبيق ${name} APK 📱`, apkUrl), Markup.button.url('فيديو الشرح 🎬', videoUrl)],
                 [Markup.button.callback('رجوع ↩️', 'deposit_menu'), Markup.button.callback('القائمة الرئيسية 🏠', 'main_menu')]
             ])
         });
@@ -308,13 +309,40 @@ function createBot() {
         });
     });
 
-    bot.on('text', async (ctx) => {
+    // معالجة استقبال الملفات والفيديوهات الخاصة بالأدمن فقط
+    bot.on(['document', 'video', 'text'], async (ctx) => {
         try {
             const userId = ctx.from.id;
             const user = await getUser(userId);
             const state = user.state;
-            const text = ctx.message.text.trim();
             const db = await getDb();
+
+            // معالجة رفع الأدمن للـ APK
+            if (userId === ADMIN_ID && state === 'admin_waiting_apk') {
+                if (ctx.message.document) {
+                    const fileId = ctx.message.document.file_id;
+                    await setSetting('admin_apk_file_id', fileId);
+                    await setUserState(ADMIN_ID, null);
+                    return ctx.reply('✅ تم حفظ ملف الـ APK بنجاح للأدمن!');
+                } else {
+                    return ctx.reply('❌ يرجى إرسال ملف APK (Document) صالح.');
+                }
+            }
+
+            // معالجة رفع الأدمن لفيديو الشرح
+            if (userId === ADMIN_ID && state === 'admin_waiting_video') {
+                if (ctx.message.video || ctx.message.document) {
+                    const fileId = ctx.message.video ? ctx.message.video.file_id : ctx.message.document.file_id;
+                    await setSetting('admin_video_file_id', fileId);
+                    await setUserState(ADMIN_ID, null);
+                    return ctx.reply('✅ تم حفظ فيديو الشرح (الذي يوضح مكان رقم العملية والمبلغ) بنجاح للأدمن!');
+                } else {
+                    return ctx.reply('❌ يرجى إرسال فيديو صالح.');
+                }
+            }
+
+            if (!ctx.message.text) return;
+            const text = ctx.message.text.trim();
 
             if (!state) {
                 return ctx.reply('⚠️ يرجى اختيار العملية من القائمة الرئيسية أو الضغط على /start للبدء.');
@@ -477,18 +505,12 @@ module.exports = async (req, res) => {
 
         if (req.method === 'GET') {
             const s = await getSetting('syriatel', '87524496');
-            const s_apk = await getSetting('syriatel_apk', '');
-            const s_vid = await getSetting('syriatel_video', '');
             const s_rate = await getSetting('syriatel_rate', '100');
 
             const sh = await getSetting('shamcash', '0912345678');
-            const sh_apk = await getSetting('shamcash_apk', '');
-            const sh_vid = await getSetting('shamcash_video', '');
             const sh_rate = await getSetting('shamcash_rate', '1');
 
             const us = await getSetting('usdt', 'TXXXXXXXXXXXXXX');
-            const us_apk = await getSetting('usdt_apk', '');
-            const us_vid = await getSetting('usdt_video', '');
             const us_rate = await getSetting('usdt_rate', '1');
 
             const bo = await getSetting('deposit_bonus_percent', '10');
@@ -521,24 +543,18 @@ module.exports = async (req, res) => {
                             <fieldset>
                                 <legend>📱 سيرياتيل كاش</legend>
                                 <div class="form-group"><label>رقم الحساب:</label><input type="text" name="syriatel" value="${s}"></div>
-                                <div class="form-group"><label>رابط تطبيق APK:</label><input type="text" name="syriatel_apk" value="${s_apk}"></div>
-                                <div class="form-group"><label>رابط فيديو الشرح:</label><input type="text" name="syriatel_video" value="${s_vid}"></div>
                                 <div class="form-group"><label>معامل المضاعفة أو سعر الصرف:</label><input type="text" name="syriatel_rate" value="${s_rate}"></div>
                             </fieldset>
 
                             <fieldset>
                                 <legend>💳 شام كاش</legend>
                                 <div class="form-group"><label>رقم الحساب:</label><input type="text" name="shamcash" value="${sh}"></div>
-                                <div class="form-group"><label>رابط تطبيق APK:</label><input type="text" name="shamcash_apk" value="${sh_apk}"></div>
-                                <div class="form-group"><label>رابط فيديو الشرح:</label><input type="text" name="shamcash_video" value="${sh_vid}"></div>
                                 <div class="form-group"><label>معامل المضاعفة أو سعر الصرف:</label><input type="text" name="shamcash_rate" value="${sh_rate}"></div>
                             </fieldset>
 
                             <fieldset>
                                 <legend>🌐 USDT</legend>
                                 <div class="form-group"><label>رابط المحفظة:</label><input type="text" name="usdt" value="${us}"></div>
-                                <div class="form-group"><label>رابط تطبيق APK:</label><input type="text" name="usdt_apk" value="${us_apk}"></div>
-                                <div class="form-group"><label>رابط فيديو الشرح:</label><input type="text" name="usdt_video" value="${us_vid}"></div>
                                 <div class="form-group"><label>معامل المضاعفة أو سعر الصرف:</label><input type="text" name="usdt_rate" value="${us_rate}"></div>
                             </fieldset>
 
