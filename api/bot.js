@@ -143,7 +143,6 @@ function getBot() {
         return sendMainMenu(ctx, user);
     });
 
-    // استجابة فورية لجميع أزرار الـ Callback بدون أي تأخير
     bot.action('main_menu', async (ctx) => {
         await ctx.answerCbQuery('القائمة الرئيسية 🏠').catch(() => {});
         const user = await getUser(ctx.from.id);
@@ -172,7 +171,7 @@ function getBot() {
     });
 
     bot.action(/^pay_/, async (ctx) => {
-        await ctx.answerCbQuery('جاري تحميل تفاصيل الحساب...').catch(() => {});
+        await ctx.answerCbQuery('جاري إحضار رقم الحساب...').catch(() => {});
         const userId = ctx.from.id;
         const method = ctx.match[0];
         
@@ -207,23 +206,18 @@ function getBot() {
 
         const text = `⚡ قم بالتحويل عبر **${name}** إلى الحساب التالي:\n\n\`${num}\`\n\n👇 **الخطوة الأولى:** أرسل **رقم العملية** الآن في رسالة:`;
         
+        // إرسال رسالة جديدة تضمن عدم تعليق الأزرار نهائياً وتظهر الحسابات بوضوح
         try {
-            return await ctx.editMessageText(text, {
-                parse_mode: 'Markdown',
-                ...Markup.inlineKeyboard([
-                    [Markup.button.url(`تحميل تطبيق ${name} APK 📱`, apkUrl), Markup.button.url('فيديو الشرح 🎬', videoUrl)],
-                    [Markup.button.callback('رجوع ↩️', 'deposit_menu'), Markup.button.callback('القائمة الرئيسية 🏠', 'main_menu')]
-                ])
-            });
-        } catch (e) {
-            return await ctx.reply(text, {
-                parse_mode: 'Markdown',
-                ...Markup.inlineKeyboard([
-                    [Markup.button.url(`تحميل تطبيق ${name} APK 📱`, apkUrl), Markup.button.url('فيديو الشرح 🎬', videoUrl)],
-                    [Markup.button.callback('رجوع ↩️', 'deposit_menu'), Markup.button.callback('القائمة الرئيسية 🏠', 'main_menu')]
-                ])
-            });
-        }
+            await ctx.deleteMessage().catch(() => {});
+        } catch (e) {}
+
+        return ctx.reply(text, {
+            parse_mode: 'Markdown',
+            ...Markup.inlineKeyboard([
+                [Markup.button.url(`تحميل تطبيق ${name} APK 📱`, apkUrl), Markup.button.url('فيديو الشرح 🎬', videoUrl)],
+                [Markup.button.callback('رجوع ↩️', 'deposit_menu'), Markup.button.callback('القائمة الرئيسية 🏠', 'main_menu')]
+            ])
+        });
     });
 
     bot.action('account_menu', async (ctx) => {
@@ -454,7 +448,7 @@ function getBot() {
             if (state === 'awaiting_support_message') {
                 delete userStates[userId];
                 await bot.telegram.sendMessage(ADMIN_ID, `💬 **رسالة دعم فورية**\n\n👤 ID: \`${userId}\`\n\n${text}`, { parse_mode: 'Markdown' });
-                await ctx.reply('✅ تم إرسال رسالتك للإدارة بنجاح.');
+                await ctx.reply('✅ تم إرسال رسالتك للدعم بنجاح.');
                 return sendMainMenu(ctx, await getUser(userId));
             }
         } catch (e) { console.error(e); }
