@@ -63,9 +63,25 @@ function getBot() {
         let user = await db.get('SELECT * FROM users WHERE user_id = ?', [userId]);
         if (!user) {
             await db.run('INSERT INTO users (user_id, balance) VALUES (?, 0)', [userId]);
-            user = { user_id: userId, balance: 0 };
+            user = { user_id: userId, balance: 0, ichancy_user: null, ichancy_pass: null };
         }
         return user;
+    }
+
+    async function updateBalance(userId, amount) {
+        const db = await getDb();
+        await db.run('UPDATE users SET balance = balance + ? WHERE user_id = ?', [amount, userId]);
+    }
+
+    async function getSetting(key, def = '') {
+        const db = await getDb();
+        const row = await db.get('SELECT setting_value FROM settings WHERE setting_key = ?', [key]);
+        return (row && row.setting_value) ? row.setting_value : def;
+    }
+
+    async function setSetting(key, val) {
+        const db = await getDb();
+        await db.run('INSERT OR REPLACE INTO settings (setting_key, setting_value) VALUES (?, ?)', [key, val]);
     }
 
     async function sendMainMenu(ctx, user) {
@@ -89,15 +105,345 @@ function getBot() {
         }
     }
 
+    async function renderAdmin(ctx, isEdit = true) {
+        const s = await getSetting('syriatel', '87524496');
+        const sh = await getSetting('shamcash', '0912345678');
+        const us = await getSetting('usdt', 'TXXXXXXXXXXXXXX');
+        const bo = await getSetting('deposit_bonus_percent', '10');
+        const di = await getSetting('withdraw_discount_percent', '10');
+
+        const text = `⚙️ **لوحة التحكم والإعدادات الحالية:**\n\n` +
+            `📱 سيرياتيل كاش: \`${s}\`\n` +
+            `💳 شام كاش: \`${sh}\`\n` +
+            `🌐 USDT: \`${us}\`\n` +
+            `🎁 بونص الإيداع: **%${bo}**\n` +
+            `🔻 عمولة السحب: **%${di}**\n\n` +
+            `اضغط على الزر لتعديل قيمته عبر الدردشة:`;
+
+        const kb = Markup.inlineKeyboard([
+            [Markup.button.callback('تعديل سيرياتيل 📱', 'set_syriatel'), Markup.button.callback('تعديل شام كاش 💳', 'set_shamcash')],
+            [Markup.button.callback('تعديل USDT 🌐', 'set_usdt')],
+            [Markup.button.callback('تعديل البونص 🎁', 'set_bonus'), Markup.button.callback('تعديل العمولة 🔻', 'set_discount')],
+            [Markup.button.callback('رجوع ↩️', 'main_menu')]
+        ]);
+
+        if (isEdit && ctx.callbackQuery) {
+            return ctx.editMessageText(text, { parse_mode: 'Markdown', ...kb }).catch(() => {});
+        }
+        return ctx.reply(text, { parse_mode: 'Markdown', ...kb });
+    }
+
     bot.start(async (ctx) => {
-        const user = await getUser(ctx.from.id);
+        const userId = ctx.from.id;
+        delete userStates[userId];
+        const user = await getUser(userId);
         return sendMainMenu(ctx, user);
     });
 
     bot.action('main_menu', async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
+        delete userStates[ctx.from.id];
         const user = await getUser(ctx.from.id);
         return sendMainMenu(ctx, user);
+    });
+
+    bot.action('admin_panel', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        if (ctx.from.id !== ADMIN_ID) return;
+        delete userStates[ADMIN_ID];
+        return renderAdmin(ctx, true);
+    });
+
+    bot.action(/^set_/, async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        if (ctx.from.id !== ADMIN_ID) return;
+        const action = ctx.match[0];
+        userStates[ADMIN_ID] = action;
+        const p = {
+            'set_syriatel': '📱 أرسل رقم سيرياتيل كاش الجديد:',
+            'set_shamcash': '💳 أرسل رقم شام كاش الجديد:',
+            'set_usdt': '🌐 أرسل عنوان محفظة USDT الجديد:',
+            'set_bonus': '🎁 أرسل نسبة بونص الإيداع الجديدة (رقم فقط):',
+            'set_discount': '🔻 أرسل نسبة عمولة السحب الجديدة (رقم فقط):'
+        };
+        return ctx.editMessageText(p[action], Markup.inlineKeyboard([[Markup.button.callback('إلغاء ❌', 'admin_panel')]]));
+    });
+
+    bot.action('deposit_menu', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        return ctx.editMessageText('اختر طريقة الشحن المتاحة:', Markup.inlineKeyboard([
+            [Markup.button.callback('سيرياتيل كاش 📱', 'pay_syriatel')],
+            [Markup.button.callback('شام كاش 💳', 'pay_shamcash')],
+            [Markup.button.callback('USDT 🌐', 'pay_usdt')],
+            [Markup.button.callback('رجوع ↩️', 'main_menu')]
+        ]));
+    });
+
+    bot.action(/^pay_/, async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        const userId = ctx.from.id;
+        const method = ctx.match[0];
+        userStates[userId] = 'awaiting_transaction_number';
+        pendingDeposits[userId] = {};
+
+        let num = method === 'pay_syriatel' ? await getSetting('syriatel', '87524496') :
+                  method === 'pay_shamcash' ? await getSetting('shamcash', '0912345678') : await getSetting('usdt', 'TXXXXXXXXXXXXXX');
+        let name = method === 'pay_syriatel' ? 'سيرياتيل كاش' : method === 'pay_shamcash' ? 'شام كاش' : 'USDT';
+
+        return ctx.editMessageText(`قم بالتحويل عبر **${name}** إلى الرقم التالي:\n\n\`${num}\`\n\nأدخل رقم العملية الآن:`, {
+            parse_mode: 'Markdown',
+            ...Markup.inlineKeyboard([[Markup.button.callback('إلغاء ❌', 'main_menu')]])
+        });
+    });
+
+    bot.action('account_menu', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        const userId = ctx.from.id;
+        const user = await getUser(userId);
+        if (!user.ichancy_user) {
+            userStates[userId] = 'awaiting_account_creation';
+            return ctx.editMessageText('أدخل اسم المستخدم المراد إنشاؤه على آيسانسي:', Markup.inlineKeyboard([
+                [Markup.button.callback('إلغاء ↩️', 'main_menu')]
+            ]));
+        } else {
+            return ctx.editMessageText(`حسابك على آيسانسي:\n\nالمستخدم: \`${user.ichancy_user}\`\nكلمة المرور: \`${user.ichancy_pass}\``, {
+                parse_mode: 'Markdown',
+                ...Markup.inlineKeyboard([
+                    [Markup.button.callback('سحب رصيد 💸', 'withdraw_menu'), Markup.button.callback('شحن رصيد 🪙', 'deposit_menu')],
+                    [Markup.button.callback('رجوع ↩️', 'main_menu')]
+                ])
+            });
+        }
+    });
+
+    bot.action('withdraw_menu', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        userStates[ctx.from.id] = 'awaiting_withdraw_account';
+        pendingWithdrawals[ctx.from.id] = {};
+        return ctx.editMessageText('أدخل رقم الحساب أو المحفظة المراد السحب إليها:', Markup.inlineKeyboard([
+            [Markup.button.callback('إلغاء ❌', 'main_menu')]
+        ]));
+    });
+
+    bot.action('gift_menu', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        userStates[ctx.from.id] = 'awaiting_gift_target_id';
+        pendingGifts[ctx.from.id] = {};
+        return ctx.editMessageText('🎁 أدخل أيدي (ID) الصديق المراد إرسال الهدية له:', Markup.inlineKeyboard([
+            [Markup.button.callback('إلغاء ❌', 'main_menu')]
+        ]));
+    });
+
+    bot.action('offers', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        const b = await getSetting('deposit_bonus_percent', '10');
+        const d = await getSetting('withdraw_discount_percent', '10');
+        return ctx.editMessageText(`🎁 **العروض النشطة:**\n\n✨ بونص إيداع: +${b}\%\n🔻 عمولة سحب: ${d}%`, {
+            parse_mode: 'Markdown',
+            ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
+        });
+    });
+
+    bot.action('referrals_menu', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        const userId = ctx.from.id;
+        const db = await getDb();
+        const row = await db.get('SELECT COUNT(*) as count FROM users WHERE referrer_id = ?', [userId]);
+        return ctx.editMessageText(`👥 **الإحالات**\n\nعدد إحالاتك: ${row ? row.count : 0}`, {
+            parse_mode: 'Markdown',
+            ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
+        });
+    });
+
+    bot.action('support_menu', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        userStates[ctx.from.id] = 'awaiting_support_message';
+        return ctx.editMessageText('💬 أكتب رسالتك وستصل إلى الإدارة فوراً:', Markup.inlineKeyboard([
+            [Markup.button.callback('إلغاء ❌', 'main_menu')]
+        ]));
+    });
+
+    bot.on('text', async (ctx) => {
+        try {
+            const userId = ctx.from.id;
+            const state = userStates[userId];
+            const text = ctx.message.text.trim();
+            const db = await getDb();
+
+            if (userId === ADMIN_ID && state && state.startsWith('set_')) {
+                const map = {
+                    'set_syriatel': 'syriatel',
+                    'set_shamcash': 'shamcash',
+                    'set_usdt': 'usdt',
+                    'set_bonus': 'deposit_bonus_percent',
+                    'set_discount': 'withdraw_discount_percent'
+                };
+                await setSetting(map[state], text);
+                delete userStates[ADMIN_ID];
+                await ctx.reply(`✅ تم الحفظ بنجاح! القيمة الجديدة: \`${text}\``, { parse_mode: 'Markdown' });
+                return renderAdmin(ctx, false);
+            }
+
+            if (state === 'awaiting_account_creation') {
+                const pass = Math.random().toString(36).slice(-6);
+                await db.run('UPDATE users SET ichancy_user = ?, ichancy_pass = ? WHERE user_id = ?', [text, pass, userId]);
+                delete userStates[userId];
+                await ctx.reply('✅ تم إنشاء حسابك على آيسانسي بنجاح!');
+                return sendMainMenu(ctx, await getUser(userId));
+            }
+
+            if (state === 'awaiting_transaction_number') {
+                pendingDeposits[userId] = { transactionId: text };
+                userStates[userId] = 'awaiting_deposit_amount';
+                return ctx.reply('✅ تم استلام رقم العملية. أدخل المبلغ المراد شحنه:');
+            }
+
+            if (state === 'awaiting_deposit_amount') {
+                const amount = parseFloat(text);
+                if (isNaN(amount) || amount <= 0) return ctx.reply('❌ يرجى إدخال مبلغ صحيح.');
+                const bonus = parseFloat(await getSetting('deposit_bonus_percent', '10'));
+                const net = amount + (amount * (bonus / 100));
+                const txId = pendingDeposits[userId].transactionId;
+
+                delete userStates[userId];
+                delete pendingDeposits[userId];
+
+                const res = await db.run(
+                    'INSERT INTO transactions (user_id, type, amount, net_amount, transaction_id, status) VALUES (?, "deposit", ?, ?, ?, "pending")',
+                    [userId, amount, net, txId]
+                );
+
+                await ctx.reply('⏳ تم إرسال طلب الشحن إلى الإدارة للمراجعة.');
+                await bot.telegram.sendMessage(ADMIN_ID, `📥 **طلب شحن جديد (#${res.lastID})**\n\n👤 ID: \`${userId}\`\n🔢 العملية: \`${txId}\`\n💰 المبلغ: ${amount}\n🎁 مع البونص: **${net}**`, {
+                    parse_mode: 'Markdown',
+                    ...Markup.inlineKeyboard([
+                        [Markup.button.callback(`✅ موافقة (${net})`, `approve_dep_${res.lastID}`), Markup.button.callback('❌ رفض', `reject_dep_${res.lastID}`)]
+                    ])
+                });
+                return sendMainMenu(ctx, await getUser(userId));
+            }
+
+            if (state === 'awaiting_withdraw_account') {
+                pendingWithdrawals[userId] = { targetAccount: text };
+                userStates[userId] = 'awaiting_withdraw_amount';
+                return ctx.reply('✅ تم حفظ الحساب. أدخل المبلغ المراد سحبه:');
+            }
+
+            if (state === 'awaiting_withdraw_amount') {
+                const amount = parseFloat(text);
+                const user = await getUser(userId);
+                if (isNaN(amount) || amount <= 0 || user.balance < amount) {
+                    delete userStates[userId];
+                    await ctx.reply('❌ رصيدك غير كافي.');
+                    return sendMainMenu(ctx, user);
+                }
+                const discount = parseFloat(await getSetting('withdraw_discount_percent', '10'));
+                const net = amount - (amount * (discount / 100));
+                const acc = pendingWithdrawals[userId].targetAccount;
+
+                await updateBalance(userId, -amount);
+                delete userStates[userId];
+                delete pendingWithdrawals[userId];
+
+                const res = await db.run(
+                    'INSERT INTO transactions (user_id, type, amount, net_amount, target_account, status) VALUES (?, "withdraw", ?, ?, ?, "pending")',
+                    [userId, amount, net, acc]
+                );
+
+                await ctx.reply(`✅ تم خصم ${amount} وإرسال طلب السحب للإدارة.`);
+                await bot.telegram.sendMessage(ADMIN_ID, `📤 **طلب سحب جديد (#${res.lastID})**\n\n👤 ID: \`${userId}\`\n🏦 الحساب: \`${acc}\`\n💵 الصافي: **${net}**`, {
+                    parse_mode: 'Markdown',
+                    ...Markup.inlineKeyboard([
+                        [Markup.button.callback('✅ تأكيد السحب', `approve_with_${res.lastID}`), Markup.button.callback('❌ رفض وإعادة الرصيد', `reject_with_${res.lastID}`)]
+                    ])
+                });
+                return sendMainMenu(ctx, await getUser(userId));
+            }
+
+            if (state === 'awaiting_gift_target_id') {
+                pendingGifts[userId] = { targetId: text };
+                userStates[userId] = 'awaiting_gift_amount';
+                return ctx.reply(`أدخل المبلغ المراد إهداؤه لـ \`${text}\`:`, { parse_mode: 'Markdown' });
+            }
+
+            if (state === 'awaiting_gift_amount') {
+                const amount = parseFloat(text);
+                const user = await getUser(userId);
+                const targetId = pendingGifts[userId].targetId;
+
+                if (isNaN(amount) || amount <= 0 || user.balance < amount) {
+                    delete userStates[userId];
+                    await ctx.reply('❌ رصيدك غير كافي.');
+                    return sendMainMenu(ctx, user);
+                }
+
+                await updateBalance(userId, -amount);
+                await updateBalance(targetId, amount);
+                delete userStates[userId];
+                delete pendingGifts[userId];
+
+                await ctx.reply(`🎉 تم إرسال الهدية بنجاح!`);
+                await bot.telegram.sendMessage(targetId, `🎁 **وصلتك هدية جديدة!**\nتم تحويل ${amount} إلى حسابك.`).catch(() => {});
+                return sendMainMenu(ctx, await getUser(userId));
+            }
+
+            if (state === 'awaiting_support_message') {
+                delete userStates[userId];
+                await bot.telegram.sendMessage(ADMIN_ID, `💬 **رسالة دعم**\n\n👤 ID: \`${userId}\`\n\n${text}`, { parse_mode: 'Markdown' });
+                await ctx.reply('✅ تم إرسال رسالتك للإدارة بنجاح.');
+                return sendMainMenu(ctx, await getUser(userId));
+            }
+        } catch (e) { console.error(e); }
+    });
+
+    bot.action(/^approve_dep_(\d+)$/, async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        const txId = ctx.match[1];
+        const db = await getDb();
+        const tx = await db.get('SELECT * FROM transactions WHERE id = ? AND status = "pending"', [txId]);
+        if (tx) {
+            await updateBalance(tx.user_id, tx.net_amount);
+            await db.run('UPDATE transactions SET status = "approved" WHERE id = ?', [txId]);
+            await ctx.editMessageText(`${ctx.callbackQuery.message.text}\n\n✅ **تمت الموافقة وشحن الرصيد.**`);
+            await bot.telegram.sendMessage(tx.user_id, `🎉 تم شحن حسابك بمبلغ ${tx.net_amount} بنجاح!`).catch(() => {});
+        }
+    });
+
+    bot.action(/^reject_dep_(\d+)$/, async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        const txId = ctx.match[1];
+        const db = await getDb();
+        const tx = await db.get('SELECT * FROM transactions WHERE id = ? AND status = "pending"', [txId]);
+        if (tx) {
+            await db.run('UPDATE transactions SET status = "rejected" WHERE id = ?', [txId]);
+            await ctx.editMessageText(`${ctx.callbackQuery.message.text}\n\n❌ **تم رفض الشحن.**`);
+            await bot.telegram.sendMessage(tx.user_id, `❌ عذراً، تم رفض طلب الشحن الخاص بك.`).catch(() => {});
+        }
+    });
+
+    bot.action(/^approve_with_(\d+)$/, async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        const txId = ctx.match[1];
+        const db = await getDb();
+        const tx = await db.get('SELECT * FROM transactions WHERE id = ? AND status = "pending"', [txId]);
+        if (tx) {
+            await db.run('UPDATE transactions SET status = "approved" WHERE id = ?', [txId]);
+            await ctx.editMessageText(`${ctx.callbackQuery.message.text}\n\n✅ **تم تأكيد السحب.**`);
+            await bot.telegram.sendMessage(tx.user_id, `🎉 تم إتمام وتحويل عملية السحب بنجاح!`).catch(() => {});
+        }
+    });
+
+    bot.action(/^reject_with_(\d+)$/, async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        const txId = ctx.match[1];
+        const db = await getDb();
+        const tx = await db.get('SELECT * FROM transactions WHERE id = ? AND status = "pending"', [txId]);
+        if (tx) {
+            await updateBalance(tx.user_id, tx.amount);
+            await db.run('UPDATE transactions SET status = "rejected" WHERE id = ?', [txId]);
+            await ctx.editMessageText(`${ctx.callbackQuery.message.text}\n\n❌ **تم رفض السحب وإعادة المبلغ للرصيد.**`);
+            await bot.telegram.sendMessage(tx.user_id, `❌ تم رفض السحب وإعادة مبلغ ${tx.amount} إلى رصيدك.`).catch(() => {});
+        }
     });
 
     botInstance = bot;
