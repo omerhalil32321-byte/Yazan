@@ -44,7 +44,9 @@ async function getDb() {
         'shamcash': '0912345678',
         'usdt': 'TXXXXXXXXXXXXXX',
         'deposit_bonus_percent': '10',
-        'withdraw_discount_percent': '10'
+        'withdraw_discount_percent': '10',
+        'apk_url': 'https://t.me/A_ToolsX',
+        'video_url': 'https://t.me/A_ToolsX'
     };
 
     for (const [key, val] of Object.entries(defaults)) {
@@ -93,11 +95,15 @@ function getBot() {
 
     async function sendMainMenu(ctx, user) {
         const userId = ctx.from.id;
+        const apkUrl = await getSetting('apk_url', 'https://t.me/A_ToolsX');
+        const videoUrl = await getSetting('video_url', 'https://t.me/A_ToolsX');
+
         const msg = `📋 **قائمة الخيارات الرئيسية** \n\n💰 الرصيد الحالي: ${user.balance || 0} SYP\n🆔 أيدي حسابك: \`${userId}\``;
         const buttons = [
             [Markup.button.callback('حساب ايسانسي وشحنه ⚡', 'account_menu')],
             [Markup.button.callback('شحن رصيد في البوت 📥', 'deposit_menu'), Markup.button.callback('سحب رصيد من البوت 📤', 'withdraw_menu')],
             [Markup.button.callback('كود جائزة 🏆', 'promo'), Markup.button.callback('إهداء صديق 🎁', 'gift_menu')],
+            [Markup.button.url('تحميل تطبيق البنك APK 📱', apkUrl), Markup.button.url('فيديو الشرح 🎬', videoUrl)],
             [Markup.button.callback('الإحالات 💰', 'referrals_menu')],
             [Markup.button.callback('إرسال رسالة للدعم 💬', 'support_menu'), Markup.button.callback('السجلات 📄', 'logs_menu')],
             [Markup.button.callback('العروض النشطة 🎁', 'offers'), Markup.button.callback('شروط الاستخدام ⚠️', 'terms')]
@@ -118,19 +124,24 @@ function getBot() {
         const us = await getSetting('usdt', 'TXXXXXXXXXXXXXX');
         const bo = await getSetting('deposit_bonus_percent', '10');
         const di = await getSetting('withdraw_discount_percent', '10');
+        const apk = await getSetting('apk_url', '');
+        const vid = await getSetting('video_url', '');
 
         const text = `⚙️ **لوحة التحكم والإعدادات الفورية:**\n\n` +
             `📱 سيرياتيل كاش: \`${s}\`\n` +
             `💳 شام كاش: \`${sh}\`\n` +
             `🌐 USDT: \`${us}\`\n` +
             `🎁 بونص الإيداع: **%${bo}**\n` +
-            `🔻 عمولة السحب: **%${di}**\n\n` +
+            `🔻 عمولة السحب: **%${di}**\n` +
+            `📱 رابط تطبيق APK: \`${apk}\`\n` +
+            `🎬 رابط فيديو الشرح: \`${vid}\`\n\n` +
             `👇 اضغط على الزر لتعديل القيمة فوراً في قاعدة البيانات:`;
 
         const kb = Markup.inlineKeyboard([
             [Markup.button.callback('تعديل سيرياتيل 📱', 'set_syriatel'), Markup.button.callback('تعديل شام كاش 💳', 'set_shamcash')],
             [Markup.button.callback('تعديل USDT 🌐', 'set_usdt')],
             [Markup.button.callback('تعديل البونص 🎁', 'set_bonus'), Markup.button.callback('تعديل العمولة 🔻', 'set_discount')],
+            [Markup.button.callback('تعديل رابط APK 📱', 'set_apk'), Markup.button.callback('تعديل فيديو الشرح 🎬', 'set_video')],
             [Markup.button.callback('رجوع ↩️', 'main_menu')]
         ]);
 
@@ -172,11 +183,13 @@ function getBot() {
         const action = ctx.match[0];
         userStates[ADMIN_ID] = action;
         const p = {
-            'set_syriatel': '📱 أرسل الرقم الجديد لسيرياتيل كاش في رسالة الآن:',
-            'set_shamcash': '💳 أرسل الرقم الجديد لشام كاش في رسالة الآن:',
-            'set_usdt': '🌐 أرسل عنوان USDT الجديد في رسالة الآن:',
+            'set_syriatel': '📱 أرسل الرقم الجديد لسيرياتيل كاش:',
+            'set_shamcash': '💳 أرسل الرقم الجديد لشام كاش:',
+            'set_usdt': '🌐 أرسل عنوان USDT الجديد:',
             'set_bonus': '🎁 أرسل نسبة بونص الإيداع الجديدة (رقم فقط):',
-            'set_discount': '🔻 أرسل نسبة عمولة السحب الجديدة (رقم فقط):'
+            'set_discount': '🔻 أرسل نسبة عمولة السحب الجديدة (رقم فقط):',
+            'set_apk': '📱 أرسل رابط تحميل تطبيق البنك (APK):',
+            'set_video': '🎬 أرسل رابط فيديو الشرح:'
         };
         return ctx.editMessageText(p[action], Markup.inlineKeyboard([[Markup.button.callback('إلغاء ❌', 'admin_panel')]]));
     });
@@ -191,14 +204,10 @@ function getBot() {
         ]));
     });
 
-    // جلب أرقام وحسابات الشحن مباشرة من قاعدة البيانات عند ضغط الزبون
     bot.action(/^pay_/, async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         const userId = ctx.from.id;
         const method = ctx.match[0];
-        userStates[userId] = 'awaiting_transaction_number';
-        pendingDeposits[userId] = {};
-
         let num = '';
         let name = '';
 
@@ -213,8 +222,14 @@ function getBot() {
             name = 'USDT';
         }
 
-        return ctx.editMessageText(`⚡ قم بالتحويل الفوري عبر **${name}** إلى الرقم التالي:\n\n\`${num}\`\n\nأدخل رقم العملية لتأكيد الشحن:`, {
+        userStates[userId] = 'awaiting_transaction_number';
+        pendingDeposits[userId] = { paymentMethod: name };
+
+        const videoUrl = await getSetting('video_url', 'https://t.me/A_ToolsX');
+
+        return ctx.editMessageText(`⚡ قم بالتحويل الفوري عبر **${name}** إلى الرقم التالي:\n\n\`${num}\`\n\n💡 [شاهد فيديو الشرح هنا](${videoUrl})\n\nأدخل رقم العملية لتأكيد الشحن:`, {
             parse_mode: 'Markdown',
+            disable_web_page_preview: true,
             ...Markup.inlineKeyboard([[Markup.button.callback('إلغاء ❌', 'main_menu')]])
         });
     });
@@ -299,11 +314,14 @@ function getBot() {
                     'set_shamcash': 'shamcash',
                     'set_usdt': 'usdt',
                     'set_bonus': 'deposit_bonus_percent',
-                    'set_discount': 'withdraw_discount_percent'
+                    'set_discount': 'withdraw_discount_percent',
+                    'set_apk': 'apk_url',
+                    'set_video': 'video_url'
                 };
-                await setSetting(map[state], text);
+                const settingKey = map[state];
+                await setSetting(settingKey, text);
                 delete userStates[ADMIN_ID];
-                await ctx.reply(`✅ تم الحفظ والتحديث في قاعدة البيانات فوراً إلى: \`${text}\``, { parse_mode: 'Markdown' });
+                await ctx.reply(`✅ تم الحفظ والتحديث في قاعدة البيانات فوراً إلى:\n\`${text}\``, { parse_mode: 'Markdown' });
                 return renderAdmin(ctx, false);
             }
 
@@ -316,7 +334,8 @@ function getBot() {
             }
 
             if (state === 'awaiting_transaction_number') {
-                pendingDeposits[userId] = { transactionId: text };
+                if (!pendingDeposits[userId]) pendingDeposits[userId] = {};
+                pendingDeposits[userId].transactionId = text;
                 userStates[userId] = 'awaiting_deposit_amount';
                 return ctx.reply('✅ تم استلام رقم العملية. أدخل المبلغ المراد شحنه:');
             }
@@ -326,18 +345,21 @@ function getBot() {
                 if (isNaN(amount) || amount <= 0) return ctx.reply('❌ يرجى إدخال مبلغ صحيح.');
                 const bonus = parseFloat(await getSetting('deposit_bonus_percent', '10'));
                 const net = amount + (amount * (bonus / 100));
-                const txId = pendingDeposits[userId].transactionId;
+                
+                const depositData = pendingDeposits[userId] || {};
+                const txId = depositData.transactionId || 'غير محدد';
+                const method = depositData.paymentMethod || 'طريقة إلكترونية';
 
                 delete userStates[userId];
                 delete pendingDeposits[userId];
 
                 const res = await db.run(
-                    'INSERT INTO transactions (user_id, type, amount, net_amount, transaction_id, status) VALUES (?, "deposit", ?, ?, ?, "pending")',
-                    [userId, amount, net, txId]
+                    'INSERT INTO transactions (user_id, type, amount, net_amount, transaction_id, target_account, status) VALUES (?, "deposit", ?, ?, ?, ?, "pending")',
+                    [userId, amount, net, txId, method]
                 );
 
                 await ctx.reply('⏳ تم إرسال طلب الشحن للإدارة للمراجعة الفورية.');
-                await bot.telegram.sendMessage(ADMIN_ID, `📥 **طلب شحن جديد (#${res.lastID})**\n\n👤 ID: \`${userId}\`\n🔢 العملية: \`${txId}\`\n💰 المبلغ: ${amount}\n🎁 مع البونص: **${net}**`, {
+                await bot.telegram.sendMessage(ADMIN_ID, `📥 **طلب شحن جديد (#${res.lastID})**\n\n👤 ID: \`${userId}\`\n💳 الطريقة: \`${method}\`\n🔢 العملية: \`${txId}\`\n💰 المبلغ: ${amount}\n🎁 مع البونص: **${net}**`, {
                     parse_mode: 'Markdown',
                     ...Markup.inlineKeyboard([
                         [Markup.button.callback(`✅ موافقة وشحن فوراً (${net})`, `approve_dep_${res.lastID}`), Markup.button.callback('❌ رفض', `reject_dep_${res.lastID}`)]
@@ -476,12 +498,75 @@ function getBot() {
 module.exports = async (req, res) => {
     try {
         await getDb();
-        const bot = getBot();
+        
+        // إذا قام الأدمن بفتح رابط الموقع مباشرة عبر المتصفح، اعرض له صفحة لوحة التحكم على الويب
+        if (req.method === 'GET' && !req.query?.bot) {
+            const s = await getSetting('syriatel', '87524496');
+            const sh = await getSetting('shamcash', '0912345678');
+            const us = await getSetting('usdt', 'TXXXXXXXXXXXXXX');
+            const bo = await getSetting('deposit_bonus_percent', '10');
+            const di = await getSetting('withdraw_discount_percent', '10');
+            const apk = await getSetting('apk_url', '');
+            const vid = await getSetting('video_url', '');
 
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
+            return res.status(200).send(`
+                <!DOCTYPE html>
+                <html lang="ar" dir="rtl">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>لوحة تحكم بوت سوخوي المالي</title>
+                    <style>
+                        body { font-family: Tahoma, sans-serif; background: #0f172a; color: #f8fafc; padding: 20px; direction: rtl; }
+                        .container { max-width: 600px; margin: 0 auto; background: #1e293b; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+                        h2 { text-align: center; color: #38bdf8; margin-bottom: 25px; }
+                        .form-group { margin-bottom: 15px; }
+                        label { display: block; margin-bottom: 5px; color: #cbd5e1; }
+                        input { width: 100%; padding: 10px; background: #0f172a; border: 1px solid #475569; border-radius: 6px; color: white; box-sizing: border-box; }
+                        button { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 16px; }
+                        button:hover { background: #1d4ed8; }
+                        .msg { text-align: center; margin-top: 15px; color: #4ade80; font-weight: bold; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h2>🚀 لوحة إدارة بوت سوخوي</h2>
+                        <form method="POST">
+                            <div class="form-group"><label>📱 رقم سيرياتيل كاش:</label><input type="text" name="syriatel" value="${s}"></div>
+                            <div class="form-group"><label>💳 رقم شام كاش:</label><input type="text" name="shamcash" value="${sh}"></div>
+                            <div class="form-group"><label>🌐 محفظة USDT:</label><input type="text" name="usdt" value="${us}"></div>
+                            <div class="form-group"><label>🎁 بونص الإيداع (%):</label><input type="text" name="deposit_bonus_percent" value="${bo}"></div>
+                            <div class="form-group"><label>🔻 عمولة السحب (%):</label><input type="text" name="withdraw_discount_percent" value="${di}"></div>
+                            <div class="form-group"><label>📱 رابط تطبيق البنك (APK):</label><input type="text" name="apk_url" value="${apk}"></div>
+                            <div class="form-group"><label>🎬 رابط فيديو الشرح:</label><input type="text" name="video_url" value="${vid}"></div>
+                            <button type="submit">💾 حفظ التحديثات فوراً</button>
+                        </form>
+                    </div>
+                </body>
+                </html>
+            `);
+        }
+
+        // إذا أرسل الأدمن تحديثات من صفحة الويب
+        if (req.method === 'POST' && req.body && req.body.syriatel) {
+            for (const [k, v] of Object.entries(req.body)) {
+                await setSetting(k, v);
+            }
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
+            return res.status(200).send(`
+                <body style="background:#0f172a;color:#4ade80;text-align:center;padding-top:50px;font-family:Tahoma;">
+                    <h2>✅ تم حفظ وتحديث كافة الإعدادات والروابط بنجاح!</h2>
+                    <br><a href="/" style="color:#38bdf8;text-decoration:none;font-size:18px;">⬅️ العودة للوحة التحكم</a>
+                </body>
+            `);
+        }
+
+        const bot = getBot();
         if (req.method === 'POST') {
             await bot.handleUpdate(req.body);
             return res.status(200).json({ status: 'success' });
         }
+        
         return res.status(200).send('Sukhoi Bot Vercel Webhook is active and ready!');
     } catch (e) {
         console.error('Vercel Handler Error:', e);
