@@ -103,7 +103,6 @@ function getBot() {
     if (botInstance) return botInstance;
     const bot = new Telegraf(BOT_TOKEN);
 
-    // القائمة الداخلية السريعة جداً
     async function sendMainMenu(ctx, user) {
         const userId = ctx.from.id;
         await setUserState(userId, null, null);
@@ -145,7 +144,6 @@ function getBot() {
         return sendMainMenu(ctx, user);
     });
 
-    // التنقلات الداخلية (سرعة فائقة واستجابة فورية بدون أي تأخير)
     bot.action('main_menu', async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         const user = await getUser(ctx.from.id);
@@ -176,7 +174,7 @@ function getBot() {
         });
     });
 
-    // معالجة البيانات الخارجية (APKs والروابط على مهلها في الخلفية)
+    // حل نهائي لعدم تعليق أزرار البنوك وظهور الحسابات فوراً عبر إرسال رسالة جديدة
     bot.action(/^pay_/, async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         const userId = ctx.from.id;
@@ -303,7 +301,6 @@ function getBot() {
         return ctx.editMessageText('⚠️ يرجى التأكد من إدخال رقم العملية الصحيح والمبلغ المطابق.', Markup.inlineKeyboard([[Markup.button.callback('↩️ رجوع', 'main_menu')]]));
     });
 
-    // معالجة النصوص (الخطوات بالترتيب الداخلي)
     bot.on('text', async (ctx) => {
         try {
             const userId = ctx.from.id;
@@ -488,7 +485,7 @@ module.exports = async (req, res) => {
                 <html lang="ar" dir="rtl">
                 <head>
                     <meta charset="UTF-8">
-                    <title>لوحة تحكم بوت سوخوي M</title>
+                    <title>لوحة إدارة بوت سوخوي</title>
                     <style>
                         body { font-family: Tahoma; background: #0f172a; color: #f8fafc; padding: 20px; direction: rtl; }
                         .container { max-width: 700px; margin: 0 auto; background: #1e293b; padding: 30px; border-radius: 12px; }
