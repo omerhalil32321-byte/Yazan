@@ -41,12 +41,16 @@ async function getDb() {
 
     const defaults = {
         'syriatel': '87524496',
+        'syriatel_apk': 'https://t.me/A_ToolsX',
+        'syriatel_video': 'https://t.me/A_ToolsX',
         'shamcash': '0912345678',
+        'shamcash_apk': 'https://t.me/A_ToolsX',
+        'shamcash_video': 'https://t.me/A_ToolsX',
         'usdt': 'TXXXXXXXXXXXXXX',
+        'usdt_apk': 'https://t.me/A_ToolsX',
+        'usdt_video': 'https://t.me/A_ToolsX',
         'deposit_bonus_percent': '10',
-        'withdraw_discount_percent': '10',
-        'apk_url': 'https://t.me/A_ToolsX',
-        'video_url': 'https://t.me/A_ToolsX'
+        'withdraw_discount_percent': '10'
     };
 
     for (const [key, val] of Object.entries(defaults)) {
@@ -95,15 +99,11 @@ function getBot() {
 
     async function sendMainMenu(ctx, user) {
         const userId = ctx.from.id;
-        const apkUrl = await getSetting('apk_url', 'https://t.me/A_ToolsX');
-        const videoUrl = await getSetting('video_url', 'https://t.me/A_ToolsX');
-
         const msg = `📋 **قائمة الخيارات الرئيسية** \n\n💰 الرصيد الحالي: ${user.balance || 0} SYP\n🆔 أيدي حسابك: \`${userId}\``;
         const buttons = [
             [Markup.button.callback('حساب ايسانسي وشحنه ⚡', 'account_menu')],
             [Markup.button.callback('شحن رصيد في البوت 📥', 'deposit_menu'), Markup.button.callback('سحب رصيد من البوت 📤', 'withdraw_menu')],
             [Markup.button.callback('كود جائزة 🏆', 'promo'), Markup.button.callback('إهداء صديق 🎁', 'gift_menu')],
-            [Markup.button.url('تحميل تطبيق البنك APK 📱', apkUrl), Markup.button.url('فيديو الشرح 🎬', videoUrl)],
             [Markup.button.callback('الإحالات 💰', 'referrals_menu')],
             [Markup.button.callback('إرسال رسالة للدعم 💬', 'support_menu'), Markup.button.callback('السجلات 📄', 'logs_menu')],
             [Markup.button.callback('العروض النشطة 🎁', 'offers'), Markup.button.callback('شروط الاستخدام ⚠️', 'terms')]
@@ -116,39 +116,6 @@ function getBot() {
         } catch (e) {
             return await ctx.reply(msg, { parse_mode: 'Markdown', ...keyboard });
         }
-    }
-
-    async function renderAdmin(ctx, isEdit = true) {
-        const s = await getSetting('syriatel', '87524496');
-        const sh = await getSetting('shamcash', '0912345678');
-        const us = await getSetting('usdt', 'TXXXXXXXXXXXXXX');
-        const bo = await getSetting('deposit_bonus_percent', '10');
-        const di = await getSetting('withdraw_discount_percent', '10');
-        const apk = await getSetting('apk_url', '');
-        const vid = await getSetting('video_url', '');
-
-        const text = `⚙️ **لوحة التحكم والإعدادات الفورية:**\n\n` +
-            `📱 سيرياتيل كاش: \`${s}\`\n` +
-            `💳 شام كاش: \`${sh}\`\n` +
-            `🌐 USDT: \`${us}\`\n` +
-            `🎁 بونص الإيداع: **%${bo}**\n` +
-            `🔻 عمولة السحب: **%${di}**\n` +
-            `📱 رابط تطبيق APK: \`${apk}\`\n` +
-            `🎬 رابط فيديو الشرح: \`${vid}\`\n\n` +
-            `👇 اضغط على الزر لتعديل القيمة فوراً في قاعدة البيانات:`;
-
-        const kb = Markup.inlineKeyboard([
-            [Markup.button.callback('تعديل سيرياتيل 📱', 'set_syriatel'), Markup.button.callback('تعديل شام كاش 💳', 'set_shamcash')],
-            [Markup.button.callback('تعديل USDT 🌐', 'set_usdt')],
-            [Markup.button.callback('تعديل البونص 🎁', 'set_bonus'), Markup.button.callback('تعديل العمولة 🔻', 'set_discount')],
-            [Markup.button.callback('تعديل رابط APK 📱', 'set_apk'), Markup.button.callback('تعديل فيديو الشرح 🎬', 'set_video')],
-            [Markup.button.callback('رجوع ↩️', 'main_menu')]
-        ]);
-
-        if (isEdit && ctx.callbackQuery) {
-            return ctx.editMessageText(text, { parse_mode: 'Markdown', ...kb }).catch(() => {});
-        }
-        return ctx.reply(text, { parse_mode: 'Markdown', ...kb });
     }
 
     bot.start(async (ctx) => {
@@ -173,25 +140,10 @@ function getBot() {
     bot.action('admin_panel', async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         if (ctx.from.id !== ADMIN_ID) return;
-        delete userStates[ADMIN_ID];
-        return renderAdmin(ctx, true);
-    });
-
-    bot.action(/^set_/, async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
-        if (ctx.from.id !== ADMIN_ID) return;
-        const action = ctx.match[0];
-        userStates[ADMIN_ID] = action;
-        const p = {
-            'set_syriatel': '📱 أرسل الرقم الجديد لسيرياتيل كاش:',
-            'set_shamcash': '💳 أرسل الرقم الجديد لشام كاش:',
-            'set_usdt': '🌐 أرسل عنوان USDT الجديد:',
-            'set_bonus': '🎁 أرسل نسبة بونص الإيداع الجديدة (رقم فقط):',
-            'set_discount': '🔻 أرسل نسبة عمولة السحب الجديدة (رقم فقط):',
-            'set_apk': '📱 أرسل رابط تحميل تطبيق البنك (APK):',
-            'set_video': '🎬 أرسل رابط فيديو الشرح:'
-        };
-        return ctx.editMessageText(p[action], Markup.inlineKeyboard([[Markup.button.callback('إلغاء ❌', 'admin_panel')]]));
+        return ctx.editMessageText('⚙️ **لوحة تحكم الأدمن:**\n\nلإدارة وتعديل الأرقام، التطبيقات، وفيديوهات الشرح لكل بنك بكل سهولة، قم بفتح **رابط موقعك على Vercel** من متصفح الإنترنت الخاص بك.', {
+            parse_mode: 'Markdown',
+            ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
+        });
     });
 
     bot.action('deposit_menu', async (ctx) => {
@@ -204,30 +156,38 @@ function getBot() {
         ]));
     });
 
+    // عند اختيار الزبون للبنك، يتم جلب رقمه، تطبيق APK الخاص به، وفيديو الشرح الخاص به حصرياً
     bot.action(/^pay_/, async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         const userId = ctx.from.id;
         const method = ctx.match[0];
+        
         let num = '';
         let name = '';
+        let apkUrl = '';
+        let videoUrl = '';
 
         if (method === 'pay_syriatel') {
             num = await getSetting('syriatel', '87524496');
+            apkUrl = await getSetting('syriatel_apk', 'https://t.me/A_ToolsX');
+            videoUrl = await getSetting('syriatel_video', 'https://t.me/A_ToolsX');
             name = 'سيرياتيل كاش';
         } else if (method === 'pay_shamcash') {
             num = await getSetting('shamcash', '0912345678');
+            apkUrl = await getSetting('shamcash_apk', 'https://t.me/A_ToolsX');
+            videoUrl = await getSetting('shamcash_video', 'https://t.me/A_ToolsX');
             name = 'شام كاش';
         } else if (method === 'pay_usdt') {
             num = await getSetting('usdt', 'TXXXXXXXXXXXXXX');
+            apkUrl = await getSetting('usdt_apk', 'https://t.me/A_ToolsX');
+            videoUrl = await getSetting('usdt_video', 'https://t.me/A_ToolsX');
             name = 'USDT';
         }
 
         userStates[userId] = 'awaiting_transaction_number';
         pendingDeposits[userId] = { paymentMethod: name };
 
-        const videoUrl = await getSetting('video_url', 'https://t.me/A_ToolsX');
-
-        return ctx.editMessageText(`⚡ قم بالتحويل الفوري عبر **${name}** إلى الرقم التالي:\n\n\`${num}\`\n\n💡 [شاهد فيديو الشرح هنا](${videoUrl})\n\nأدخل رقم العملية لتأكيد الشحن:`, {
+        return ctx.editMessageText(`⚡ قم بالتحويل عبر **${name}** إلى الحساب التالي:\n\n\`${num}\`\n\n📱 [تحميل تطبيق ${name} APK](${apkUrl})\n🎬 [شاهد فيديو الشرح وسعر الصرف](${videoUrl})\n\nأدخل رقم العملية لتأكيد الشحن:`, {
             parse_mode: 'Markdown',
             disable_web_page_preview: true,
             ...Markup.inlineKeyboard([[Markup.button.callback('إلغاء ❌', 'main_menu')]])
@@ -276,7 +236,7 @@ function getBot() {
         await ctx.answerCbQuery().catch(() => {});
         const b = await getSetting('deposit_bonus_percent', '10');
         const d = await getSetting('withdraw_discount_percent', '10');
-        return ctx.editMessageText(`🎁 **العروض الفورية النشطة:**\n\n✨ بونص إيداع: +${b}\%\n🔻 عمولة سحب: ${d}%`, {
+        return ctx.editMessageText(`🎁 **العروض الفورية النشطة:**\n\n✨ بونص إيداع: +${b}%\n🔻 عمولة سحب: ${d}%`, {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
         });
@@ -307,23 +267,6 @@ function getBot() {
             const state = userStates[userId];
             const text = ctx.message.text.trim();
             const db = await getDb();
-
-            if (userId === ADMIN_ID && state && state.startsWith('set_')) {
-                const map = {
-                    'set_syriatel': 'syriatel',
-                    'set_shamcash': 'shamcash',
-                    'set_usdt': 'usdt',
-                    'set_bonus': 'deposit_bonus_percent',
-                    'set_discount': 'withdraw_discount_percent',
-                    'set_apk': 'apk_url',
-                    'set_video': 'video_url'
-                };
-                const settingKey = map[state];
-                await setSetting(settingKey, text);
-                delete userStates[ADMIN_ID];
-                await ctx.reply(`✅ تم الحفظ والتحديث في قاعدة البيانات فوراً إلى:\n\`${text}\``, { parse_mode: 'Markdown' });
-                return renderAdmin(ctx, false);
-            }
 
             if (state === 'awaiting_account_creation') {
                 const pass = Math.random().toString(36).slice(-6);
@@ -499,15 +442,22 @@ module.exports = async (req, res) => {
     try {
         await getDb();
         
-        // إذا قام الأدمن بفتح رابط الموقع مباشرة عبر المتصفح، اعرض له صفحة لوحة التحكم على الويب
+        // لوحة تحكم الويب المحدثة لكل بنك على حدة (أرقام، تطبيقات APK، وفيديوهات الشرح وسعر الصرف)
         if (req.method === 'GET' && !req.query?.bot) {
-            const s = await getSetting('syriatel', '87524496');
-            const sh = await getSetting('shamcash', '0912345678');
-            const us = await getSetting('usdt', 'TXXXXXXXXXXXXXX');
+            const s = await getSetting('syriatel', '');
+            const s_apk = await getSetting('syriatel_apk', '');
+            const s_vid = await getSetting('syriatel_video', '');
+
+            const sh = await getSetting('shamcash', '');
+            const sh_apk = await getSetting('shamcash_apk', '');
+            const sh_vid = await getSetting('shamcash_video', '');
+
+            const us = await getSetting('usdt', '');
+            const us_apk = await getSetting('usdt_apk', '');
+            const us_vid = await getSetting('usdt_video', '');
+
             const bo = await getSetting('deposit_bonus_percent', '10');
             const di = await getSetting('withdraw_discount_percent', '10');
-            const apk = await getSetting('apk_url', '');
-            const vid = await getSetting('video_url', '');
 
             res.setHeader('Content-Type', 'text/html; charset=utf-8');
             return res.status(200).send(`
@@ -518,28 +468,49 @@ module.exports = async (req, res) => {
                     <title>لوحة تحكم بوت سوخوي المالي</title>
                     <style>
                         body { font-family: Tahoma, sans-serif; background: #0f172a; color: #f8fafc; padding: 20px; direction: rtl; }
-                        .container { max-width: 600px; margin: 0 auto; background: #1e293b; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+                        .container { max-width: 700px; margin: 0 auto; background: #1e293b; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
                         h2 { text-align: center; color: #38bdf8; margin-bottom: 25px; }
-                        .form-group { margin-bottom: 15px; }
-                        label { display: block; margin-bottom: 5px; color: #cbd5e1; }
-                        input { width: 100%; padding: 10px; background: #0f172a; border: 1px solid #475569; border-radius: 6px; color: white; box-sizing: border-box; }
-                        button { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 16px; }
+                        fieldset { border: 1px solid #475569; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
+                        legend { color: #38bdf8; font-weight: bold; padding: 0 10px; }
+                        .form-group { margin-bottom: 12px; }
+                        label { display: block; margin-bottom: 4px; color: #cbd5e1; font-size: 14px; }
+                        input { width: 100%; padding: 9px; background: #0f172a; border: 1px solid #475569; border-radius: 6px; color: white; box-sizing: border-box; }
+                        button { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; }
                         button:hover { background: #1d4ed8; }
-                        .msg { text-align: center; margin-top: 15px; color: #4ade80; font-weight: bold; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
-                        <h2>🚀 لوحة إدارة بوت سوخوي</h2>
+                        <h2>🚀 لوحة إدارة بوت سوخوي (الحسابات والروابط)</h2>
                         <form method="POST">
-                            <div class="form-group"><label>📱 رقم سيرياتيل كاش:</label><input type="text" name="syriatel" value="${s}"></div>
-                            <div class="form-group"><label>💳 رقم شام كاش:</label><input type="text" name="shamcash" value="${sh}"></div>
-                            <div class="form-group"><label>🌐 محفظة USDT:</label><input type="text" name="usdt" value="${us}"></div>
-                            <div class="form-group"><label>🎁 بونص الإيداع (%):</label><input type="text" name="deposit_bonus_percent" value="${bo}"></div>
-                            <div class="form-group"><label>🔻 عمولة السحب (%):</label><input type="text" name="withdraw_discount_percent" value="${di}"></div>
-                            <div class="form-group"><label>📱 رابط تطبيق البنك (APK):</label><input type="text" name="apk_url" value="${apk}"></div>
-                            <div class="form-group"><label>🎬 رابط فيديو الشرح:</label><input type="text" name="video_url" value="${vid}"></div>
-                            <button type="submit">💾 حفظ التحديثات فوراً</button>
+                            <fieldset>
+                                <legend>📱 سيرياتيل كاش</legend>
+                                <div class="form-group"><label>رقم الحساب:</label><input type="text" name="syriatel" value="${s}"></div>
+                                <div class="form-group"><label>رابط تطبيق APK الخاص:</label><input type="text" name="syriatel_apk" value="${s_apk}"></div>
+                                <div class="form-group"><label>رابط فيديو الشرح وسعر الصرف:</label><input type="text" name="syriatel_video" value="${s_vid}"></div>
+                            </fieldset>
+
+                            <fieldset>
+                                <legend>💳 شام كاش</legend>
+                                <div class="form-group"><label>رقم الحساب:</label><input type="text" name="shamcash" value="${sh}"></div>
+                                <div class="form-group"><label>رابط تطبيق APK الخاص:</label><input type="text" name="shamcash_apk" value="${sh_apk}"></div>
+                                <div class="form-group"><label>رابط فيديو الشرح وسعر الصرف:</label><input type="text" name="shamcash_video" value="${sh_vid}"></div>
+                            </fieldset>
+
+                            <fieldset>
+                                <legend>🌐 USDT</legend>
+                                <div class="form-group"><label>رابط المحفظة:</label><input type="text" name="usdt" value="${us}"></div>
+                                <div class="form-group"><label>رابط تطبيق/محفظة APK الخاص:</label><input type="text" name="usdt_apk" value="${us_apk}"></div>
+                                <div class="form-group"><label>رابط فيديو الشرح وسعر الصرف:</label><input type="text" name="usdt_video" value="${us_vid}"></div>
+                            </fieldset>
+
+                            <fieldset>
+                                <legend>⚙️ النِسب العامة</legend>
+                                <div class="form-group"><label>🎁 بونص الإيداع (%):</label><input type="text" name="deposit_bonus_percent" value="${bo}"></div>
+                                <div class="form-group"><label>🔻 عمولة السحب (%):</label><input type="text" name="withdraw_discount_percent" value="${di}"></div>
+                            </fieldset>
+
+                            <button type="submit">💾 حفظ كافة التحديثات فوراً</button>
                         </form>
                     </div>
                 </body>
@@ -547,15 +518,15 @@ module.exports = async (req, res) => {
             `);
         }
 
-        // إذا أرسل الأدمن تحديثات من صفحة الويب
-        if (req.method === 'POST' && req.body && req.body.syriatel) {
+        // استقبال وتخزين كافة الإرساليات من لوحة الويب فوراً في قاعدة البيانات
+        if (req.method === 'POST' && req.body) {
             for (const [k, v] of Object.entries(req.body)) {
                 await setSetting(k, v);
             }
             res.setHeader('Content-Type', 'text/html; charset=utf-8');
             return res.status(200).send(`
                 <body style="background:#0f172a;color:#4ade80;text-align:center;padding-top:50px;font-family:Tahoma;">
-                    <h2>✅ تم حفظ وتحديث كافة الإعدادات والروابط بنجاح!</h2>
+                    <h2>✅ تم تحديث الأرقام، تطبيقات APK، وفيديوهات الشرح وسعر الصرف بنجاح تام!</h2>
                     <br><a href="/" style="color:#38bdf8;text-decoration:none;font-size:18px;">⬅️ العودة للوحة التحكم</a>
                 </body>
             `);
