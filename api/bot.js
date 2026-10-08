@@ -43,12 +43,18 @@ async function getDb() {
         'syriatel': '87524496',
         'syriatel_apk': 'https://t.me/A_ToolsX',
         'syriatel_video': 'https://t.me/A_ToolsX',
+        'syriatel_rate': '100', // سعر الصرف / أو معامل المضاعفة
+        
         'shamcash': '0912345678',
         'shamcash_apk': 'https://t.me/A_ToolsX',
         'shamcash_video': 'https://t.me/A_ToolsX',
+        'shamcash_rate': '1',
+        
         'usdt': 'TXXXXXXXXXXXXXX',
         'usdt_apk': 'https://t.me/A_ToolsX',
         'usdt_video': 'https://t.me/A_ToolsX',
+        'usdt_rate': '1',
+        
         'deposit_bonus_percent': '10',
         'withdraw_discount_percent': '10'
     };
@@ -147,7 +153,7 @@ function getBot() {
     bot.action('admin_panel', async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         if (ctx.from.id !== ADMIN_ID) return;
-        return ctx.editMessageText(`⚙️ **لوحة تحكم الأدمن:**\n\nلإدارة وتعديل الأرقام، التطبيقات، وفيديوهات الشرح، افتح موقعك على Vercel من المتصفح.`, {
+        return ctx.editMessageText(`⚙️ **لوحة تحكم الأدمن:**\n\nلإدارة وتعديل الأرقام، سعر الصرف، والمضاعفة، افتح موقعك على Vercel من المتصفح.`, {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
         });
@@ -163,9 +169,8 @@ function getBot() {
         ]));
     });
 
-    // استجابة فورية وآمنة تماماً لأزرار الدفع لمنع أي تعليق
     bot.action(/^pay_/, async (ctx) => {
-        await ctx.answerCbQuery('جاري جلب تفاصيل الحساب...').catch(() => {});
+        await ctx.answerCbQuery().catch(() => {});
         const userId = ctx.from.id;
         const method = ctx.match[0];
         
@@ -192,27 +197,17 @@ function getBot() {
         }
 
         userStates[userId] = 'awaiting_transaction_number';
-        pendingDeposits[userId] = { paymentMethod: name };
+        pendingDeposits[userId] = { paymentMethod: name, methodKey: method.replace('pay_', '') };
 
         const text = `⚡ قم بالتحويل عبر **${name}** إلى الحساب التالي:\n\n\`${num}\`\n\nأدخل رقم العملية لتأكيد الشحن:`;
         
-        try {
-            await ctx.editMessageText(text, {
-                parse_mode: 'Markdown',
-                ...Markup.inlineKeyboard([
-                    [Markup.button.url(`تطبيق ${name} APK 📱`, apkUrl), Markup.button.url('فيديو الشرح 🎬', videoUrl)],
-                    [Markup.button.callback('إلغاء ❌', 'main_menu')]
-                ])
-            });
-        } catch (e) {
-            await ctx.reply(text, {
-                parse_mode: 'Markdown',
-                ...Markup.inlineKeyboard([
-                    [Markup.button.url(`تطبيق ${name} APK 📱`, apkUrl), Markup.button.url('فيديو الشرح 🎬', videoUrl)],
-                    [Markup.button.callback('إلغاء ❌', 'main_menu')]
-                ])
-            });
-        }
+        return ctx.editMessageText(text, {
+            parse_mode: 'Markdown',
+            ...Markup.inlineKeyboard([
+                [Markup.button.url(`تطبيق ${name} APK 📱`, apkUrl), Markup.button.url('فيديو الشرح 🎬', videoUrl)],
+                [Markup.button.callback('رجوع ↩️', 'deposit_menu'), Markup.button.callback('القائمة الرئيسية 🏠', 'main_menu')]
+            ])
+        });
     });
 
     bot.action('account_menu', async (ctx) => {
@@ -222,7 +217,7 @@ function getBot() {
         if (!user.ichancy_user) {
             userStates[userId] = 'awaiting_account_creation';
             return ctx.editMessageText('⚡ أدخل اسم المستخدم المراد إنشاؤه فوراً على آيسانسي:', Markup.inlineKeyboard([
-                [Markup.button.callback('إلغاء ↩️', 'main_menu')]
+                [Markup.button.callback('رجوع ↩️', 'main_menu')]
             ]));
         } else {
             return ctx.editMessageText(`⚡ تفاصيل حسابك الفوري على آيسانسي:\n\nالمستخدم: \`${user.ichancy_user}\`\nكلمة المرور: \`${user.ichancy_pass}\``, {
@@ -240,7 +235,7 @@ function getBot() {
         userStates[ctx.from.id] = 'awaiting_withdraw_account';
         pendingWithdrawals[ctx.from.id] = {};
         return ctx.editMessageText('⚡ أدخل رقم الحساب أو المحفظة المراد السحب إليها فوراً:', Markup.inlineKeyboard([
-            [Markup.button.callback('إلغاء ❌', 'main_menu')]
+            [Markup.button.callback('رجوع ↩️', 'main_menu')]
         ]));
     });
 
@@ -253,7 +248,7 @@ function getBot() {
         userStates[ctx.from.id] = 'awaiting_gift_target_id';
         pendingGifts[ctx.from.id] = {};
         return ctx.editMessageText('🎁 أدخل أيدي (ID) الصديق المراد إرسال الهدية له فوراً:', Markup.inlineKeyboard([
-            [Markup.button.callback('إلغاء ❌', 'main_menu')]
+            [Markup.button.callback('رجوع ↩️', 'main_menu')]
         ]));
     });
 
@@ -272,7 +267,7 @@ function getBot() {
         await ctx.answerCbQuery().catch(() => {});
         userStates[ctx.from.id] = 'awaiting_support_message';
         return ctx.editMessageText('💬 أكتب رسالتك للدعم وستصل للإدارة فوراً:', Markup.inlineKeyboard([
-            [Markup.button.callback('إلغاء ❌', 'main_menu')]
+            [Markup.button.callback('رجوع ↩️', 'main_menu')]
         ]));
     });
 
@@ -332,34 +327,44 @@ function getBot() {
                 if (!pendingDeposits[userId]) pendingDeposits[userId] = {};
                 pendingDeposits[userId].transactionId = text;
                 userStates[userId] = 'awaiting_deposit_amount';
-                return ctx.reply('✅ تم استلام رقم العملية. أدخل المبلغ المراد شحنه:');
+                return ctx.reply('✅ تم استلام رقم العملية. أدخل المبلغ المراد شحنه (المبلغ المرسل):');
             }
 
             if (state === 'awaiting_deposit_amount') {
                 const amount = parseFloat(text);
                 if (isNaN(amount) || amount <= 0) return ctx.reply('❌ يرجى إدخال مبلغ صحيح.');
-                const bonus = parseFloat(await getSetting('deposit_bonus_percent', '10'));
-                const net = amount + (amount * (bonus / 100));
                 
                 const depositData = pendingDeposits[userId] || {};
                 const txId = depositData.transactionId || 'غير محدد';
-                const method = depositData.paymentMethod || 'طريقة إلكترونية';
+                const methodKey = depositData.methodKey || 'syriatel';
+                const method = depositData.paymentMethod || 'سيرياتيل كاش';
+
+                // جلب سعر الصرف / أو معامل المضاعفة المخصص لهذا البنك
+                const rate = parseFloat(await getSetting(`${methodKey}_rate`, '1'));
+                const bonus = parseFloat(await getSetting('deposit_bonus_percent', '10'));
+
+                // تنفيذ المعادلة: (المبلغ × سعر الصرف/المضاعفة) + نسبة البونص
+                const multipliedAmount = amount * rate;
+                const net = multipliedAmount + (multipliedAmount * (bonus / 100));
 
                 delete userStates[userId];
                 delete pendingDeposits[userId];
 
+                // شحن الرصيد تلقائياً وفوراً للزبون
+                await updateBalance(userId, net);
+
                 const res = await db.run(
-                    'INSERT INTO transactions (user_id, type, amount, net_amount, transaction_id, target_account, status) VALUES (?, "deposit", ?, ?, ?, ?, "pending")',
+                    'INSERT INTO transactions (user_id, type, amount, net_amount, transaction_id, target_account, status) VALUES (?, "deposit", ?, ?, ?, ?, "approved")',
                     [userId, amount, net, txId, method]
                 );
 
-                await ctx.reply('⏳ تم إرسال طلب الشحن للإدارة للمراجعة الفورية.');
-                await bot.telegram.sendMessage(ADMIN_ID, `📥 **طلب شحن جديد (#${res.lastID})**\n\n👤 ID: \`${userId}\`\n💳 الطريقة: \`${method}\`\n🔢 العملية: \`${txId}\`\n💰 المبلغ: ${amount}\n🎁 مع البونص: **${net}**`, {
-                    parse_mode: 'Markdown',
-                    ...Markup.inlineKeyboard([
-                        [Markup.button.callback(`✅ موافقة وشحن فوراً (${net})`, `approve_dep_${res.lastID}`), Markup.button.callback('❌ رفض', `reject_dep_${res.lastID}`)]
-                    ])
+                await ctx.reply(`✅ **تم شحن حسابك تلقائياً بنجاح!**\n\n💵 المبلغ المدخل: ${amount}\n🔄 معامل الصرف/المضاعفة: x${rate}\n🎁 مع بونص الإيداع (%${bonus}): **${net} SYP**`);
+                
+                // إشعار للإدارة بالعملية التلقائية
+                await bot.telegram.sendMessage(ADMIN_ID, `⚡ **عملية شحن تلقائية ناجحة (#${res.lastID})**\n\n👤 ID: \`${userId}\`\n💳 البنك: \`${method}\`\n🔢 العملية: \`${txId}\`\n💰 الأساسي: ${amount} -> المضاعف: ${multipliedAmount}\n🎁 النهائي المضاف: **${net}**`, {
+                    parse_mode: 'Markdown'
                 });
+
                 return sendMainMenu(ctx, await getUser(userId));
             }
 
@@ -436,31 +441,6 @@ function getBot() {
         } catch (e) { console.error(e); }
     });
 
-    bot.action(/^approve_dep_(\d+)$/, async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
-        const txId = ctx.match[1];
-        const db = await getDb();
-        const tx = await db.get('SELECT * FROM transactions WHERE id = ? AND status = "pending"', [txId]);
-        if (tx) {
-            await updateBalance(tx.user_id, tx.net_amount);
-            await db.run('UPDATE transactions SET status = "approved" WHERE id = ?', [txId]);
-            await ctx.editMessageText(`${ctx.callbackQuery.message.text}\n\n✅ **تمت الموافقة وشحن الرصيد فوراً.**`);
-            await bot.telegram.sendMessage(tx.user_id, `🎉 تم شحن حسابك بمبلغ ${tx.net_amount} بنجاح!`).catch(() => {});
-        }
-    });
-
-    bot.action(/^reject_dep_(\d+)$/, async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
-        const txId = ctx.match[1];
-        const db = await getDb();
-        const tx = await db.get('SELECT * FROM transactions WHERE id = ? AND status = "pending"', [txId]);
-        if (tx) {
-            await db.run('UPDATE transactions SET status = "rejected" WHERE id = ?', [txId]);
-            await ctx.editMessageText(`${ctx.callbackQuery.message.text}\n\n❌ **تم رفض الشحن.**`);
-            await bot.telegram.sendMessage(tx.user_id, `❌ عذراً، تم رفض طلب الشحن الخاص بك.`).catch(() => {});
-        }
-    });
-
     bot.action(/^approve_with_(\d+)$/, async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         const txId = ctx.match[1];
@@ -503,14 +483,17 @@ module.exports = async (req, res) => {
             const s = await getSetting('syriatel', '');
             const s_apk = await getSetting('syriatel_apk', '');
             const s_vid = await getSetting('syriatel_video', '');
+            const s_rate = await getSetting('syriatel_rate', '100');
 
             const sh = await getSetting('shamcash', '');
             const sh_apk = await getSetting('shamcash_apk', '');
             const sh_vid = await getSetting('shamcash_video', '');
+            const sh_rate = await getSetting('shamcash_rate', '1');
 
             const us = await getSetting('usdt', '');
             const us_apk = await getSetting('usdt_apk', '');
             const us_vid = await getSetting('usdt_video', '');
+            const us_rate = await getSetting('usdt_rate', '1');
 
             const bo = await getSetting('deposit_bonus_percent', '10');
             const di = await getSetting('withdraw_discount_percent', '10');
@@ -537,27 +520,30 @@ module.exports = async (req, res) => {
                 </head>
                 <body>
                     <div class="container">
-                        <h2>🚀 لوحة إدارة بوت سوخوي (الحسابات والروابط)</h2>
+                        <h2>🚀 لوحة إدارة بوت سوخوي (أسعار الصرف والمضاعفة التلقائية)</h2>
                         <form method="POST">
                             <fieldset>
                                 <legend>📱 سيرياتيل كاش</legend>
                                 <div class="form-group"><label>رقم الحساب:</label><input type="text" name="syriatel" value="${s}"></div>
-                                <div class="form-group"><label>رابط تطبيق APK الخاص:</label><input type="text" name="syriatel_apk" value="${s_apk}"></div>
-                                <div class="form-group"><label>رابط فيديو الشرح وسعر الصرف:</label><input type="text" name="syriatel_video" value="${s_vid}"></div>
+                                <div class="form-group"><label>رابط تطبيق APK:</label><input type="text" name="syriatel_apk" value="${s_apk}"></div>
+                                <div class="form-group"><label>رابط فيديو الشرح:</label><input type="text" name="syriatel_video" value="${s_vid}"></div>
+                                <div class="form-group"><label>معامل المضاعفة أو سعر الصرف (مثال: 100):</label><input type="text" name="syriatel_rate" value="${s_rate}"></div>
                             </fieldset>
 
                             <fieldset>
                                 <legend>💳 شام كاش</legend>
                                 <div class="form-group"><label>رقم الحساب:</label><input type="text" name="shamcash" value="${sh}"></div>
-                                <div class="form-group"><label>رابط تطبيق APK الخاص:</label><input type="text" name="shamcash_apk" value="${sh_apk}"></div>
-                                <div class="form-group"><label>رابط فيديو الشرح وسعر الصرف:</label><input type="text" name="shamcash_video" value="${sh_vid}"></div>
+                                <div class="form-group"><label>رابط تطبيق APK:</label><input type="text" name="shamcash_apk" value="${sh_apk}"></div>
+                                <div class="form-group"><label>رابط فيديو الشرح:</label><input type="text" name="shamcash_video" value="${sh_vid}"></div>
+                                <div class="form-group"><label>معامل المضاعفة أو سعر الصرف:</label><input type="text" name="shamcash_rate" value="${sh_rate}"></div>
                             </fieldset>
 
                             <fieldset>
                                 <legend>🌐 USDT</legend>
                                 <div class="form-group"><label>رابط المحفظة:</label><input type="text" name="usdt" value="${us}"></div>
-                                <div class="form-group"><label>رابط تطبيق/محفظة APK الخاص:</label><input type="text" name="usdt_apk" value="${us_apk}"></div>
-                                <div class="form-group"><label>رابط فيديو الشرح وسعر الصرف:</label><input type="text" name="usdt_video" value="${us_vid}"></div>
+                                <div class="form-group"><label>رابط تطبيق APK:</label><input type="text" name="usdt_apk" value="${us_apk}"></div>
+                                <div class="form-group"><label>رابط فيديو الشرح:</label><input type="text" name="usdt_video" value="${us_vid}"></div>
+                                <div class="form-group"><label>معامل المضاعفة أو سعر الصرف:</label><input type="text" name="usdt_rate" value="${us_rate}"></div>
                             </fieldset>
 
                             <fieldset>
@@ -566,7 +552,7 @@ module.exports = async (req, res) => {
                                 <div class="form-group"><label>🔻 عمولة السحب (%):</label><input type="text" name="withdraw_discount_percent" value="${di}"></div>
                             </fieldset>
 
-                            <button type="submit">💾 حفظ كافة التحديثات فوراً</button>
+                            <button type="submit">💾 حفظ كافة الإعدادات والمعادلات فوراً</button>
                         </form>
                     </div>
                 </body>
@@ -581,7 +567,7 @@ module.exports = async (req, res) => {
             res.setHeader('Content-Type', 'text/html; charset=utf-8');
             return res.status(200).send(`
                 <body style="background:#0f172a;color:#4ade80;text-align:center;padding-top:50px;font-family:Tahoma;">
-                    <h2>✅ تم تحديث الأرقام، تطبيقات APK، وفيديوهات الشرح وسعر الصرف بنجاح تام!</h2>
+                    <h2>✅ تم حفظ أسعار الصرف ومعاملات المضاعفة والتطبيقات بنجاح تام!</h2>
                     <br><a href="/" style="color:#38bdf8;text-decoration:none;font-size:18px;">⬅️ العودة للوحة التحكم</a>
                 </body>
             `);
