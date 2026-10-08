@@ -44,21 +44,25 @@ async function getDb() {
         'bank1_acc': '87524496',
         'bank1_rate': '100',
         'bank1_status': 'غير مثبت ❌',
+        'bank1_web': 'https://shamcash.app',
 
         'bank2_name': 'شام كاش 💳',
         'bank2_acc': '0912345678',
         'bank2_rate': '1',
         'bank2_status': 'غير مثبت ❌',
+        'bank2_web': 'https://shamcash.app',
 
         'bank3_name': 'USDT 🌐',
         'bank3_acc': 'TXXXXXXXXXXXXXX',
         'bank3_rate': '1',
         'bank3_status': 'غير مثبت ❌',
+        'bank3_web': 'https://tronscan.org',
 
         'bank4_name': 'بنك إضافي 🏦',
         'bank4_acc': '0999999999',
         'bank4_rate': '1',
         'bank4_status': 'غير مثبت ❌',
+        'bank4_web': 'https://t.me/A_ToolsX',
 
         'deposit_bonus_percent': '10',
         'withdraw_discount_percent': '10'
@@ -124,7 +128,7 @@ function createBot() {
         ];
         
         if (userId === ADMIN_ID) {
-            buttons.unshift([Markup.button.callback('⚙️ لوحة تحكم الأدمن وتثبيت التطبيقات', 'admin_panel')]);
+            buttons.unshift([Markup.button.callback('⚙️ لوحة تحكم الأدمن وحسابات البنوك', 'admin_panel')]);
         }
 
         const keyboard = Markup.inlineKeyboard(buttons);
@@ -159,7 +163,7 @@ function createBot() {
     bot.action('admin_panel', async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         if (ctx.from.id !== ADMIN_ID) return;
-        return ctx.editMessageText(`⚙️ **لوحة تحكم الأدمن وتثبيت التطبيقات:**\n\nاختر البنك لرفع وتثبيت التطبيق الخاص به ومراقبة الحوالات:`, {
+        return ctx.editMessageText(`⚙️ **لوحة تحكم الأدمن وإدارة الحسابات:**\n\nاختر البنك لتسجيل الدخول لحسابك الشخصي وربطه:`, {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([
                 [Markup.button.callback('📱 البنك الأول', 'admin_b1'), Markup.button.callback('💳 البنك الثاني', 'admin_b2')],
@@ -169,15 +173,17 @@ function createBot() {
         });
     });
 
-    // دالة إنشاء أزرار إدارة كل بنك (رفع APK + تثبيت التطبيق + رفع قالب القراءة)
+    // قائمة إدارة كل بنك للأدمن مع زر فتح تطبيق البنك للحساب الشخصي
     async function bankAdminMenu(ctx, bankNum) {
         if (ctx.from.id !== ADMIN_ID) return;
         const status = await getSetting(`${bankNum}_status`, 'غير مثبت ❌');
         const name = await getSetting(`${bankNum}_name`, bankNum);
+        const webUrl = await getSetting(`${bankNum}_web`, 'https://t.me/A_ToolsX');
 
-        return ctx.editMessageText(`⚙️ **إدارة ${name}:**\nحالة التطبيق: **${status}**\n\nاختر العملية المطلوبة:`, {
+        return ctx.editMessageText(`⚙️ **إدارة ${name}:**\nحالة التطبيق: **${status}**\n\nقم بتسجيل الدخول بحسابك الشخصي عبر الزر أدناه لتستقبل عليه الحوالات:`, {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([
+                [Markup.button.url('🔐 فتح حسابي الشخصي بالبنك', webUrl)],
                 [Markup.button.callback('📤 رفع ملف APK', `upload_apk_${bankNum}`), Markup.button.callback('🛠️ تثبيت التطبيق وتشغيله', `install_app_${bankNum}`)],
                 [Markup.button.callback('🎯 رفع قالب القراءة (صورة)', `upload_template_${bankNum}`)],
                 [Markup.button.callback('رجوع لوحة الأدمن ↩️', 'admin_panel')]
@@ -190,7 +196,6 @@ function createBot() {
     bot.action('admin_b3', (ctx) => bankAdminMenu(ctx, 'bank3'));
     bot.action('admin_b4', (ctx) => bankAdminMenu(ctx, 'bank4'));
 
-    // أزرار رفع APK وقالب القراءة
     bot.action(/^upload_apk_(bank\d)$/, async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         const b = ctx.match[1];
@@ -205,7 +210,6 @@ function createBot() {
         return ctx.reply(`🎯 أرسل صورة قالب القراءة للـ (${b}) لتحديد مكان رقم العملية والمبلغ:`);
     });
 
-    // زر تثبيت التطبيق وتشغيله نظامياً
     bot.action(/^install_app_(bank\d)$/, async (ctx) => {
         await ctx.answerCbQuery('جاري تثبيت التطبيق...').catch(() => {});
         const b = ctx.match[1];
@@ -216,7 +220,7 @@ function createBot() {
         }
 
         await setSetting(`${b}_status`, 'متصل ومثبت ونظامي ✅');
-        return ctx.reply(`🛠️ **تم تثبيت وتفعيل التطبيق بنجاح تام!**\n\nالبنك (${b}) يعمل الآن بنظام متكامل وكأنه مثبت على الهاتف، وجاهز لقراءة ومطابقة رقم العملية والمبلغ تلقائياً.`);
+        return ctx.reply(`🛠️ **تم تثبيت وتفعيل التطبيق بنجاح تام!**\n\nالبنك (${b}) يعمل الآن بنظام متكامل وجاهز لاستقبال الحوالات على حسابك الشخصي.`);
     });
 
     bot.action('deposit_menu', async (ctx) => {
@@ -373,7 +377,7 @@ function createBot() {
                     const fileId = ctx.message.document.file_id;
                     await setSetting(`${bankNum}_apk`, fileId);
                     await setUserState(ADMIN_ID, null);
-                    return ctx.reply(`✅ تم رفع ملف الـ APK لـ (${bankNum}) بنجاح. يمكنك الآن النقر على زر "تثبيت التطبيق وتشغيله".`);
+                    return ctx.reply(`✅ تم رفع ملف الـ APK لـ (${bankNum}) بنجاح.`);
                 }
 
                 if (type === 'template' && ctx.message.photo) {
@@ -565,18 +569,22 @@ module.exports = async (req, res) => {
             const b1_name = await getSetting('bank1_name', 'سيرياتيل كاش');
             const b1_acc = await getSetting('bank1_acc', '87524496');
             const b1_rate = await getSetting('bank1_rate', '100');
+            const b1_web = await getSetting('bank1_web', 'https://shamcash.app');
 
             const b2_name = await getSetting('bank2_name', 'شام كاش');
             const b2_acc = await getSetting('bank2_acc', '0912345678');
             const b2_rate = await getSetting('bank2_rate', '1');
+            const b2_web = await getSetting('bank2_web', 'https://shamcash.app');
 
             const b3_name = await getSetting('bank3_name', 'USDT');
             const b3_acc = await getSetting('bank3_acc', 'TXXXXXXXXXXXXXX');
             const b3_rate = await getSetting('bank3_rate', '1');
+            const b3_web = await getSetting('bank3_web', 'https://tronscan.org');
 
             const b4_name = await getSetting('bank4_name', 'بنك إضافي');
             const b4_acc = await getSetting('bank4_acc', '0999999999');
             const b4_rate = await getSetting('bank4_rate', '1');
+            const b4_web = await getSetting('bank4_web', 'https://t.me/A_ToolsX');
 
             const bo = await getSetting('deposit_bonus_percent', '10');
             const di = await getSetting('withdraw_discount_percent', '10');
@@ -603,13 +611,14 @@ module.exports = async (req, res) => {
                 </head>
                 <body>
                     <div class="container">
-                        <h2>🚀 لوحة إعدادات البنوك والتطبيقات</h2>
+                        <h2>🚀 لوحة إعدادات البنوك وحسابات الاستقبال الشخصية</h2>
                         <form method="POST">
                             <fieldset>
                                 <legend>📱 البنك الأول</legend>
                                 <div class="form-group"><label>اسم البنك:</label><input type="text" name="bank1_name" value="${b1_name}"></div>
                                 <div class="form-group"><label>رقم الحساب:</label><input type="text" name="bank1_acc" value="${b1_acc}"></div>
                                 <div class="form-group"><label>سعر الصرف:</label><input type="text" name="bank1_rate" value="${b1_rate}"></div>
+                                <div class="form-group"><label>رابط/موقع تسجيل الدخول الشخصي:</label><input type="text" name="bank1_web" value="${b1_web}"></div>
                             </fieldset>
 
                             <fieldset>
@@ -617,6 +626,7 @@ module.exports = async (req, res) => {
                                 <div class="form-group"><label>اسم البنك:</label><input type="text" name="bank2_name" value="${b2_name}"></div>
                                 <div class="form-group"><label>رقم الحساب:</label><input type="text" name="bank2_acc" value="${b2_acc}"></div>
                                 <div class="form-group"><label>سعر الصرف:</label><input type="text" name="bank2_rate" value="${b2_rate}"></div>
+                                <div class="form-group"><label>رابط/موقع تسجيل الدخول الشخصي:</label><input type="text" name="bank2_web" value="${b2_web}"></div>
                             </fieldset>
 
                             <fieldset>
@@ -624,6 +634,7 @@ module.exports = async (req, res) => {
                                 <div class="form-group"><label>اسم البنك:</label><input type="text" name="bank3_name" value="${b3_name}"></div>
                                 <div class="form-group"><label>رقم الحساب:</label><input type="text" name="bank3_acc" value="${b3_acc}"></div>
                                 <div class="form-group"><label>سعر الصرف:</label><input type="text" name="bank3_rate" value="${b3_rate}"></div>
+                                <div class="form-group"><label>رابط/موقع تسجيل الدخول الشخصي:</label><input type="text" name="bank3_web" value="${b3_web}"></div>
                             </fieldset>
 
                             <fieldset>
@@ -631,6 +642,7 @@ module.exports = async (req, res) => {
                                 <div class="form-group"><label>اسم البنك:</label><input type="text" name="bank4_name" value="${b4_name}"></div>
                                 <div class="form-group"><label>رقم الحساب:</label><input type="text" name="bank4_acc" value="${b4_acc}"></div>
                                 <div class="form-group"><label>سعر الصرف:</label><input type="text" name="bank4_rate" value="${b4_rate}"></div>
+                                <div class="form-group"><label>رابط/موقع تسجيل الدخول الشخصي:</label><input type="text" name="bank4_web" value="${b4_web}"></div>
                             </fieldset>
 
                             <fieldset>
@@ -639,7 +651,7 @@ module.exports = async (req, res) => {
                                 <div class="form-group"><label>🔻 عمولة السحب (%):</label><input type="text" name="withdraw_discount_percent" value="${di}"></div>
                             </fieldset>
 
-                            <button type="submit">💾 حفظ كافة الإعدادات فوراً</button>
+                            <button type="submit">💾 حفظ كافة الإعدادات وروابط الحسابات فوراً</button>
                         </form>
                     </div>
                 </body>
@@ -654,7 +666,7 @@ module.exports = async (req, res) => {
             res.setHeader('Content-Type', 'text/html; charset=utf-8');
             return res.status(200).send(`
                 <body style="background:#0f172a;color:#4ade80;text-align:center;padding-top:50px;font-family:Tahoma;">
-                    <h2>✅ تم حفظ الإعدادات بنجاح!</h2>
+                    <h2>✅ تم حفظ روابط الحسابات الشخصية بنجاح!</h2>
                     <br><a href="/" style="color:#38bdf8;text-decoration:none;font-size:18px;">⬅️ العودة للوحة التحكم</a>
                 </body>
             `);
