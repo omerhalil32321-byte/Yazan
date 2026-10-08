@@ -21,7 +21,9 @@ async function getDb() {
             balance REAL DEFAULT 0,
             ichancy_user TEXT,
             ichancy_pass TEXT,
-            referrer_id INTEGER
+            referrer_id INTEGER,
+            state TEXT DEFAULT NULL,
+            temp_data TEXT DEFAULT NULL
         );
         CREATE TABLE IF NOT EXISTS settings (
             setting_key TEXT PRIMARY KEY,
@@ -80,31 +82,33 @@ async function setSetting(key, val) {
     await db.run('INSERT OR REPLACE INTO settings (setting_key, setting_value) VALUES (?, ?)', [key, val]);
 }
 
+async function getUser(userId) {
+    const db = await getDb();
+    let user = await db.get('SELECT * FROM users WHERE user_id = ?', [userId]);
+    if (!user) {
+        await db.run('INSERT INTO users (user_id, balance) VALUES (?, 0)', [userId]);
+        user = { user_id: userId, balance: 0, ichancy_user: null, ichancy_pass: null, state: null, temp_data: null };
+    }
+    return user;
+}
+
+async function setUserState(userId, state, temp_data = null) {
+    const db = await getDb();
+    await db.run('UPDATE users SET state = ?, temp_data = ? WHERE user_id = ?', [state, temp_data ? JSON.stringify(temp_data) : null, userId]);
+}
+
+async function updateBalance(userId, amount) {
+    const db = await getDb();
+    await db.run('UPDATE users SET balance = balance + ? WHERE user_id = ?', [amount, userId]);
+}
+
 function getBot() {
     if (botInstance) return botInstance;
     const bot = new Telegraf(BOT_TOKEN);
-    const userStates = {};
-    const pendingData = {};
-
-    async function getUser(userId) {
-        const db = await getDb();
-        let user = await db.get('SELECT * FROM users WHERE user_id = ?', [userId]);
-        if (!user) {
-            await db.run('INSERT INTO users (user_id, balance) VALUES (?, 0)', [userId]);
-            user = { user_id: userId, balance: 0, ichancy_user: null, ichancy_pass: null };
-        }
-        return user;
-    }
-
-    async function updateBalance(userId, amount) {
-        const db = await getDb();
-        await db.run('UPDATE users SET balance = balance + ? WHERE user_id = ?', [amount, userId]);
-    }
 
     async function sendMainMenu(ctx, user) {
         const userId = ctx.from.id;
-        delete userStates[userId];
-        delete pendingData[userId];
+        await setUserState(userId, null, null);
 
         const msg = `📋 **قائمة الخيارات الرئيسية** \n\n💰 الرصيد الحالي: ${user.balance || 0} SYP\n🆔 أيدي حسابك: \`${userId}\``;
         
@@ -144,13 +148,13 @@ function getBot() {
     });
 
     bot.action('main_menu', async (ctx) => {
-        await ctx.answerCbQuery('القائمة الرئيسية 🏠').catch(() => {});
+        await ctx.answerCbQuery().catch(() => {});
         const user = await getUser(ctx.from.id);
         return sendMainMenu(ctx, user);
     });
 
     bot.action('admin_panel', async (ctx) => {
-        await ctx.answerCbQuery('لوحة التحكم ⚙️').catch(() => {});
+        await ctx.answerCbQuery().catch(() => {});
         if (ctx.from.id !== ADMIN_ID) return;
         return ctx.editMessageText(`⚙️ **لوحة تحكم الأدمن:**\n\nلإدارة وتعديل الحسابات وأسعار الصرف، قم بفتح موقعك على Vercel من متصفح الإنترنت.`, {
             parse_mode: 'Markdown',
@@ -159,9 +163,9 @@ function getBot() {
     });
 
     bot.action('deposit_menu', async (ctx) => {
-        await ctx.answerCbQuery('شحن الرصيد 📥').catch(() => {});
-        userStates[ctx.from.id] = null;
-        pendingData[ctx.from.id] = {};
+        await ctx.answerCbQuery().catch(() => {});
+        const userId = ctx.from.id;
+        await setUserState(userId, null, null);
         return ctx.editMessageText('اختر طريقة الشحن المتاحة:', Markup.inlineKeyboard([
             [Markup.button.callback('سيرياتيل كاش 📱', 'pay_syriatel')],
             [Markup.button.callback('شام كاش 💳', 'pay_shamcash')],
@@ -171,7 +175,7 @@ function getBot() {
     });
 
     bot.action(/^pay_/, async (ctx) => {
-        await ctx.answerCbQuery('جاري إحضار رقم الحساب...').catch(() => {});
+        await ctx.answerCbQuery().catch(() => {});
         const userId = ctx.from.id;
         const method = ctx.match[0];
         
@@ -201,15 +205,9 @@ function getBot() {
             name = 'USDT';
         }
 
-        userStates[userId] = 'awaiting_transaction_id';
-        pendingData[userId] = { paymentMethod: name, methodKey: methodKey };
+        await setUserState(userId, 'awaiting_transaction_id', { paymentMethod: name, methodKey: methodKey });
 
         const text = `⚡ قم بالتحويل عبر **${name}** إلى الحساب التالي:\n\n\`${num}\`\n\n👇 **الخطوة الأولى:** أرسل **رقم العملية** الآن في رسالة:`;
-        
-        // إرسال رسالة جديدة تضمن عدم تعليق الأزرار نهائياً وتظهر الحسابات بوضوح
-        try {
-            await ctx.deleteMessage().catch(() => {});
-        } catch (e) {}
 
         return ctx.reply(text, {
             parse_mode: 'Markdown',
@@ -221,11 +219,11 @@ function getBot() {
     });
 
     bot.action('account_menu', async (ctx) => {
-        await ctx.answerCbQuery('حساب آيسانسي ⚡').catch(() => {});
+        await ctx.answerCbQuery().catch(() => {});
         const userId = ctx.from.id;
         const user = await getUser(userId);
         if (!user.ichancy_user) {
-            userStates[userId] = 'awaiting_account_creation';
+            await setUserState(userId, 'awaiting_account_creation');
             return ctx.editMessageText('⚡ أدخل اسم المستخدم المراد إنشاؤه فوراً على آيسانسي:', Markup.inlineKeyboard([
                 [Markup.button.callback('رجوع ↩️', 'main_menu')]
             ]));
@@ -241,9 +239,9 @@ function getBot() {
     });
 
     bot.action('withdraw_menu', async (ctx) => {
-        await ctx.answerCbQuery('سحب رصيد 📤').catch(() => {});
-        userStates[ctx.from.id] = 'awaiting_withdraw_account';
-        pendingData[ctx.from.id] = {};
+        await ctx.answerCbQuery().catch(() => {});
+        const userId = ctx.from.id;
+        await setUserState(userId, 'awaiting_withdraw_account');
         return ctx.editMessageText('⚡ أدخل رقم الحساب أو المحفظة المراد السحب إليها فوراً:', Markup.inlineKeyboard([
             [Markup.button.callback('رجوع ↩️', 'main_menu')]
         ]));
@@ -254,16 +252,16 @@ function getBot() {
     });
 
     bot.action('gift_menu', async (ctx) => {
-        await ctx.answerCbQuery('إهداء صديق 🎁').catch(() => {});
-        userStates[ctx.from.id] = 'awaiting_gift_target_id';
-        pendingData[ctx.from.id] = {};
+        await ctx.answerCbQuery().catch(() => {});
+        const userId = ctx.from.id;
+        await setUserState(userId, 'awaiting_gift_target_id');
         return ctx.editMessageText('🎁 أدخل أيدي (ID) الصديق المراد إرسال الهدية له فوراً:', Markup.inlineKeyboard([
             [Markup.button.callback('رجوع ↩️', 'main_menu')]
         ]));
     });
 
     bot.action('referrals_menu', async (ctx) => {
-        await ctx.answerCbQuery('الإحالات 💰').catch(() => {});
+        await ctx.answerCbQuery().catch(() => {});
         const userId = ctx.from.id;
         const db = await getDb();
         const row = await db.get('SELECT COUNT(*) as count FROM users WHERE referrer_id = ?', [userId]);
@@ -274,15 +272,16 @@ function getBot() {
     });
 
     bot.action('support_menu', async (ctx) => {
-        await ctx.answerCbQuery('الدعم الفني 💬').catch(() => {});
-        userStates[ctx.from.id] = 'awaiting_support_message';
+        await ctx.answerCbQuery().catch(() => {});
+        const userId = ctx.from.id;
+        await setUserState(userId, 'awaiting_support_message');
         return ctx.editMessageText('💬 أكتب رسالتك للدعم وستصل للإدارة فوراً:', Markup.inlineKeyboard([
             [Markup.button.callback('رجوع ↩️', 'main_menu')]
         ]));
     });
 
     bot.action('logs_menu', async (ctx) => {
-        await ctx.answerCbQuery('السجلات 📄').catch(() => {});
+        await ctx.answerCbQuery().catch(() => {});
         const userId = ctx.from.id;
         const db = await getDb();
         const txs = await db.all('SELECT * FROM transactions WHERE user_id = ? ORDER BY id DESC LIMIT 5', [userId]);
@@ -301,7 +300,7 @@ function getBot() {
     });
 
     bot.action('offers', async (ctx) => {
-        await ctx.answerCbQuery('العروض النشطة 🎁').catch(() => {});
+        await ctx.answerCbQuery().catch(() => {});
         const b = await getSetting('deposit_bonus_percent', '10');
         const d = await getSetting('withdraw_discount_percent', '10');
         return ctx.editMessageText(`🎁 **العروض الفورية النشطة:**\n\n✨ بونص إيداع: +${b}%\n🔻 عمولة سحب: ${d}%`, {
@@ -311,18 +310,19 @@ function getBot() {
     });
 
     bot.action('terms', async (ctx) => {
-        await ctx.answerCbQuery('شروط الاستخدام ⚠️').catch(() => {});
+        await ctx.answerCbQuery().catch(() => {});
         return ctx.editMessageText('⚠️ **شروط الاستخدام:**\n\nيجب التأكد من إدخال رقم العملية الصحيح والمبلغ المطابق لضمان سرعة معالجة طلبك.', {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
         });
     });
 
-    // معالجة النصوص بالترتيب السليم
+    // معالجة النصوص المرتبطة حصراً بقاعدة البيانات لضمان عدم التعليق نهائياً
     bot.on('text', async (ctx) => {
         try {
             const userId = ctx.from.id;
-            const state = userStates[userId];
+            const user = await getUser(userId);
+            const state = user.state;
             const text = ctx.message.text.trim();
             const db = await getDb();
 
@@ -333,15 +333,15 @@ function getBot() {
             if (state === 'awaiting_account_creation') {
                 const pass = Math.random().toString(36).slice(-6);
                 await db.run('UPDATE users SET ichancy_user = ?, ichancy_pass = ? WHERE user_id = ?', [text, pass, userId]);
-                delete userStates[userId];
+                await setUserState(userId, null, null);
                 await ctx.reply('✅ تم إنشاء حسابك على آيسانسي بنجاح!');
                 return sendMainMenu(ctx, await getUser(userId));
             }
 
             if (state === 'awaiting_transaction_id') {
-                if (!pendingData[userId]) pendingData[userId] = {};
-                pendingData[userId].transactionId = text;
-                userStates[userId] = 'awaiting_deposit_amount';
+                let temp = user.temp_data ? JSON.parse(user.temp_data) : {};
+                temp.transactionId = text;
+                await setUserState(userId, 'awaiting_deposit_amount', temp);
                 return ctx.reply(`✅ تم حفظ رقم العملية (\`${text}\`).\n\n👇 **الخطوة الثانية:** الآن أرسل **المبلغ** المراد شحنه (رقم فقط):`, { parse_mode: 'Markdown' });
             }
 
@@ -351,10 +351,10 @@ function getBot() {
                     return ctx.reply('❌ يرجى إدخال مبلغ صحيح (أرقام فقط):');
                 }
 
-                const data = pendingData[userId] || {};
-                const txId = data.transactionId || 'غير محدد';
-                const methodKey = data.methodKey || 'syriatel';
-                const method = data.paymentMethod || 'سيرياتيل كاش';
+                let temp = user.temp_data ? JSON.parse(user.temp_data) : {};
+                const txId = temp.transactionId || 'غير محدد';
+                const methodKey = temp.methodKey || 'syriatel';
+                const method = temp.paymentMethod || 'سيرياتيل كاش';
 
                 const rate = parseFloat(await getSetting(`${methodKey}_rate`, '100'));
                 const bonus = parseFloat(await getSetting('deposit_bonus_percent', '10'));
@@ -362,9 +362,7 @@ function getBot() {
                 const multipliedAmount = amount * rate;
                 const net = multipliedAmount + (multipliedAmount * (bonus / 100));
 
-                delete userStates[userId];
-                delete pendingData[userId];
-
+                await setUserState(userId, null, null);
                 await updateBalance(userId, net);
 
                 const res = await db.run(
@@ -382,26 +380,25 @@ function getBot() {
             }
 
             if (state === 'awaiting_withdraw_account') {
-                pendingData[userId] = { targetAccount: text };
-                userStates[userId] = 'awaiting_withdraw_amount';
+                let temp = { targetAccount: text };
+                await setUserState(userId, 'awaiting_withdraw_amount', temp);
                 return ctx.reply('✅ تم حفظ الحساب. أدخل المبلغ المراد سحبه:');
             }
 
             if (state === 'awaiting_withdraw_amount') {
                 const amount = parseFloat(text);
-                const user = await getUser(userId);
                 if (isNaN(amount) || amount <= 0 || user.balance < amount) {
-                    delete userStates[userId];
+                    await setUserState(userId, null, null);
                     await ctx.reply('❌ رصيدك غير كافي.');
                     return sendMainMenu(ctx, user);
                 }
                 const discount = parseFloat(await getSetting('withdraw_discount_percent', '10'));
                 const net = amount - (amount * (discount / 100));
-                const acc = pendingData[userId].targetAccount;
+                let temp = user.temp_data ? JSON.parse(user.temp_data) : {};
+                const acc = temp.targetAccount;
 
                 await updateBalance(userId, -amount);
-                delete userStates[userId];
-                delete pendingData[userId];
+                await setUserState(userId, null, null);
 
                 const res = await db.run(
                     'INSERT INTO transactions (user_id, type, amount, net_amount, target_account, status) VALUES (?, "withdraw", ?, ?, ?, "pending")',
@@ -419,26 +416,25 @@ function getBot() {
             }
 
             if (state === 'awaiting_gift_target_id') {
-                pendingData[userId] = { targetId: text };
-                userStates[userId] = 'awaiting_gift_amount';
+                let temp = { targetId: text };
+                await setUserState(userId, 'awaiting_gift_amount', temp);
                 return ctx.reply(`أدخل المبلغ المراد إهداؤه لـ \`${text}\`:`, { parse_mode: 'Markdown' });
             }
 
             if (state === 'awaiting_gift_amount') {
                 const amount = parseFloat(text);
-                const user = await getUser(userId);
-                const targetId = pendingData[userId].targetId;
+                let temp = user.temp_data ? JSON.parse(user.temp_data) : {};
+                const targetId = temp.targetId;
 
                 if (isNaN(amount) || amount <= 0 || user.balance < amount) {
-                    delete userStates[userId];
+                    await setUserState(userId, null, null);
                     await ctx.reply('❌ رصيدك غير كافي.');
                     return sendMainMenu(ctx, user);
                 }
 
                 await updateBalance(userId, -amount);
                 await updateBalance(targetId, amount);
-                delete userStates[userId];
-                delete pendingData[userId];
+                await setUserState(userId, null, null);
 
                 await ctx.reply(`🎉 تم إرسال الهدية فوراً بنجاح!`);
                 await bot.telegram.sendMessage(targetId, `🎁 **وصلتك هدية جديدة!**\nتم تحويل ${amount} إلى حسابك فوراً.`).catch(() => {});
@@ -446,7 +442,7 @@ function getBot() {
             }
 
             if (state === 'awaiting_support_message') {
-                delete userStates[userId];
+                await setUserState(userId, null, null);
                 await bot.telegram.sendMessage(ADMIN_ID, `💬 **رسالة دعم فورية**\n\n👤 ID: \`${userId}\`\n\n${text}`, { parse_mode: 'Markdown' });
                 await ctx.reply('✅ تم إرسال رسالتك للدعم بنجاح.');
                 return sendMainMenu(ctx, await getUser(userId));
@@ -455,7 +451,7 @@ function getBot() {
     });
 
     bot.action(/^approve_with_(\d+)$/, async (ctx) => {
-        await ctx.answerCbQuery('تم تأكيد السحب').catch(() => {});
+        await ctx.answerCbQuery().catch(() => {});
         const txId = ctx.match[1];
         const db = await getDb();
         const tx = await db.get('SELECT * FROM transactions WHERE id = ? AND status = "pending"', [txId]);
@@ -467,7 +463,7 @@ function getBot() {
     });
 
     bot.action(/^reject_with_(\d+)$/, async (ctx) => {
-        await ctx.answerCbQuery('تم رفض السحب').catch(() => {});
+        await ctx.answerCbQuery().catch(() => {});
         const txId = ctx.match[1];
         const db = await getDb();
         const tx = await db.get('SELECT * FROM transactions WHERE id = ? AND status = "pending"', [txId]);
