@@ -163,8 +163,9 @@ function getBot() {
         ]));
     });
 
+    // استجابة فورية وآمنة تماماً لأزرار الدفع لمنع أي تعليق
     bot.action(/^pay_/, async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
+        await ctx.answerCbQuery('جاري جلب تفاصيل الحساب...').catch(() => {});
         const userId = ctx.from.id;
         const method = ctx.match[0];
         
@@ -193,13 +194,25 @@ function getBot() {
         userStates[userId] = 'awaiting_transaction_number';
         pendingDeposits[userId] = { paymentMethod: name };
 
-        return ctx.editMessageText(`⚡ قم بالتحويل عبر **${name}** إلى الحساب التالي:\n\n\`${num}\`\n\nأدخل رقم العملية لتأكيد الشحن:`, {
-            parse_mode: 'Markdown',
-            ...Markup.inlineKeyboard([
-                [Markup.button.url(`تطبيق ${name} APK 📱`, apkUrl), Markup.button.url('فيديو الشرح 🎬', videoUrl)],
-                [Markup.button.callback('إلغاء ❌', 'main_menu')]
-            ])
-        });
+        const text = `⚡ قم بالتحويل عبر **${name}** إلى الحساب التالي:\n\n\`${num}\`\n\nأدخل رقم العملية لتأكيد الشحن:`;
+        
+        try {
+            await ctx.editMessageText(text, {
+                parse_mode: 'Markdown',
+                ...Markup.inlineKeyboard([
+                    [Markup.button.url(`تطبيق ${name} APK 📱`, apkUrl), Markup.button.url('فيديو الشرح 🎬', videoUrl)],
+                    [Markup.button.callback('إلغاء ❌', 'main_menu')]
+                ])
+            });
+        } catch (e) {
+            await ctx.reply(text, {
+                parse_mode: 'Markdown',
+                ...Markup.inlineKeyboard([
+                    [Markup.button.url(`تطبيق ${name} APK 📱`, apkUrl), Markup.button.url('فيديو الشرح 🎬', videoUrl)],
+                    [Markup.button.callback('إلغاء ❌', 'main_menu')]
+                ])
+            });
+        }
     });
 
     bot.action('account_menu', async (ctx) => {
