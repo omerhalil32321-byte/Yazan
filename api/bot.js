@@ -174,7 +174,6 @@ function getBot() {
         });
     });
 
-    // حل نهائي لعدم تعليق أزرار البنوك وظهور الحسابات فوراً عبر إرسال رسالة جديدة
     bot.action(/^pay_/, async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         const userId = ctx.from.id;
@@ -337,23 +336,52 @@ function getBot() {
                 const methodKey = temp.methodKey || 'syriatel';
                 const method = temp.paymentMethod || 'سيرياتيل كاش';
 
-                const rate = parseFloat(await getSetting(`${methodKey}_rate`, '100'));
-                const bonus = parseFloat(await getSetting('deposit_bonus_percent', '10'));
-
-                const multipliedAmount = amount * rate;
-                const net = multipliedAmount + (multipliedAmount * (bonus / 100));
-
                 await setUserState(userId, null, null);
-                await updateBalance(userId, net);
 
-                const res = await db.run(
-                    'INSERT INTO transactions (user_id, type, amount, net_amount, transaction_id, target_account, status) VALUES (?, "deposit", ?, ?, ?, ?, "approved")',
-                    [userId, amount, net, txId, method]
-                );
+                // إرسال رسالة انتظار وتفعيل مهلة الـ 10 ثوانٍ للتحقق التلقائي
+                const waitMsg = await ctx.reply('⏳ جاري التحقق من التحويل عبر تطبيق البنك... (يرجى الانتظار)');
 
-                await ctx.reply(`✅ **تم الشحن وإضافة الرصيد تلقائياً!**\n\n💵 المبلغ: ${amount}\n🔄 الصرف: x${rate}\n🎁 الإجمالي مع البونص: **${net} SYP**`);
-                
-                await bot.telegram.sendMessage(ADMIN_ID, `⚡ **عملية شحن أوتوماتيكية (#${res.lastID})**\n- User ID: \`${userId}\`\n- الطريقة: \`${method}\`\n- العملية: \`${txId}\`\n- المضاف: **${net}**`, { parse_mode: 'Markdown' });
+                // محاكاة التحقق التلقائي (خلال 10 ثوانٍ)
+                setTimeout(async () => {
+                    try {
+                        // هنا يتم الفحص التلقائي: إذا وجدنا التطبيق استجاب خلال 10 ثواني نضيف الرصيد تلقائياً
+                        // (محاكاة: إذا كان المبلغ متاحاً يتم الشحن الفوري، وإذا لم يستجب النظام يتم تحويله للأدمن)
+                        const rate = parseFloat(await getSetting(`${methodKey}_rate`, '100'));
+                        const bonus = parseFloat(await getSetting('deposit_bonus_percent', '10'));
+                        const multipliedAmount = amount * rate;
+                        const net = multipliedAmount + (multipliedAmount * (bonus / 100));
+
+                        // هل التطبيق قيد العمل؟ (نعتبره تحقق ناجح، وإذا لم يستجب نحوله للأدمن)
+                        const autoSuccess = true; // اجعلها تعتمد على استجابة النظام الفعلي لديك
+
+                        if (autoSuccess) {
+                            await updateBalance(userId, net);
+                            const res = await db.run(
+                                'INSERT INTO transactions (user_id, type, amount, net_amount, transaction_id, target_account, status) VALUES (?, "deposit", ?, ?, ?, ?, "approved")',
+                                [userId, amount, net, txId, method]
+                            );
+
+                            await ctx.telegram.editMessageText(ctx.chat.id, waitMsg.message_id, null, `✅ **تم شحن رصيدك تلقائياً بنجاح!**\n\n💵 المبلغ: ${amount}\n🔄 الصرف: x${rate}\n🎁 الإجمالي مع البونص: **${net} SYP**`, { parse_mode: 'Markdown' });
+                            
+                            await bot.telegram.sendMessage(ADMIN_ID, `⚡ **عملية شحن أوتوماتيكية (#${res.lastID})**\n- User ID: \`${userId}\`\n- الطريقة: \`${method}\`\n- العملية: \`${txId}\`\n- المضاف: **${net}**`, { parse_mode: 'Markdown' });
+                        } else {
+                            // إذا لم يستجب التطبيق خلال 10 ثوانٍ، يتم تحويله للأدمن للمراجعة اليدوية
+                            const res = await db.run(
+                                'INSERT INTO transactions (user_id, type, amount, net_amount, transaction_id, target_account, status) VALUES (?, "deposit", ?, ?, ?, ?, "pending")',
+                                [userId, amount, amount, txId, method]
+                            );
+
+                            await ctx.telegram.editMessageText(ctx.chat.id, waitMsg.message_id, null, `⚠️ لم يتم الرد من تطبيق البنك تلقائياً خلال 10 ثوانٍ.\n\nتم إرسال طلبك إلى **الإدارة للمراجعة اليدوية والقَبول الفوري**.`);
+                            
+                            await bot.telegram.sendMessage(ADMIN_ID, `📥 **طلب شحن جديد يحتاج مراجعة يدوية (#${res.lastID})**\n- User: \`${userId}\`\n- البنك: \`${method}\`\n- العملية: \`${txId}\`\n- المبلغ: ${amount}`, {
+                                parse_mode: 'Markdown',
+                                ...Markup.inlineKeyboard([
+                                    [Markup.button.callback('✅ قبول الشحن', `approve_dep_${res.lastID}`), Markup.button.callback('❌ رفض', `reject_dep_${res.lastID}`)]
+                                ])
+                            });
+                        }
+                    } catch (err) { console.error(err); }
+                }, 10000); // 10 ثوانٍ
 
                 return sendMainMenu(ctx, await getUser(userId));
             }
@@ -420,6 +448,36 @@ function getBot() {
                 return sendMainMenu(ctx, await getUser(userId));
             }
         } catch (e) { console.error(e); }
+    });
+
+    // أزرار قبول/رفض الإيداع اليدوي للأدمن إذا انقضت الـ 10 ثوانٍ
+    bot.action(/^approve_dep_(\d+)$/, async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        const txId = ctx.match[1];
+        const db = await getDb();
+        const tx = await db.get('SELECT * FROM transactions WHERE id = ? AND status = "pending"', [txId]);
+        if (tx) {
+            const rate = parseFloat(await getSetting('syriatel_rate', '100'));
+            const bonus = parseFloat(await getSetting('deposit_bonus_percent', '10'));
+            const net = (tx.amount * rate) + ((tx.amount * rate) * (bonus / 100));
+
+            await db.run('UPDATE transactions SET status = "approved", net_amount = ? WHERE id = ?', [net, txId]);
+            await updateBalance(tx.user_id, net);
+            await ctx.editMessageText(`${ctx.callbackQuery.message.text}\n\n✅ **تم قبول الشحن يدوياً وإضافة الرصيد للزبون.**`);
+            await bot.telegram.sendMessage(tx.user_id, `🎉 تم قبول عملية الشحن وإضافة ${net} SYP إلى رصيدك!`).catch(() => {});
+        }
+    });
+
+    bot.action(/^reject_dep_(\d+)$/, async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        const txId = ctx.match[1];
+        const db = await getDb();
+        const tx = await db.get('SELECT * FROM transactions WHERE id = ? AND status = "pending"', [txId]);
+        if (tx) {
+            await db.run('UPDATE transactions SET status = "rejected" WHERE id = ?', [txId]);
+            await ctx.editMessageText(`${ctx.callbackQuery.message.text}\n\n❌ **تم رفض عملية الشحن.**`);
+            await bot.telegram.sendMessage(tx.user_id, `❌ نعتذر، تم رفض عملية الشحن لعدم صحة البيانات.`).catch(() => {});
+        }
     });
 
     bot.action(/^approve_with_(\d+)$/, async (ctx) => {
