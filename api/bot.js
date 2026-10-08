@@ -147,7 +147,7 @@ function getBot() {
     bot.action('admin_panel', async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         if (ctx.from.id !== ADMIN_ID) return;
-        return ctx.editMessageText(`⚙️ **لوحة تحكم الأدمن:**\n\nلإدارة وتعديل الأرقام، التطبيقات، وفيديوهات الشرح لكل بنك، افتح موقعك على Vercel من المتصفح.`, {
+        return ctx.editMessageText(`⚙️ **لوحة تحكم الأدمن:**\n\nلإدارة وتعديل الأرقام، التطبيقات، وفيديوهات الشرح، افتح موقعك على Vercel من المتصفح.`, {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
         });
@@ -231,6 +231,10 @@ function getBot() {
         ]));
     });
 
+    bot.action('promo', async (ctx) => {
+        await ctx.answerCbQuery('لا يوجد كود نشط حالياً ⚠️', { show_alert: true });
+    });
+
     bot.action('gift_menu', async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         userStates[ctx.from.id] = 'awaiting_gift_target_id';
@@ -238,16 +242,6 @@ function getBot() {
         return ctx.editMessageText('🎁 أدخل أيدي (ID) الصديق المراد إرسال الهدية له فوراً:', Markup.inlineKeyboard([
             [Markup.button.callback('إلغاء ❌', 'main_menu')]
         ]));
-    });
-
-    bot.action('offers', async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
-        const b = await getSetting('deposit_bonus_percent', '10');
-        const d = await getSetting('withdraw_discount_percent', '10');
-        return ctx.editMessageText(`🎁 **العروض الفورية النشطة:**\n\n✨ بونص إيداع: +${b}%\n🔻 عمولة سحب: ${d}%`, {
-            parse_mode: 'Markdown',
-            ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
-        });
     });
 
     bot.action('referrals_menu', async (ctx) => {
@@ -267,6 +261,43 @@ function getBot() {
         return ctx.editMessageText('💬 أكتب رسالتك للدعم وستصل للإدارة فوراً:', Markup.inlineKeyboard([
             [Markup.button.callback('إلغاء ❌', 'main_menu')]
         ]));
+    });
+
+    bot.action('logs_menu', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        const userId = ctx.from.id;
+        const db = await getDb();
+        const txs = await db.all('SELECT * FROM transactions WHERE user_id = ? ORDER BY id DESC LIMIT 5', [userId]);
+        let msg = '📄 **آخر العمليات الخاصة بك:**\n\n';
+        if (txs.length === 0) {
+            msg += 'لا توجد عمليات سابقة.';
+        } else {
+            txs.forEach(t => {
+                msg += `- النوع: ${t.type} | المبلغ: ${t.amount} | الحالة: ${t.status}\n`;
+            });
+        }
+        return ctx.editMessageText(msg, {
+            parse_mode: 'Markdown',
+            ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
+        });
+    });
+
+    bot.action('offers', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        const b = await getSetting('deposit_bonus_percent', '10');
+        const d = await getSetting('withdraw_discount_percent', '10');
+        return ctx.editMessageText(`🎁 **العروض الفورية النشطة:**\n\n✨ بونص إيداع: +${b}%\n🔻 عمولة سحب: ${d}%`, {
+            parse_mode: 'Markdown',
+            ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
+        });
+    });
+
+    bot.action('terms', async (ctx) => {
+        await ctx.answerCbQuery().catch(() => {});
+        return ctx.editMessageText('⚠️ **شروط الاستخدام:**\n\nيجب التأكد من إدخال رقم العملية الصحيح والمبلغ المطابق لضمان سرعة معالجة طلبك.', {
+            parse_mode: 'Markdown',
+            ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
+        });
     });
 
     bot.on('text', async (ctx) => {
@@ -450,13 +481,11 @@ module.exports = async (req, res) => {
     try {
         await getDb();
 
-        // قراءة الـ Body في حال أرسل Vercel البيانات كنص
         let body = req.body;
         if (typeof body === 'string') {
             try { body = JSON.parse(body); } catch (e) { body = {}; }
         }
 
-        // إذا تم فتح الموقع من المتصفح (عرض لوحة التحكم)
         if (req.method === 'GET') {
             const s = await getSetting('syriatel', '');
             const s_apk = await getSetting('syriatel_apk', '');
@@ -532,7 +561,6 @@ module.exports = async (req, res) => {
             `);
         }
 
-        // إذا تم إرسال تحديثات من لوحة الويب (POST بدون تحديث تليغرام)
         if (req.method === 'POST' && body && Object.keys(body).length > 0 && !body.update_id) {
             for (const [k, v] of Object.entries(body)) {
                 await setSetting(k, v);
@@ -546,7 +574,6 @@ module.exports = async (req, res) => {
             `);
         }
 
-        // معالجة رسائل وأزرار بوت تليغرام
         const bot = getBot();
         if (body && body.update_id) {
             await bot.handleUpdate(body);
