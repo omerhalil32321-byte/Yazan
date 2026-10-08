@@ -100,6 +100,7 @@ function getBot() {
     async function sendMainMenu(ctx, user) {
         const userId = ctx.from.id;
         const msg = `📋 **قائمة الخيارات الرئيسية** \n\n💰 الرصيد الحالي: ${user.balance || 0} SYP\n🆔 أيدي حسابك: \`${userId}\``;
+        
         const buttons = [
             [Markup.button.callback('حساب ايسانسي وشحنه ⚡', 'account_menu')],
             [Markup.button.callback('شحن رصيد في البوت 📥', 'deposit_menu'), Markup.button.callback('سحب رصيد من البوت 📤', 'withdraw_menu')],
@@ -108,10 +109,16 @@ function getBot() {
             [Markup.button.callback('إرسال رسالة للدعم 💬', 'support_menu'), Markup.button.callback('السجلات 📄', 'logs_menu')],
             [Markup.button.callback('العروض النشطة 🎁', 'offers'), Markup.button.callback('شروط الاستخدام ⚠️', 'terms')]
         ];
-        if (userId === ADMIN_ID) buttons.unshift([Markup.button.callback('⚙️ لوحة تحكم الأدمن', 'admin_panel')]);
+        
+        if (userId === ADMIN_ID) {
+            buttons.unshift([Markup.button.callback('⚙️ لوحة تحكم الأدمن', 'admin_panel')]);
+        }
+
         const keyboard = Markup.inlineKeyboard(buttons);
         try {
-            if (ctx.callbackQuery) return await ctx.editMessageText(msg, { parse_mode: 'Markdown', ...keyboard });
+            if (ctx.callbackQuery) {
+                return await ctx.editMessageText(msg, { parse_mode: 'Markdown', ...keyboard });
+            }
             return await ctx.reply(msg, { parse_mode: 'Markdown', ...keyboard });
         } catch (e) {
             return await ctx.reply(msg, { parse_mode: 'Markdown', ...keyboard });
@@ -140,7 +147,7 @@ function getBot() {
     bot.action('admin_panel', async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         if (ctx.from.id !== ADMIN_ID) return;
-        return ctx.editMessageText('⚙️ **لوحة تحكم الأدمن:**\n\nلإدارة وتعديل الأرقام، التطبيقات، وفيديوهات الشرح لكل بنك بكل سهولة، قم بفتح **رابط موقعك على Vercel** من متصفح الإنترنت الخاص بك.', {
+        return ctx.editMessageText(`⚙️ **لوحة تحكم الأدمن:**\n\nلإدارة وتعديل الأرقام، التطبيقات، وفيديوهات الشرح لكل بنك بكل سهولة، قم بفتح **رابط موقعك على Vercel** من متصفح الإنترنت الخاص بك.`, {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
         });
@@ -156,7 +163,6 @@ function getBot() {
         ]));
     });
 
-    // عند اختيار الزبون للبنك، يتم جلب رقمه، تطبيق APK الخاص به، وفيديو الشرح الخاص به حصرياً
     bot.action(/^pay_/, async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         const userId = ctx.from.id;
@@ -190,7 +196,10 @@ function getBot() {
         return ctx.editMessageText(`⚡ قم بالتحويل عبر **${name}** إلى الحساب التالي:\n\n\`${num}\`\n\n📱 [تحميل تطبيق ${name} APK](${apkUrl})\n🎬 [شاهد فيديو الشرح وسعر الصرف](${videoUrl})\n\nأدخل رقم العملية لتأكيد الشحن:`, {
             parse_mode: 'Markdown',
             disable_web_page_preview: true,
-            ...Markup.inlineKeyboard([[Markup.button.callback('إلغاء ❌', 'main_menu')]])
+            ...Markup.inlineKeyboard([
+                [Markup.button.url(`تطبيق ${name} APK 📱`, apkUrl), Markup.button.url('فيديو الشرح 🎬', videoUrl)],
+                [Markup.button.callback('إلغاء ❌', 'main_menu')]
+            ])
         });
     });
 
@@ -442,7 +451,6 @@ module.exports = async (req, res) => {
     try {
         await getDb();
         
-        // لوحة تحكم الويب المحدثة لكل بنك على حدة (أرقام، تطبيقات APK، وفيديوهات الشرح وسعر الصرف)
         if (req.method === 'GET' && !req.query?.bot) {
             const s = await getSetting('syriatel', '');
             const s_apk = await getSetting('syriatel_apk', '');
@@ -518,8 +526,7 @@ module.exports = async (req, res) => {
             `);
         }
 
-        // استقبال وتخزين كافة الإرساليات من لوحة الويب فوراً في قاعدة البيانات
-        if (req.method === 'POST' && req.body) {
+        if (req.method === 'POST' && req.body && Object.keys(req.body).length > 0) {
             for (const [k, v] of Object.entries(req.body)) {
                 await setSetting(k, v);
             }
