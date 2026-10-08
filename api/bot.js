@@ -8,6 +8,15 @@ const ADMIN_ID = parseInt(process.env.ADMIN_ID || '7074242190');
 let botInstance = null;
 let dbInstance = null;
 
+// إعدادات افتراضية ثابتة تضمن عدم ضياعها أبداً على Vercel
+let staticSettings = {
+    syriatel: '87524496',
+    shamcash: '0912345678',
+    usdt: 'TXXXXXXXXXXXXXX',
+    deposit_bonus_percent: '10',
+    withdraw_discount_percent: '10'
+};
+
 async function getDb() {
     if (dbInstance) return dbInstance;
     dbInstance = await open({
@@ -23,10 +32,6 @@ async function getDb() {
             ichancy_pass TEXT,
             referrer_id INTEGER
         );
-        CREATE TABLE IF NOT EXISTS settings (
-            setting_key TEXT PRIMARY KEY,
-            setting_value TEXT
-        );
         CREATE TABLE IF NOT EXISTS transactions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
@@ -38,15 +43,6 @@ async function getDb() {
             status TEXT DEFAULT 'pending'
         );
     `);
-
-    const check = await dbInstance.get('SELECT setting_value FROM settings WHERE setting_key = "syriatel"');
-    if (!check) {
-        await dbInstance.run('INSERT INTO settings (setting_key, setting_value) VALUES ("syriatel", "87524496")');
-        await dbInstance.run('INSERT INTO settings (setting_key, setting_value) VALUES ("shamcash", "0912345678")');
-        await dbInstance.run('INSERT INTO settings (setting_key, setting_value) VALUES ("usdt", "TXXXXXXXXXXXXXX")');
-        await dbInstance.run('INSERT INTO settings (setting_key, setting_value) VALUES ("deposit_bonus_percent", "10")');
-        await dbInstance.run('INSERT INTO settings (setting_key, setting_value) VALUES ("withdraw_discount_percent", "10")');
-    }
     return dbInstance;
 }
 
@@ -73,17 +69,6 @@ function getBot() {
         await db.run('UPDATE users SET balance = balance + ? WHERE user_id = ?', [amount, userId]);
     }
 
-    async function getSetting(key, def = '') {
-        const db = await getDb();
-        const row = await db.get('SELECT setting_value FROM settings WHERE setting_key = ?', [key]);
-        return (row && row.setting_value) ? row.setting_value : def;
-    }
-
-    async function setSetting(key, val) {
-        const db = await getDb();
-        await db.run('INSERT OR REPLACE INTO settings (setting_key, setting_value) VALUES (?, ?)', [key, val]);
-    }
-
     async function sendMainMenu(ctx, user) {
         const userId = ctx.from.id;
         const msg = `📋 **قائمة الخيارات الرئيسية** \n\n💰 الرصيد الحالي: ${user.balance || 0} SYP\n🆔 أيدي حسابك: \`${userId}\``;
@@ -106,18 +91,12 @@ function getBot() {
     }
 
     async function renderAdmin(ctx, isEdit = true) {
-        const s = await getSetting('syriatel', '87524496');
-        const sh = await getSetting('shamcash', '0912345678');
-        const us = await getSetting('usdt', 'TXXXXXXXXXXXXXX');
-        const bo = await getSetting('deposit_bonus_percent', '10');
-        const di = await getSetting('withdraw_discount_percent', '10');
-
         const text = `⚙️ **لوحة التحكم والإعدادات الحالية:**\n\n` +
-            `📱 سيرياتيل كاش: \`${s}\`\n` +
-            `💳 شام كاش: \`${sh}\`\n` +
-            `🌐 USDT: \`${us}\`\n` +
-            `🎁 بونص الإيداع: **%${bo}**\n` +
-            `🔻 عمولة السحب: **%${di}**\n\n` +
+            `📱 سيرياتيل كاش: \`${staticSettings.syriatel}\`\n` +
+            `💳 شام كاش: \`${staticSettings.shamcash}\`\n` +
+            `🌐 USDT: \`${staticSettings.usdt}\`\n` +
+            `🎁 بونص الإيداع: **%${staticSettings.deposit_bonus_percent}**\n` +
+            `🔻 عمولة السحب: **%${staticSettings.withdraw_discount_percent}**\n\n` +
             `اضغط على الزر لتعديل قيمته عبر الدردشة:`;
 
         const kb = Markup.inlineKeyboard([
@@ -137,6 +116,11 @@ function getBot() {
         const userId = ctx.from.id;
         delete userStates[userId];
         const user = await getUser(userId);
+        return sendMainMenu(ctx, user);
+    });
+
+    bot.command(['account', 'deposit', 'withdraw', 'support'], async (ctx) => {
+        const user = await getUser(ctx.from.id);
         return sendMainMenu(ctx, user);
     });
 
@@ -186,8 +170,8 @@ function getBot() {
         userStates[userId] = 'awaiting_transaction_number';
         pendingDeposits[userId] = {};
 
-        let num = method === 'pay_syriatel' ? await getSetting('syriatel', '87524496') :
-                  method === 'pay_shamcash' ? await getSetting('shamcash', '0912345678') : await getSetting('usdt', 'TXXXXXXXXXXXXXX');
+        let num = method === 'pay_syriatel' ? staticSettings.syriatel :
+                  method === 'pay_shamcash' ? staticSettings.shamcash : staticSettings.usdt;
         let name = method === 'pay_syriatel' ? 'سيرياتيل كاش' : method === 'pay_shamcash' ? 'شام كاش' : 'USDT';
 
         return ctx.editMessageText(`قم بالتحويل عبر **${name}** إلى الرقم التالي:\n\n\`${num}\`\n\nأدخل رقم العملية الآن:`, {
@@ -236,9 +220,7 @@ function getBot() {
 
     bot.action('offers', async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
-        const b = await getSetting('deposit_bonus_percent', '10');
-        const d = await getSetting('withdraw_discount_percent', '10');
-        return ctx.editMessageText(`🎁 **العروض النشطة:**\n\n✨ بونص إيداع: +${b}\%\n🔻 عمولة سحب: ${d}%`, {
+        return ctx.editMessageText(`🎁 **العروض النشطة:**\n\n✨ بونص إيداع: +${staticSettings.deposit_bonus_percent}\%\n🔻 عمولة سحب: ${staticSettings.withdraw_discount_percent}%`, {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
         });
@@ -278,9 +260,9 @@ function getBot() {
                     'set_bonus': 'deposit_bonus_percent',
                     'set_discount': 'withdraw_discount_percent'
                 };
-                await setSetting(map[state], text);
+                staticSettings[map[state]] = text;
                 delete userStates[ADMIN_ID];
-                await ctx.reply(`✅ تم الحفظ بنجاح! القيمة الجديدة: \`${text}\``, { parse_mode: 'Markdown' });
+                await ctx.reply(`✅ تم تحديث وحفظ القيمة بنجاح إلى: \`${text}\``, { parse_mode: 'Markdown' });
                 return renderAdmin(ctx, false);
             }
 
@@ -301,7 +283,7 @@ function getBot() {
             if (state === 'awaiting_deposit_amount') {
                 const amount = parseFloat(text);
                 if (isNaN(amount) || amount <= 0) return ctx.reply('❌ يرجى إدخال مبلغ صحيح.');
-                const bonus = parseFloat(await getSetting('deposit_bonus_percent', '10'));
+                const bonus = parseFloat(staticSettings.deposit_bonus_percent);
                 const net = amount + (amount * (bonus / 100));
                 const txId = pendingDeposits[userId].transactionId;
 
@@ -337,7 +319,7 @@ function getBot() {
                     await ctx.reply('❌ رصيدك غير كافي.');
                     return sendMainMenu(ctx, user);
                 }
-                const discount = parseFloat(await getSetting('withdraw_discount_percent', '10'));
+                const discount = parseFloat(staticSettings.withdraw_discount_percent);
                 const net = amount - (amount * (discount / 100));
                 const acc = pendingWithdrawals[userId].targetAccount;
 
