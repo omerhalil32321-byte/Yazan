@@ -147,7 +147,7 @@ function getBot() {
     bot.action('admin_panel', async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         if (ctx.from.id !== ADMIN_ID) return;
-        return ctx.editMessageText(`⚙️ **لوحة تحكم الأدمن:**\n\nلإدارة وتعديل الأرقام، التطبيقات، وفيديوهات الشرح لكل بنك بكل سهولة، قم بفتح **رابط موقعك على Vercel** من متصفح الإنترنت الخاص بك.`, {
+        return ctx.editMessageText(`⚙️ **لوحة تحكم الأدمن:**\n\nلإدارة وتعديل الأرقام، التطبيقات، وفيديوهات الشرح لكل بنك، افتح موقعك على Vercel من المتصفح.`, {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
         });
@@ -193,9 +193,8 @@ function getBot() {
         userStates[userId] = 'awaiting_transaction_number';
         pendingDeposits[userId] = { paymentMethod: name };
 
-        return ctx.editMessageText(`⚡ قم بالتحويل عبر **${name}** إلى الحساب التالي:\n\n\`${num}\`\n\n📱 [تحميل تطبيق ${name} APK](${apkUrl})\n🎬 [شاهد فيديو الشرح وسعر الصرف](${videoUrl})\n\nأدخل رقم العملية لتأكيد الشحن:`, {
+        return ctx.editMessageText(`⚡ قم بالتحويل عبر **${name}** إلى الحساب التالي:\n\n\`${num}\`\n\nأدخل رقم العملية لتأكيد الشحن:`, {
             parse_mode: 'Markdown',
-            disable_web_page_preview: true,
             ...Markup.inlineKeyboard([
                 [Markup.button.url(`تطبيق ${name} APK 📱`, apkUrl), Markup.button.url('فيديو الشرح 🎬', videoUrl)],
                 [Markup.button.callback('إلغاء ❌', 'main_menu')]
@@ -450,8 +449,15 @@ function getBot() {
 module.exports = async (req, res) => {
     try {
         await getDb();
-        
-        if (req.method === 'GET' && !req.query?.bot) {
+
+        // قراءة الـ Body في حال أرسل Vercel البيانات كنص
+        let body = req.body;
+        if (typeof body === 'string') {
+            try { body = JSON.parse(body); } catch (e) { body = {}; }
+        }
+
+        // إذا تم فتح الموقع من المتصفح (عرض لوحة التحكم)
+        if (req.method === 'GET') {
             const s = await getSetting('syriatel', '');
             const s_apk = await getSetting('syriatel_apk', '');
             const s_vid = await getSetting('syriatel_video', '');
@@ -526,8 +532,9 @@ module.exports = async (req, res) => {
             `);
         }
 
-        if (req.method === 'POST' && req.body && Object.keys(req.body).length > 0) {
-            for (const [k, v] of Object.entries(req.body)) {
+        // إذا تم إرسال تحديثات من لوحة الويب (POST بدون تحديث تليغرام)
+        if (req.method === 'POST' && body && Object.keys(body).length > 0 && !body.update_id) {
+            for (const [k, v] of Object.entries(body)) {
                 await setSetting(k, v);
             }
             res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -539,9 +546,10 @@ module.exports = async (req, res) => {
             `);
         }
 
+        // معالجة رسائل وأزرار بوت تليغرام
         const bot = getBot();
-        if (req.method === 'POST') {
-            await bot.handleUpdate(req.body);
+        if (body && body.update_id) {
+            await bot.handleUpdate(body);
             return res.status(200).json({ status: 'success' });
         }
         
