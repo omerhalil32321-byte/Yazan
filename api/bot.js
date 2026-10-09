@@ -3,7 +3,6 @@ const { Telegraf, Markup } = require('telegraf');
 const BOT_TOKEN = process.env.BOT_TOKEN || '8991565390:AAGLlPEM2rf4EDZ5DIUHSdZoURy23-yKivk';
 const ADMIN_ID = parseInt(process.env.ADMIN_ID || '7074242190');
 
-// ذاكرة دائمية ومستقرة تماماً على Vercel
 const memoryStore = {
     users: {},
     settings: {
@@ -15,8 +14,7 @@ const memoryStore = {
         'bank2_name': 'شام كاش 💳 (Webhook آلي)',
         'bank2_acc': '8811164969946430',
         'bank2_rate': '1',
-        'bank2_api_key': 'sk_44be05d6c99af48263a54813fecdc8a415531c04f93888451d3f61b66c08ada0',
-        'bank2_url': 'https://api-shamcash.com', // رابط لوحة شام كاش الخاصة بك
+        'bank2_url': 'https://api-shamcash.com',
 
         'bank3_name': 'USDT 🌐',
         'bank3_acc': 'TXXXXXXXXXXXXXX',
@@ -37,10 +35,6 @@ const memoryStore = {
 
 async function getSetting(key, def = '') {
     return memoryStore.settings[key] !== undefined ? memoryStore.settings[key] : def;
-}
-
-async function setSetting(key, val) {
-    memoryStore.settings[key] = val;
 }
 
 async function getUser(userId) {
@@ -145,7 +139,6 @@ function createBot() {
         const acc = await getSetting(`${bankNum}_acc`, '');
         const url = await getSetting(`${bankNum}_url`, 'https://api-shamcash.com');
 
-        // إذا كان شام كاش (bank2)، نعرض زر فتح صفحة شام كاش والتحويلات مباشرة
         const buttons = bankNum === 'bank2' ? [
             [Markup.button.url('🌐 فتح واجهة شام كاش وسجل الحركات', url)],
             [Markup.button.callback('رجوع لوحة الأدمن ↩️', 'admin_panel')]
@@ -247,7 +240,6 @@ function createBot() {
 
     bot.action('referrals_menu', async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
-        const userId = ctx.from.id;
         return ctx.editMessageText(`👥 **الإحالات الفورية**\n\nعدد إحالاتك: 0`, {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
@@ -479,10 +471,10 @@ module.exports = async (req, res) => {
         }
 
         if (req.method === 'GET') {
-            const b2_name = await memoryStore.settings['bank2_name'];
-            const b2_acc = await memoryStore.settings['bank2_acc'];
-            const b2_rate = await memoryStore.settings['bank2_rate'];
-            const b2_url = await memoryStore.settings['bank2_url'];
+            const b2_name = await getSetting('bank2_name');
+            const b2_acc = await getSetting('bank2_acc');
+            const b2_rate = await getSetting('bank2_rate');
+            const b2_url = await getSetting('bank2_url');
 
             res.setHeader('Content-Type', 'text/html; charset=utf-8');
             return res.status(200).send(`
@@ -542,7 +534,7 @@ module.exports = async (req, res) => {
 
         const bot = createBot();
         if (body && body.update_id) {
-            await bot.handleUpdate(body);
+            await bot.handleOrder ? await bot.handleOrder(body) : await bot.handleUpdate(body);
             return res.status(200).json({ status: 'success' });
         }
         
