@@ -95,6 +95,7 @@ function createBot() {
         }
     }
 
+    // فتح البوت فوراً وبشكل مباشر بدون أي تحقق من اشتراك قنوات
     bot.start(async (ctx) => {
         try {
             const userId = ctx.from.id;
@@ -510,9 +511,9 @@ module.exports = async (req, res) => {
                 </head>
                 <body>
                     <div class="container">
-                        <h2>🚀 ربط Webhook شام كاش الآمن والصارم</h2>
+                        <h2>🚀 ربط Webhook شام كاش الآمن</h2>
                         <div class="alert">
-                            📌 <b>حالة النظام:</b> تم إزالة أي قيود أو اشتراكات خارجية. البوت يعمل مباشرة وبدون قنوات إجبارية.
+                            📌 <b>حالة النظام:</b> تم حذف جميع شروط الاشتراك الإجباري. البوت يعمل مباشرة وبدون أي قيود أو قنوات خارجية.
                         </div>
                         <form method="POST" action="">
                             <fieldset style="border-color: #38bdf8;">
