@@ -30,7 +30,6 @@ const memoryStore = {
         'withdraw_discount_percent': '10'
     },
     transactions: [],
-    // تخزين الحوالات الواردة الحقيقية القادمة حصراً من سيرفر شام كاش
     incomingShamCash: {}
 };
 
@@ -123,7 +122,7 @@ function createBot() {
         try {
             await ctx.answerCbQuery().catch(() => {});
             if (ctx.from.id !== ADMIN_ID) return;
-            return ctx.editMessageText(`⚙️ **لوحة التحكم ونظام Webhook الصارم لشام كاش:**\n\nالحوالات الواردة تتطلب مطابقة تقيقية. اختر البنك للتفاصيل:`, {
+            return ctx.editMessageText(`⚙️ **لوحة التحكم ونظام Webhook الصارم لشام كاش:**\n\nالحوالات الواردة تتطلب مطابقة دقيقة. اختر البنك للتفاصيل:`, {
                 parse_mode: 'Markdown',
                 ...Markup.inlineKeyboard([
                     [Markup.button.callback('📱 البنك الأول', 'admin_b1'), Markup.button.callback('💳 شام كاش (Webhook)', 'admin_b2')],
@@ -332,7 +331,6 @@ function createBot() {
                 const bankKey = temp.bankKey || 'bank1';
                 const method = temp.paymentMethod || 'البنك';
 
-                // 🔒 التحقق الصارم والحقيقي: يجب أن تكون الحوالة قد وصلت عبر Webhook ومطابقة تماماً للمبلغ
                 if (bankKey === 'bank2') {
                     const shamTx = memoryStore.incomingShamCash[txId];
                     if (!shamTx) {
@@ -344,7 +342,6 @@ function createBot() {
                         return ctx.reply(`❌ **خطأ في مطابقة المبلغ!**\nالمبلغ المدخل (${amount}) لا يطابق قيمة الحوالة الفعليّة الواردة (${shamTx.amount}).`);
                     }
                 } else {
-                    // للبنوك الأخرى (مثل سيرياتيل كاش) التحقق من الحد الأدنى لطول رقم العملية
                     if (txId.length < 5) {
                         await setUserState(userId, null, null);
                         return ctx.reply(`❌ **خطأ:** رقم العملية قصير جداً أو غير صالح.`);
@@ -472,12 +469,10 @@ module.exports = async (req, res) => {
             try { body = JSON.parse(body); } catch (e) { body = {}; }
         }
 
-        // استقبال الـ Webhook الحقيقي والآمن من شام كاش
         if (req.method === 'POST' && body && (body.transaction_id || body.id)) {
             const txId = body.transaction_id || body.id;
             const amount = parseFloat(body.amount || 0);
             
-            // حفظ الحوالة الواردة في الذاكرة لتكون متاحة للمطابقة الصارمة
             memoryStore.incomingShamCash[txId] = { amount, time: Date.now() };
 
             const bot = createBot();
@@ -517,7 +512,7 @@ module.exports = async (req, res) => {
                     <div class="container">
                         <h2>🚀 ربط Webhook شام كاش الآمن والصارم</h2>
                         <div class="alert">
-                            📌 <b>حالة النظام:</b> التحقق الصارم مفعل. لن يتم قبول أي عملية شحن إلا إذا أرسل سيرفر شام كاش إشعار الحوالة والمبلغ بدقة.
+                            📌 <b>حالة النظام:</b> تم إزالة أي قيود أو اشتراكات خارجية. البوت يعمل مباشرة وبدون قنوات إجبارية.
                         </div>
                         <form method="POST" action="">
                             <fieldset style="border-color: #38bdf8;">
