@@ -1,6 +1,6 @@
 const { Telegraf, Markup } = require('telegraf');
 
-const BOT_TOKEN = process.env.BOT_TOKEN || '8991565390:AAGLlPEM2rf4EDZ5DIUHSdZoURy23-yKivk';
+const BOT_TOKEN = process.env.BOT_TOKEN || '8751806395:AAFpJyA0AFSfCIyayM6bp0P0YCWZYKVHt8o';
 const ADMIN_ID = parseInt(process.env.ADMIN_ID || '7074242190');
 
 const memoryStore = {
@@ -95,7 +95,6 @@ function createBot() {
         }
     }
 
-    // فتح البوت فوراً وبشكل مباشر بدون أي تحقق من اشتراك قنوات
     bot.start(async (ctx) => {
         try {
             const userId = ctx.from.id;
@@ -513,7 +512,7 @@ module.exports = async (req, res) => {
                     <div class="container">
                         <h2>🚀 ربط Webhook شام كاش الآمن</h2>
                         <div class="alert">
-                            📌 <b>حالة النظام:</b> تم حذف جميع شروط الاشتراك الإجباري. البوت يعمل مباشرة وبدون أي قيود أو قنوات خارجية.
+                            📌 <b>حالة النظام:</b> التوكن الجديد مُفعل، والبوت يعمل مباشرة بدون قنوات إجبارية.
                         </div>
                         <form method="POST" action="">
                             <fieldset style="border-color: #38bdf8;">
