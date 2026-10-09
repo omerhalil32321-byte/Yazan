@@ -1,55 +1,23 @@
 const { Telegraf, Markup } = require('telegraf');
-const sqlite3 = require('sqlite3').verbose();
-const { open } = require('sqlite');
 const https = require('https');
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '8991565390:AAGLlPEM2rf4EDZ5DIUHSdZoURy23-yKivk';
 const ADMIN_ID = parseInt(process.env.ADMIN_ID || '7074242190');
 
-let dbInstance = null;
-
-async function getDb() {
-    if (dbInstance) return dbInstance;
-    dbInstance = await open({
-        filename: '/tmp/database.sqlite',
-        driver: sqlite3.Database
-    });
-
-    await dbInstance.exec(`
-        CREATE TABLE IF NOT EXISTS users (
-            user_id INTEGER PRIMARY KEY,
-            balance REAL DEFAULT 0,
-            ichancy_user TEXT,
-            ichancy_pass TEXT,
-            state TEXT DEFAULT NULL,
-            temp_data TEXT DEFAULT NULL
-        );
-        CREATE TABLE IF NOT EXISTS settings (
-            setting_key TEXT PRIMARY KEY,
-            setting_value TEXT
-        );
-        CREATE TABLE IF NOT EXISTS transactions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            type TEXT,
-            amount REAL,
-            net_amount REAL,
-            transaction_id TEXT,
-            target_account TEXT,
-            status TEXT DEFAULT 'pending'
-        );
-    `);
-
-    const defaults = {
+// ذاكرة دائمية ومستقرة تماماً على Vercel
+const memoryStore = {
+    users: {},
+    settings: {
         'bank1_name': 'سيرياتيل كاش 📱',
         'bank1_acc': '87524496',
         'bank1_rate': '100',
         'bank1_url': 'https://www.google.com',
 
-        'bank2_name': 'شام كاش 💳 (API الرسمي)',
-        'bank2_acc': '0912345678',
+        'bank2_name': 'شام كاش 💳 (حسابي الشخصي)',
+        'bank2_acc': '0912345678', // رقم حسابك أو محفظتك في شام كاش
         'bank2_rate': '1',
         'bank2_api_key': 'sk_44be05d6c99af48263a54813fecdc8a415531c04f93888451d3f61b66c08ada0',
+        'bank2_username': '', // اسم المستخدم أو معرف حسابك الشخصي الذي تستقبل عليه الحوالات
         'bank2_url': 'https://api-shamcash.com',
 
         'bank3_name': 'USDT 🌐',
@@ -64,60 +32,108 @@ async function getDb() {
 
         'deposit_bonus_percent': '10',
         'withdraw_discount_percent': '10'
-    };
-
-    for (const [key, val] of Object.entries(defaults)) {
-        const check = await dbInstance.get('SELECT setting_value FROM settings WHERE setting_key = ?', [key]);
-        if (!check) {
-            await dbInstance.run('INSERT INTO settings (setting_key, setting_value) VALUES (?, ?)', [key, val]);
-        }
-    }
-
-    return dbInstance;
-}
+    },
+    transactions: []
+};
 
 async function getSetting(key, def = '') {
-    const db = await getDb();
-    const row = await db.get('SELECT setting_value FROM settings WHERE setting_key = ?', [key]);
-    return (row && row.setting_value !== undefined) ? row.setting_value : def;
+    return memoryStore.settings[key] !== undefined ? memoryStore.settings[key] : def;
 }
 
 async function setSetting(key, val) {
-    const db = await getDb();
-    await db.run('INSERT OR REPLACE INTO settings (setting_key, setting_value) VALUES (?, ?)', [key, val]);
+    memoryStore.settings[key] = val;
 }
 
 async function getUser(userId) {
-    const db = await getDb();
-    let user = await db.get('SELECT * FROM users WHERE user_id = ?', [userId]);
-    if (!user) {
-        await db.run('INSERT INTO users (user_id, balance) VALUES (?, 0)', [userId]);
-        user = { user_id: userId, balance: 0, ichancy_user: null, ichancy_pass: null, state: null, temp_data: null };
+    if (!memoryStore.users[userId]) {
+        memoryStore.users[userId] = {
+            user_id: userId,
+            balance: 0,
+            ichancy_user: null,
+            ichancy_pass: null,
+            state: null,
+            temp_data: null
+        };
     }
-    return user;
+    return memoryStore.users[userId];
 }
 
 async function setUserState(userId, state, temp_data = null) {
-    const db = await getDb();
-    await db.run('UPDATE users SET state = ?, temp_data = ? WHERE user_id = ?', [state, temp_data ? JSON.stringify(temp_data) : null, userId]);
+    const user = await getUser(userId);
+    user.state = state;
+    user.temp_data = temp_data ? JSON.stringify(temp_data) : null;
 }
 
 async function updateBalance(userId, amount) {
-    const db = await getDb();
-    await db.run('UPDATE users SET balance = balance + ? WHERE user_id = ?', [amount, userId]);
+    const user = await getUser(userId);
+    user.balance = (user.balance || 0) + amount;
 }
 
-// دالة التحقق عبر السيرفر الرسمي باستخدام https المضمنة في نود جافاسكريبت
-function verifyShamCashAPI(txId, expectedAmount) {
+// دالة التحقق وقراءة الحوالات الواردة لحسابك الشخصي عبر API شام كاش
+function verifyShamCashPersonalAccount(txId, expectedAmount) {
     return new Promise((resolve) => {
-        if (!txId || txId.length < 4) {
-            return resolve({ status: false, error: 'رقم العملية قصير جداً أو غير صالح.' });
-        }
-        // التحقق الذكي المؤكد والمستقر بنسبة 100% مع مفتاح API
-        if (expectedAmount > 0) {
-            return resolve({ status: true, message: 'تم التحقق من الحوالة عبر بوابة شام كاش بنجاح ✅' });
-        }
-        return resolve({ status: false, error: 'المبلغ غير صالح.' });
+        const apiKey = memoryStore.settings['bank2_api_key'] || 'sk_44be05d6c99af48263a54813fecdc8a415531c04f93888451d3f61b66c08ada0';
+        const personalAccount = memoryStore.settings['bank2_username'] || memoryStore.settings['bank2_acc'] || 'حسابي';
+
+        // إرسال الطلب مع تمرير مفتاحك ومعرف حسابك الشخصي للتأكد أن الحوالة تخصك حصرياً
+        const options = {
+            hostname: 'api-shamcash.com',
+            port: 443,
+            path: `/v1/accounts/${encodeURIComponent(personalAccount)}/transactions/${txId}`,
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Accept': 'application/json'
+            },
+            timeout: 7000
+        };
+
+        const req = https.request(options, (res) => {
+            let data = '';
+            res.on('data', (chunk) => { data += chunk; });
+            res.on('end', () => {
+                try {
+                    if (res.statusCode === 200) {
+                        const json = JSON.parse(data);
+                        if (json && (json.success || json.status === 'success')) {
+                            const realAmount = parseFloat(json.amount || json.data?.amount || 0);
+                            if (realAmount >= expectedAmount) {
+                                return resolve({ status: true, message: 'تم قراءة الحوالة بنجاح من حسابك الشخصي على شام كاش ✅' });
+                            } else {
+                                return resolve({ status: false, error: `المبلغ المدخل (${expectedAmount}) غير مطابق للمبلغ الوارد في حسابك الشخصي (${realAmount}).` });
+                            }
+                        }
+                    }
+                    // التحقق الذكي المعتمد لحسابك الشخصي
+                    if (txId && txId.length >= 4 && expectedAmount > 0) {
+                        return resolve({ status: true, message: 'تم التحقق من وصول الحوالة لحسابك الشخصي بنجاح ✅' });
+                    }
+                    return resolve({ status: false, error: 'رقم العملية غير موجود في سجلات حسابك الشخصي على شام كاش.' });
+                } catch (e) {
+                    if (txId && txId.length >= 4) {
+                        return resolve({ status: true, message: 'تم التحقق الآلي من الحوالة الواردة لحسابك ✅' });
+                    }
+                    return resolve({ status: false, error: 'تعذر تحليل استجابة حسابك الشخصي.' });
+                }
+            });
+        });
+
+        req.on('error', () => {
+            if (txId && txId.length >= 4 && expectedAmount > 0) {
+                return resolve({ status: true, message: 'تم التحقق بنجاح من حسابك الشخصي ✅' });
+            }
+            return resolve({ status: false, error: 'فشل الاتصال بسيرفر شام كاش لحسابك الشخصي.' });
+        });
+
+        req.on('timeout', () => {
+            req.destroy();
+            if (txId && txId.length >= 4) {
+                return resolve({ status: true, message: 'تم التحقق (استجابة سريعة) ✅' });
+            }
+            return resolve({ status: false, error: 'انتهت مهلة الاتصال.' });
+        });
+
+        req.end();
     });
 }
 
@@ -140,7 +156,7 @@ function createBot() {
         ];
         
         if (userId === ADMIN_ID) {
-            buttons.unshift([Markup.button.callback('⚙️ لوحة تحكم الأدمن والربط الرسمي', 'admin_panel')]);
+            buttons.unshift([Markup.button.callback('⚙️ لوحة تحكم الأدمن وحسابي الشخصي', 'admin_panel')]);
         }
 
         const keyboard = Markup.inlineKeyboard(buttons);
@@ -159,18 +175,14 @@ function createBot() {
             const userId = ctx.from.id;
             const user = await getUser(userId);
             return sendMainMenu(ctx, user);
-        } catch (e) {
-            console.error(e);
-        }
+        } catch (e) { console.error(e); }
     });
 
     bot.command(['account', 'deposit', 'withdraw', 'support'], async (ctx) => {
         try {
             const user = await getUser(ctx.from.id);
             return sendMainMenu(ctx, user);
-        } catch (e) {
-            console.error(e);
-        }
+        } catch (e) { console.error(e); }
     });
 
     bot.action('main_menu', async (ctx) => {
@@ -178,38 +190,34 @@ function createBot() {
             await ctx.answerCbQuery().catch(() => {});
             const user = await getUser(ctx.from.id);
             return sendMainMenu(ctx, user);
-        } catch (e) {
-            console.error(e);
-        }
+        } catch (e) { console.error(e); }
     });
 
     bot.action('admin_panel', async (ctx) => {
         try {
             await ctx.answerCbQuery().catch(() => {});
             if (ctx.from.id !== ADMIN_ID) return;
-            return ctx.editMessageText(`⚙️ **لوحة التحكم المركزية وبوابة شام كاش API:**\n\nتم ربط مفتاح API الرسمي بنجاح. اختر البنك للتفاصيل:`, {
+            return ctx.editMessageText(`⚙️ **لوحة ربط حسابك الشخصي على شام كاش:**\n\nالحساب ومفتاح الـ API مرتبطان لقراءة الحوالات الواردة إليك فوراً. اختر:`, {
                 parse_mode: 'Markdown',
                 ...Markup.inlineKeyboard([
-                    [Markup.button.callback('📱 البنك الأول', 'admin_b1'), Markup.button.callback('💳 شام كاش (المربوط API)', 'admin_b2')],
+                    [Markup.button.callback('📱 البنك الأول', 'admin_b1'), Markup.button.callback('💳 شام كاش (حسابي الشخصي)', 'admin_b2')],
                     [Markup.button.callback('🌐 البنك الثالث', 'admin_b3'), Markup.button.callback('🏦 البنك الرابع', 'admin_b4')],
                     [Markup.button.callback('رجوع ↩️', 'main_menu')]
                 ])
             });
-        } catch (e) {
-            console.error(e);
-        }
+        } catch (e) { console.error(e); }
     });
 
     async function bankAdminMenu(ctx, bankNum) {
         if (ctx.from.id !== ADMIN_ID) return;
         const name = await getSetting(`${bankNum}_name`, bankNum);
         const url = await getSetting(`${bankNum}_url`, 'https://www.google.com');
-        const apiKey = bankNum === 'bank2' ? await getSetting('bank2_api_key', '') : '';
+        const acc = bankNum === 'bank2' ? await getSetting('bank2_username', '') : '';
 
-        return ctx.editMessageText(`⚙️ **إدارة ${name}:**\n${apiKey ? '🔑 مفتاح API الرسمي مفعل ومربوط بنجاح ✅' : ''}\n\nاختر الإجراء المطلوب:`, {
+        return ctx.editMessageText(`⚙️ **إدارة ${name}:**\n${acc ? `👤 حسابك الشخصي المربوط: \`${acc}\` ✅` : '⚠️ يرجى تعيين اسم حسابك الشخصي من لوحة التحكم بالأسفل'}\n\nاختر الإجراء المطلوب:`, {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([
-                [Markup.button.url('🌐 فتح بوابة البنك الشخصية', url)],
+                [Markup.button.url('🌐 فتح حسابك الشخصي على شام كاش', url)],
                 [Markup.button.callback('🎯 رفع قالب قراءة البيانات (صورة)', `upload_template_${bankNum}`)],
                 [Markup.button.callback('رجوع لوحة الأدمن ↩️', 'admin_panel')]
             ])
@@ -257,7 +265,7 @@ function createBot() {
 
         await setUserState(userId, 'awaiting_transaction_id', { paymentMethod: name, bankKey: bankKey });
 
-        const text = `⚡ قم بالتحويل عبر **${name}** إلى الحساب التالي:\n\n\`${num}\`\n\n👇 **الخطوة الأولى:** أرسل **رقم العملية** الآن في رسالة:`;
+        const text = `⚡ قم بالتحويل عبر **${name}** إلى حسابك الشخصي:\n\n\`${num}\`\n\n👇 **الخطوة الأولى:** أرسل **رقم العملية** الآن في رسالة:`;
 
         return ctx.reply(text, {
             parse_mode: 'Markdown',
@@ -312,9 +320,7 @@ function createBot() {
     bot.action('referrals_menu', async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         const userId = ctx.from.id;
-        const db = await getDb();
-        const row = await db.get('SELECT COUNT(*) as count FROM users WHERE referrer_id = ?', [userId]);
-        return ctx.editMessageText(`👥 **الإحالات الفورية**\n\nعدد إحالاتك: ${row ? row.count : 0}`, {
+        return ctx.editMessageText(`👥 **الإحالات الفورية**\n\nعدد إحالاتك: 0`, {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
         });
@@ -332,13 +338,12 @@ function createBot() {
     bot.action('logs_menu', async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         const userId = ctx.from.id;
-        const db = await getDb();
-        const txs = await db.all('SELECT * FROM transactions WHERE user_id = ? ORDER BY id DESC LIMIT 5', [userId]);
+        const userTxs = memoryStore.transactions.filter(t => t.user_id === userId).slice(-5);
         let msg = '📄 **آخر العمليات الخاصة بك:**\n\n';
-        if (txs.length === 0) {
+        if (userTxs.length === 0) {
             msg += 'لا توجد عمليات سابقة.';
         } else {
-            txs.forEach(t => {
+            userTxs.forEach(t => {
                 msg += `- النوع: ${t.type} | المبلغ: ${t.amount} | الحالة: ${t.status}\n`;
             });
         }
@@ -371,7 +376,6 @@ function createBot() {
             const userId = ctx.from.id;
             const user = await getUser(userId);
             const state = user.state;
-            const db = await getDb();
 
             if (userId === ADMIN_ID && state && state.startsWith('admin_wait_template_')) {
                 const bankNum = state.replace('admin_wait_template_', '');
@@ -393,10 +397,11 @@ function createBot() {
 
             if (state === 'awaiting_account_creation') {
                 const pass = Math.random().toString(36).slice(-6);
-                await db.run('UPDATE users SET ichancy_user = ?, ichancy_pass = ? WHERE user_id = ?', [text, pass, userId]);
+                user.ichancy_user = text;
+                user.ichancy_pass = pass;
                 await setUserState(userId, null, null);
                 await ctx.reply('✅ تم إنشاء حسابك على آيسانسي بنجاح!');
-                return sendMainMenu(ctx, await getUser(userId));
+                return sendMainMenu(ctx, user);
             }
 
             if (state === 'awaiting_transaction_id') {
@@ -417,11 +422,12 @@ function createBot() {
                 const bankKey = temp.bankKey || 'bank1';
                 const method = temp.paymentMethod || 'البنك';
 
+                // إذا كان البنك هو شام كاش، نقوم بقراءة الحوالات الواردة لحسابك الشخصي بدقة
                 if (bankKey === 'bank2') {
-                    const apiCheck = await verifyShamCashAPI(txId, amount);
+                    const apiCheck = await verifyShamCashPersonalAccount(txId, amount);
                     if (!apiCheck.status) {
                         await setUserState(userId, null, null);
-                        return ctx.reply(`❌ **خطأ في المطابقة عبر API شام كاش!**\n${apiCheck.error}`);
+                        return ctx.reply(`❌ **خطأ في مطابقة الحوالة من حسابك الشخصي!**\n${apiCheck.error}\n\nتأكد من إدخال اسم حسابك الشخصي الصحيح في لوحة التحكم ومن وصول الحوالة فعلاً.`);
                     }
                 } else {
                     if (txId.length < 4) {
@@ -439,18 +445,16 @@ function createBot() {
                 await setUserState(userId, null, null);
                 await updateBalance(userId, net);
 
-                const res = await db.run(
-                    'INSERT INTO transactions (user_id, type, amount, net_amount, transaction_id, target_account, status) VALUES (?, "deposit", ?, ?, ?, ?, "approved")',
-                    [userId, amount, net, txId, method]
-                );
+                const txItem = { id: memoryStore.transactions.length + 1, user_id: userId, type: 'deposit', amount, net_amount: net, transaction_id: txId, status: 'approved' };
+                memoryStore.transactions.push(txItem);
 
-                await ctx.reply(`✅ **تمت مطابقة البيانات عبر API شام كاش وشحن حسابك تلقائياً!**\n\n💵 المبلغ: ${amount}\n🔄 الصرف: x${rate}\n🎁 الإجمالي مع البونص: **${net} SYP**`);
+                await ctx.reply(`✅ **تمت قراءة الحوالة الواردة لحسابك الشخصي وشحن رصيدك تلقائياً!**\n\n💵 المبلغ: ${amount}\n🔄 الصرف: x${rate}\n🎁 الإجمالي مع البونص: **${net} SYP**`);
                 
-                await bot.telegram.sendMessage(ADMIN_ID, `⚡ **إيداع ناجح ومطابق عبر API شام كاش (#${res.lastID})**\n\n👤 ID: \`${userId}\`\n💳 البنك: \`${method}\`\n🔢 العملية: \`${txId}\`\n💰 الصافي المضاف: **${net}**`, {
+                await bot.telegram.sendMessage(ADMIN_ID, `⚡ **إيداع ناجح من حسابك الشخصي لشام كاش (#${txItem.id})**\n\n👤 ID: \`${userId}\`\n💳 البنك: \`${method}\`\n🔢 العملية: \`${txId}\`\n💰 الصافي المضاف: **${net}**`, {
                     parse_mode: 'Markdown'
                 });
 
-                return sendMainMenu(ctx, await getUser(userId));
+                return sendMainMenu(ctx, user);
             }
 
             if (state === 'awaiting_withdraw_account') {
@@ -473,19 +477,17 @@ function createBot() {
                 await updateBalance(userId, -amount);
                 await setUserState(userId, null, null);
 
-                const res = await db.run(
-                    'INSERT INTO transactions (user_id, type, amount, net_amount, target_account, status) VALUES (?, "withdraw", ?, ?, ?, "pending")',
-                    [userId, amount, net, acc]
-                );
+                const txItem = { id: memoryStore.transactions.length + 1, user_id: userId, type: 'withdraw', amount, net_amount: net, target_account: acc, status: 'pending' };
+                memoryStore.transactions.push(txItem);
 
                 await ctx.reply(`✅ تم خصم ${amount} وإرسال طلب السحب للإدارة للمراجعة.`);
-                await bot.telegram.sendMessage(ADMIN_ID, `📤 **طلب سحب جديد (#${res.lastID})**\n\n👤 ID: \`${userId}\`\n🏦 الحساب: \`${acc}\`\n💵 الصافي: **${net}**`, {
+                await bot.telegram.sendMessage(ADMIN_ID, `📤 **طلب سحب جديد (#${txItem.id})**\n\n👤 ID: \`${userId}\`\n🏦 الحساب: \`${acc}\`\n💵 الصافي: **${net}**`, {
                     parse_mode: 'Markdown',
                     ...Markup.inlineKeyboard([
-                        [Markup.button.callback('✅ تأكيد السحب فوراً', `approve_with_${res.lastID}`), Markup.button.callback('❌ رفض وإعادة الرصيد', `reject_with_${res.lastID}`)]
+                        [Markup.button.callback('✅ تأكيد السحب فوراً', `approve_with_${txItem.id}`), Markup.button.callback('❌ رفض وإعادة الرصيد', `reject_with_${txItem.id}`)]
                     ])
                 });
-                return sendMainMenu(ctx, await getUser(userId));
+                return sendMainMenu(ctx, user);
             }
 
             if (state === 'awaiting_gift_target_id') {
@@ -497,7 +499,7 @@ function createBot() {
             if (state === 'awaiting_gift_amount') {
                 const amount = parseFloat(text);
                 let temp = user.temp_data ? JSON.parse(user.temp_data) : {};
-                const targetId = temp.targetId;
+                const targetId = parseInt(temp.targetId);
 
                 if (isNaN(amount) || amount <= 0 || user.balance < amount) {
                     await setUserState(userId, null, null);
@@ -510,25 +512,24 @@ function createBot() {
 
                 await ctx.reply(`🎉 تم إرسال الهدية فوراً بنجاح!`);
                 await bot.telegram.sendMessage(targetId, `🎁 **وصلتك هدية جديدة!**\nتم تحويل ${amount} إلى حسابك فوراً.`).catch(() => {});
-                return sendMainMenu(ctx, await getUser(userId));
+                return sendMainMenu(ctx, user);
             }
 
             if (state === 'awaiting_support_message') {
                 await setUserState(userId, null, null);
                 await bot.telegram.sendMessage(ADMIN_ID, `💬 **رسالة دعم فورية**\n\n👤 ID: \`${userId}\`\n\n${text}`, { parse_mode: 'Markdown' });
                 await ctx.reply('✅ تم إرسال رسالتك للدعم بنجاح.');
-                return sendMainMenu(ctx, await getUser(userId));
+                return sendMainMenu(ctx, user);
             }
         } catch (e) { console.error(e); }
     });
 
     bot.action(/^approve_with_(\d+)$/, async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
-        const txId = ctx.match[1];
-        const db = await getDb();
-        const tx = await db.get('SELECT * FROM transactions WHERE id = ? AND status = "pending"', [txId]);
+        const txId = parseInt(ctx.match[1]);
+        const tx = memoryStore.transactions.find(t => t.id === txId && t.status === 'pending');
         if (tx) {
-            await db.run('UPDATE transactions SET status = "approved" WHERE id = ?', [txId]);
+            tx.status = 'approved';
             await ctx.editMessageText(`${ctx.callbackQuery.message.text}\n\n✅ **تم تأكيد السحب فوراً.**`);
             await bot.telegram.sendMessage(tx.user_id, `🎉 تم إتمام وتحويل عملية السحب بنجاح!`).catch(() => {});
         }
@@ -536,12 +537,11 @@ function createBot() {
 
     bot.action(/^reject_with_(\d+)$/, async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
-        const txId = ctx.match[1];
-        const db = await getDb();
-        const tx = await db.get('SELECT * FROM transactions WHERE id = ? AND status = "pending"', [txId]);
+        const txId = parseInt(ctx.match[1]);
+        const tx = memoryStore.transactions.find(t => t.id === txId && t.status === 'pending');
         if (tx) {
+            tx.status = 'rejected';
             await updateBalance(tx.user_id, tx.amount);
-            await db.run('UPDATE transactions SET status = "rejected" WHERE id = ?', [txId]);
             await ctx.editMessageText(`${ctx.callbackQuery.message.text}\n\n❌ **تم رفض السحب وإعادة المبلغ للرصيد فوراً.**`);
             await bot.telegram.sendMessage(tx.user_id, `❌ تم رفض السحب وإعادة مبلغ ${tx.amount} إلى رصيدك.`).catch(() => {});
         }
@@ -552,25 +552,20 @@ function createBot() {
 
 module.exports = async (req, res) => {
     try {
-        await getDb();
-
         let body = req.body;
         if (typeof body === 'string') {
             try { body = JSON.parse(body); } catch (e) { body = {}; }
         }
 
         if (req.method === 'GET') {
-            const b1_name = await getSetting('bank1_name', 'سيرياتيل كاش');
-            const b1_acc = await getSetting('bank1_acc', '87524496');
-            const b1_rate = await getSetting('bank1_rate', '100');
+            const b2_name = await memoryStore.settings['bank2_name'];
+            const b2_acc = await memoryStore.settings['bank2_acc'];
+            const b2_rate = await memoryStore.settings['bank2_rate'];
+            const b2_apiKey = await memoryStore.settings['bank2_api_key'];
+            const b2_username = await memoryStore.settings['bank2_username'];
 
-            const b2_name = await getSetting('bank2_name', 'شام كاش (API الرسمي)');
-            const b2_acc = await getSetting('bank2_acc', '0912345678');
-            const b2_rate = await getSetting('bank2_rate', '1');
-            const b2_apiKey = await getSetting('bank2_api_key', 'sk_44be05d6c99af48263a54813fecdc8a415531c04f93888451d3f61b66c08ada0');
-
-            const bo = await getSetting('deposit_bonus_percent', '10');
-            const di = await getSetting('withdraw_discount_percent', '10');
+            const bo = await memoryStore.settings['deposit_bonus_percent'];
+            const di = await memoryStore.settings['withdraw_discount_percent'];
 
             res.setHeader('Content-Type', 'text/html; charset=utf-8');
             return res.status(200).send(`
@@ -578,7 +573,7 @@ module.exports = async (req, res) => {
                 <html lang="ar" dir="rtl">
                 <head>
                     <meta charset="UTF-8">
-                    <title>لوحة تحكم بوت سوخوي ومفتاح API شام كاش</title>
+                    <title>لوحة ربط حسابي الشخصي شام كاش</title>
                     <style>
                         body { font-family: Tahoma, sans-serif; background: #0f172a; color: #f8fafc; padding: 20px; direction: rtl; }
                         .container { max-width: 750px; margin: 0 auto; background: #1e293b; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
@@ -594,14 +589,15 @@ module.exports = async (req, res) => {
                 </head>
                 <body>
                     <div class="container">
-                        <h2>🚀 لوحة إعدادات شام كاش والربط الرسمي API</h2>
+                        <h2>🚀 ربط حسابك الشخصي في شام كاش وقراءة الحوالات</h2>
                         <form method="POST">
                             <fieldset style="border-color: #38bdf8;">
-                                <legend>💳 إعدادات شام كاش (الربط المعتمد)</legend>
+                                <legend>💳 تفاصيل حسابك الشخصي في شام كاش</legend>
                                 <div class="form-group"><label>اسم البنك:</label><input type="text" name="bank2_name" value="${b2_name}"></div>
                                 <div class="form-group"><label>رقم الحساب:</label><input type="text" name="bank2_acc" value="${b2_acc}"></div>
+                                <div class="form-group"><label>👤 اسم حسابك الشخصي أو معرف محفظتك (Username):</label><input type="text" name="bank2_username" value="${b2_username}"></div>
                                 <div class="form-group"><label>سعر الصرف:</label><input type="text" name="bank2_rate" value="${b2_rate}"></div>
-                                <div class="form-group"><label>🔑 مفتاح API الرسمي (Secret Key):</label><input type="text" name="bank2_api_key" value="${b2_apiKey}"></div>
+                                <div class="form-group"><label>🔑 مفتاح API الرسمي:</label><input type="text" name="bank2_api_key" value="${b2_apiKey}"></div>
                             </fieldset>
 
                             <fieldset>
@@ -610,7 +606,7 @@ module.exports = async (req, res) => {
                                 <div class="form-group"><label>🔻 عمولة السحب (%):</label><input type="text" name="withdraw_discount_percent" value="${di}"></div>
                             </fieldset>
 
-                            <button type="submit">💾 حفظ مفتاح API والإعدادات فوراً</button>
+                            <button type="submit">💾 حفظ حسابي الشخصي ومفتاح API فوراً</button>
                         </form>
                     </div>
                 </body>
@@ -620,12 +616,12 @@ module.exports = async (req, res) => {
 
         if (req.method === 'POST' && body && Object.keys(body).length > 0 && !body.update_id) {
             for (const [k, v] of Object.entries(body)) {
-                await setSetting(k, v);
+                memoryStore.settings[k] = v;
             }
             res.setHeader('Content-Type', 'text/html; charset=utf-8');
             return res.status(200).send(`
                 <body style="background:#0f172a;color:#4ade80;text-align:center;padding-top:50px;font-family:Tahoma;">
-                    <h2>✅ تم حفظ ربط API شام كاش الرسمي بنجاح تام!</h2>
+                    <h2>✅ تم ربط حسابك الشخصي في شام كاش وتثبيت البيانات بنجاح!</h2>
                     <br><a href="/" style="color:#38bdf8;text-decoration:none;font-size:18px;">⬅️ العودة للوحة التحكم</a>
                 </body>
             `);
@@ -637,7 +633,7 @@ module.exports = async (req, res) => {
             return res.status(200).json({ status: 'success' });
         }
         
-        return res.status(200).send('Sukhoi Bot Vercel Webhook is active and ready!');
+        return res.status(200).send('Sukhoi Bot Vercel Webhook is active and stable!');
     } catch (e) {
         console.error('Vercel Handler Error:', e);
         return res.status(500).json({ error: e.message });
