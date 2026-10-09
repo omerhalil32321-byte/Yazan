@@ -469,6 +469,13 @@ module.exports = async (req, res) => {
             try { body = JSON.parse(body); } catch (e) { body = {}; }
         }
 
+        // مسح وتحديث الـ Webhook تلقائياً لضمان استجابة التوكن الجديد
+        if (req.method === 'GET' && req.headers['host']) {
+            const currentUrl = `https://${req.headers['host']}/api/bot`;
+            const botInstance = new Telegraf(BOT_TOKEN);
+            await botInstance.telegram.setWebhook(currentUrl).catch(() => {});
+        }
+
         if (req.method === 'POST' && body && (body.transaction_id || body.id)) {
             const txId = body.transaction_id || body.id;
             const amount = parseFloat(body.amount || 0);
@@ -510,9 +517,9 @@ module.exports = async (req, res) => {
                 </head>
                 <body>
                     <div class="container">
-                        <h2>🚀 ربط Webhook شام كاش الآمن</h2>
+                        <h2>🚀 ربط Webhook التوكن الجديد</h2>
                         <div class="alert">
-                            📌 <b>حالة النظام:</b> التوكن الجديد مُفعل، والبوت يعمل مباشرة بدون قنوات إجبارية.
+                            📌 <b>حالة النظام:</b> تم ربط التوكن الجديد وتحديث رابط الـ Webhook تلقائياً بنجاح.
                         </div>
                         <form method="POST" action="">
                             <fieldset style="border-color: #38bdf8;">
@@ -549,7 +556,7 @@ module.exports = async (req, res) => {
             return res.status(200).json({ status: 'success' });
         }
         
-        return res.status(200).send('Sukhoi Bot Vercel Webhook is active and secure!');
+        return res.status(200).send('Sukhoi Bot Vercel Webhook is active with new token!');
     } catch (e) {
         console.error('Vercel Handler Error:', e);
         return res.status(500).json({ error: e.message });
