@@ -13,10 +13,10 @@ const memoryStore = {
         'bank1_url': 'https://www.google.com',
 
         'bank2_name': 'شام كاش 💳 (Webhook آلي)',
-        'bank2_acc': '8811164969946430', // رقم المحفظة الظاهر في صورتك
+        'bank2_acc': '8811164969946430',
         'bank2_rate': '1',
         'bank2_api_key': 'sk_44be05d6c99af48263a54813fecdc8a415531c04f93888451d3f61b66c08ada0',
-        'bank2_url': 'https://api-shamcash.com',
+        'bank2_url': 'https://api-shamcash.com', // رابط لوحة شام كاش الخاصة بك
 
         'bank3_name': 'USDT 🌐',
         'bank3_acc': 'TXXXXXXXXXXXXXX',
@@ -32,7 +32,6 @@ const memoryStore = {
         'withdraw_discount_percent': '10'
     },
     transactions: [],
-    // تخزين مؤقت للحوالات الواردة عبر Webhook شام كاش
     incomingShamCash: {}
 };
 
@@ -144,12 +143,19 @@ function createBot() {
         if (ctx.from.id !== ADMIN_ID) return;
         const name = await getSetting(`${bankNum}_name`, bankNum);
         const acc = await getSetting(`${bankNum}_acc`, '');
+        const url = await getSetting(`${bankNum}_url`, 'https://api-shamcash.com');
 
-        return ctx.editMessageText(`⚙️ **إدارة ${name}:**\n💳 رقم المحفظة: \`${acc}\`\n\n🔗 **تعليمات ربط Webhook:**\nانسخ رابط مشروعك على Vercel وضعه في خانة (رابط الـ Webhook HTTPS) في موقع شام كاش (كما في صورتك)، واجعل الاتجاه **(الوارد فقط)** ثم اضغط حفظ الاشتراكات!`, {
+        // إذا كان شام كاش (bank2)، نعرض زر فتح صفحة شام كاش والتحويلات مباشرة
+        const buttons = bankNum === 'bank2' ? [
+            [Markup.button.url('🌐 فتح واجهة شام كاش وسجل الحركات', url)],
+            [Markup.button.callback('رجوع لوحة الأدمن ↩️', 'admin_panel')]
+        ] : [
+            [Markup.button.callback('رجوع لوحة الأدمن ↩️', 'admin_panel')]
+        ];
+
+        return ctx.editMessageText(`⚙️ **إدارة ${name}:**\n💳 رقم المحفظة: \`${acc}\`\n\n🔗 اضغط على الزر أدناه لفتح واجهة شام كاش وسجل الحركات الخاصة بك مباشرة:`, {
             parse_mode: 'Markdown',
-            ...Markup.inlineKeyboard([
-                [Markup.button.callback('رجوع لوحة الأدمن ↩️', 'admin_panel')]
-            ])
+            ...Markup.inlineKeyboard(buttons)
         });
     }
 
@@ -333,7 +339,6 @@ function createBot() {
                 const bankKey = temp.bankKey || 'bank1';
                 const method = temp.paymentMethod || 'البنك';
 
-                // التحقق التلقائي عبر الـ Webhook الوارد أو التحقق الذكي المؤكد
                 const isIncomingExist = bankKey === 'bank2' ? (memoryStore.incomingShamCash[txId] !== undefined || txId.length >= 4) : (txId.length >= 4);
 
                 if (!isIncomingExist) {
@@ -462,13 +467,11 @@ module.exports = async (req, res) => {
             try { body = JSON.parse(body); } catch (e) { body = {}; }
         }
 
-        // 🌟 استقبال وتجهيز الـ Webhook القادم مباشرة من سيرفرات شام كاش
         if (req.method === 'POST' && body && body.transaction_id) {
             const txId = body.transaction_id || body.id;
             const amount = body.amount || 0;
             memoryStore.incomingShamCash[txId] = { amount, time: Date.now() };
 
-            // إشعار الأدمن بوصول الحوالة الفورية عبر الـ Webhook
             const bot = createBot();
             await bot.telegram.sendMessage(ADMIN_ID, `🔔 **حوالة جديدة وصلت لمحفظتك عبر Webhook شام كاش!**\n\n🔢 رقم العملية: \`${txId}\`\n💵 المبلغ: \`${amount}\``, { parse_mode: 'Markdown' }).catch(() => {});
             
@@ -479,6 +482,7 @@ module.exports = async (req, res) => {
             const b2_name = await memoryStore.settings['bank2_name'];
             const b2_acc = await memoryStore.settings['bank2_acc'];
             const b2_rate = await memoryStore.settings['bank2_rate'];
+            const b2_url = await memoryStore.settings['bank2_url'];
 
             res.setHeader('Content-Type', 'text/html; charset=utf-8');
             return res.status(200).send(`
@@ -505,14 +509,14 @@ module.exports = async (req, res) => {
                     <div class="container">
                         <h2>🚀 ربط Webhook شام كاش الفوري</h2>
                         <div class="alert">
-                            📌 <b>خطوة الربط النهائية في موقع شام كاش:</b><br>
-                            انسخ رابط موقعك الحالي على Vercel وضعه في خانة <b>(رابط الـ Webhook HTTPS)</b> في لوحة شام كاش (الظاهرة في صورتك)، واجعل الاتجاه <b>(الوارد فقط)</b> ثم اضغط حفظ الاشتراكات!
+                            📌 <b>خطوة الربط النهائية:</b> ضع رابط Vercel الخاص بك في خانة (رابط الـ Webhook HTTPS) في موقع شام كاش واجعل الاتجاه (الوارد فقط).
                         </div>
                         <form method="POST" action="">
                             <fieldset style="border-color: #38bdf8;">
                                 <legend>💳 إعدادات شام كاش</legend>
                                 <div class="form-group"><label>اسم البنك:</label><input type="text" name="bank2_name" value="${b2_name}"></div>
                                 <div class="form-group"><label>رقم المحفظة (Account ID):</label><input type="text" name="bank2_acc" value="${b2_acc}"></div>
+                                <div class="form-group"><label>رابط واجهة شام كاش وسجل الحركات (URL):</label><input type="text" name="bank2_url" value="${b2_url}"></div>
                                 <div class="form-group"><label>سعر الصرف:</label><input type="text" name="bank2_rate" value="${b2_rate}"></div>
                             </fieldset>
                             <button type="submit">💾 حفظ الإعدادات</button>
