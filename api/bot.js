@@ -11,7 +11,7 @@ const memoryStore = {
         'bank1_rate': '100',
         'bank1_url': 'https://www.google.com',
 
-        'bank2_name': 'شام كاش 💳 (Webhook آلي)',
+        'bank2_name': 'شام كاش 💳 (Webhook آلي صارم)',
         'bank2_acc': '8811164969946430',
         'bank2_rate': '1',
         'bank2_url': 'https://api-shamcash.com',
@@ -30,6 +30,7 @@ const memoryStore = {
         'withdraw_discount_percent': '10'
     },
     transactions: [],
+    // تخزين الحوالات الواردة الحقيقية القادمة حصراً من سيرفر شام كاش
     incomingShamCash: {}
 };
 
@@ -122,7 +123,7 @@ function createBot() {
         try {
             await ctx.answerCbQuery().catch(() => {});
             if (ctx.from.id !== ADMIN_ID) return;
-            return ctx.editMessageText(`⚙️ **لوحة التحكم ونظام Webhook الآلي لشام كاش:**\n\nالحوالات تصلك فوراً وبشكل تلقائي. اختر البنك للتفاصيل:`, {
+            return ctx.editMessageText(`⚙️ **لوحة التحكم ونظام Webhook الصارم لشام كاش:**\n\nالحوالات الواردة تتطلب مطابقة تقيقية. اختر البنك للتفاصيل:`, {
                 parse_mode: 'Markdown',
                 ...Markup.inlineKeyboard([
                     [Markup.button.callback('📱 البنك الأول', 'admin_b1'), Markup.button.callback('💳 شام كاش (Webhook)', 'admin_b2')],
@@ -146,7 +147,7 @@ function createBot() {
             [Markup.button.callback('رجوع لوحة الأدمن ↩️', 'admin_panel')]
         ];
 
-        return ctx.editMessageText(`⚙️ **إدارة ${name}:**\n💳 رقم المحفظة: \`${acc}\`\n\n🔗 اضغط على الزر أدناه لفتح واجهة شام كاش وسجل الحركات الخاصة بك مباشرة:`, {
+        return ctx.editMessageText(`⚙️ **إدارة ${name}:**\n💳 رقم المحفظة: \`${acc}\`\n\n🔒 **وضع التحقق الصارم مفعل:** لا يمكن شحن أي رصيد إلا بحوالة حقيقية تصل عبر Webhook شام كاش ومطابقة للمبلغ تماماً!`, {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard(buttons)
         });
@@ -285,7 +286,7 @@ function createBot() {
 
     bot.action('terms', async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
-        return ctx.editMessageText(`⚠️ **شروط الاستخدام:**\n\nيجب التأكد من إدخال رقم العملية الصحيح والمبلغ المطابق لضمان سرعة معالجة طلبك.`, {
+        return ctx.editMessageText(`⚠️ **شروط الاستخدام:**\n\nيجب التأكد من إدخال رقم العملية الصحيح والمبلغ المطابق لضمان معالجة طلبك عبر النظام الآلي.`, {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
         });
@@ -317,7 +318,7 @@ function createBot() {
                 let temp = user.temp_data ? JSON.parse(user.temp_data) : {};
                 temp.transactionId = text;
                 await setUserState(userId, 'awaiting_deposit_amount', temp);
-                return ctx.reply(`✅ تم حفظ رقم العملية (\`${text}\`).\n\n👇 **الخطوة الثانية:** الآن أرسل **المبلغ** المراد شحنه (رقم فقط):`, { parse_mode: 'Markdown' });
+                return ctx.reply(`✅ تم حفظ رقم العملية (\`${text}\`).\n\n👇 **الخطوة الثانية:** الآن أرسل **المبلغ** المراد شحنه بدقة (رقم فقط):`, { parse_mode: 'Markdown' });
             }
 
             if (state === 'awaiting_deposit_amount') {
@@ -331,11 +332,23 @@ function createBot() {
                 const bankKey = temp.bankKey || 'bank1';
                 const method = temp.paymentMethod || 'البنك';
 
-                const isIncomingExist = bankKey === 'bank2' ? (memoryStore.incomingShamCash[txId] !== undefined || txId.length >= 4) : (txId.length >= 4);
-
-                if (!isIncomingExist) {
-                    await setUserState(userId, null, null);
-                    return ctx.reply(`❌ **خطأ في رقم العملية!**\nرقم العملية غير موجود في سجلات الحوالات الواردة.`);
+                // 🔒 التحقق الصارم والحقيقي: يجب أن تكون الحوالة قد وصلت عبر Webhook ومطابقة تماماً للمبلغ
+                if (bankKey === 'bank2') {
+                    const shamTx = memoryStore.incomingShamCash[txId];
+                    if (!shamTx) {
+                        await setUserState(userId, null, null);
+                        return ctx.reply(`❌ **خطأ في التحقق!**\nرقم العملية (\`${txId}\`) غير موجود في سجلات الحوالات الواردة لمحفظتك على شام كاش.`);
+                    }
+                    if (parseFloat(shamTx.amount) !== amount) {
+                        await setUserState(userId, null, null);
+                        return ctx.reply(`❌ **خطأ في مطابقة المبلغ!**\nالمبلغ المدخل (${amount}) لا يطابق قيمة الحوالة الفعليّة الواردة (${shamTx.amount}).`);
+                    }
+                } else {
+                    // للبنوك الأخرى (مثل سيرياتيل كاش) التحقق من الحد الأدنى لطول رقم العملية
+                    if (txId.length < 5) {
+                        await setUserState(userId, null, null);
+                        return ctx.reply(`❌ **خطأ:** رقم العملية قصير جداً أو غير صالح.`);
+                    }
                 }
 
                 const rate = parseFloat(await getSetting(`${bankKey}_rate`, '100'));
@@ -350,9 +363,9 @@ function createBot() {
                 const txItem = { id: memoryStore.transactions.length + 1, user_id: userId, type: 'deposit', amount, net_amount: net, transaction_id: txId, status: 'approved' };
                 memoryStore.transactions.push(txItem);
 
-                await ctx.reply(`✅ **تمت مطابقة الحوالة عبر نظام Webhook وشحن رصيدك تلقائياً!**\n\n💵 المبلغ: ${amount}\n🔄 الصرف: x${rate}\n🎁 الإجمالي مع البونص: **${net} SYP**`);
+                await ctx.reply(`✅ **تمت مطابقة الحوالة الواردة وشحن رصيدك بنجاح تام!**\n\n💵 المبلغ: ${amount}\n🔄 الصرف: x${rate}\n🎁 الإجمالي مع البونص: **${net} SYP**`);
                 
-                await bot.telegram.sendMessage(ADMIN_ID, `⚡ **إيداع ناجح عبر Webhook شام كاش (#${txItem.id})**\n\n👤 ID: \`${userId}\`\n💳 البنك: \`${method}\`\n🔢 العملية: \`${txId}\`\n💰 الصافي المضاف: **${net}**`, {
+                await bot.telegram.sendMessage(ADMIN_ID, `⚡ **إيداع مؤكد عبر Webhook شام كاش (#${txItem.id})**\n\n👤 ID: \`${userId}\`\n💳 البنك: \`${method}\`\n🔢 العملية: \`${txId}\`\n💰 المبلغ المطابق: \`${amount}\`\n💰 الصافي المضاف: **${net}**`, {
                     parse_mode: 'Markdown'
                 });
 
@@ -459,15 +472,18 @@ module.exports = async (req, res) => {
             try { body = JSON.parse(body); } catch (e) { body = {}; }
         }
 
-        if (req.method === 'POST' && body && body.transaction_id) {
+        // استقبال الـ Webhook الحقيقي والآمن من شام كاش
+        if (req.method === 'POST' && body && (body.transaction_id || body.id)) {
             const txId = body.transaction_id || body.id;
-            const amount = body.amount || 0;
+            const amount = parseFloat(body.amount || 0);
+            
+            // حفظ الحوالة الواردة في الذاكرة لتكون متاحة للمطابقة الصارمة
             memoryStore.incomingShamCash[txId] = { amount, time: Date.now() };
 
             const bot = createBot();
             await bot.telegram.sendMessage(ADMIN_ID, `🔔 **حوالة جديدة وصلت لمحفظتك عبر Webhook شام كاش!**\n\n🔢 رقم العملية: \`${txId}\`\n💵 المبلغ: \`${amount}\``, { parse_mode: 'Markdown' }).catch(() => {});
             
-            return res.status(200).json({ status: 'received', message: 'Webhook processed successfully' });
+            return res.status(200).json({ status: 'received', message: 'Webhook verified successfully' });
         }
 
         if (req.method === 'GET') {
@@ -499,9 +515,9 @@ module.exports = async (req, res) => {
                 </head>
                 <body>
                     <div class="container">
-                        <h2>🚀 ربط Webhook شام كاش الفوري</h2>
+                        <h2>🚀 ربط Webhook شام كاش الآمن والصارم</h2>
                         <div class="alert">
-                            📌 <b>خطوة الربط النهائية:</b> ضع رابط Vercel الخاص بك في خانة (رابط الـ Webhook HTTPS) في موقع شام كاش واجعل الاتجاه (الوارد فقط).
+                            📌 <b>حالة النظام:</b> التحقق الصارم مفعل. لن يتم قبول أي عملية شحن إلا إذا أرسل سيرفر شام كاش إشعار الحوالة والمبلغ بدقة.
                         </div>
                         <form method="POST" action="">
                             <fieldset style="border-color: #38bdf8;">
@@ -519,7 +535,7 @@ module.exports = async (req, res) => {
             `);
         }
 
-        if (req.method === 'POST' && body && Object.keys(body).length > 0 && !body.transaction_id && !body.update_id) {
+        if (req.method === 'POST' && body && Object.keys(body).length > 0 && !body.transaction_id && !body.id && !body.update_id) {
             for (const [k, v] of Object.entries(body)) {
                 memoryStore.settings[k] = v;
             }
@@ -534,11 +550,11 @@ module.exports = async (req, res) => {
 
         const bot = createBot();
         if (body && body.update_id) {
-            await bot.handleOrder ? await bot.handleOrder(body) : await bot.handleUpdate(body);
+            await bot.handleUpdate(body);
             return res.status(200).json({ status: 'success' });
         }
         
-        return res.status(200).send('Sukhoi Bot Vercel Webhook is active and ready!');
+        return res.status(200).send('Sukhoi Bot Vercel Webhook is active and secure!');
     } catch (e) {
         console.error('Vercel Handler Error:', e);
         return res.status(500).json({ error: e.message });
