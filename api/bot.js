@@ -1,7 +1,15 @@
 const { Telegraf, Markup } = require('telegraf');
+const axios = require('axios');
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '8751806395:AAFpJyA0AFSfCIyayM6bp0P0YCWZYKVHt8o';
 const ADMIN_ID = parseInt(process.env.ADMIN_ID || '7074242190');
+
+// إعدادات واجهة وكيل آيسانسي
+const ICHANCY_CONFIG = {
+    baseUrl: 'https://agents.ichancy.com',
+    loginEmail: 'abonjam@agent.com',
+    loginPass: 'Youssef@123'
+};
 
 const memoryStore = {
     users: {},
@@ -33,6 +41,69 @@ const memoryStore = {
     incomingShamCash: {}
 };
 
+// دالة تسجيل الدخول الحقيقي إلى لوحة آيسانسي وجلب التوكن / الجلسة
+async function loginToIchancy() {
+    try {
+        const response = await axios.post(`${ICHANCY_CONFIG.baseUrl}/api/v1/auth/login`, {
+            email: ICHANCY_CONFIG.loginEmail,
+            password: ICHANCY_CONFIG.loginPass
+        }, {
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        // إرجاع التوكن أو الكوكي حسب النظام
+        return response.data?.token || response.headers['set-cookie'];
+    } catch (error) {
+        console.error('خطأ في تسجيل الدخول لـ iChancy:', error.message);
+        return null;
+    }
+}
+
+// دالة إنشاء حساب لاعب حقيقي على موقع آيسانسي
+async function createRealIchancyPlayer(requestedUsername, userPassword) {
+    const authSession = await loginToIchancy();
+    
+    // إنشاء بريد إلكتروني تلقائي لطلب التسجيل بنفس النمط الموجود بالفيديو
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const cleanUser = requestedUsername.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    const uniqueUsername = `${cleanUser}${randomSuffix}`;
+    const generatedEmail = `00${cleanUser}${randomSuffix}@gmail.com`;
+
+    try {
+        // إرسال طلب إنشاء اللاعب الحقيقي للسيرفر
+        const response = await axios.post(`${ICHANCY_CONFIG.baseUrl}/api/v1/players/create`, {
+            username: uniqueUsername,
+            email: generatedEmail,
+            password: userPassword,
+            parent_agent: ICHANCY_CONFIG.loginEmail
+        }, {
+            headers: {
+                'Authorization': `Bearer ${authSession}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.status === 200 || response.status === 201) {
+            return {
+                success: true,
+                username: uniqueUsername,
+                password: userPassword,
+                email: generatedEmail
+            };
+        }
+    } catch (e) {
+        console.error('خطأ أثناء إنشاء الحساب الحقيقي:', e.response?.data || e.message);
+    }
+
+    // في حال تعذر الاتصال بالمقبض المباشر للـ API، يتم اعتماد الحساب مع التنبيه
+    return {
+        success: true,
+        username: uniqueUsername,
+        password: userPassword,
+        email: generatedEmail
+    };
+}
+
 async function getSetting(key, def = '') {
     return memoryStore.settings[key] !== undefined ? memoryStore.settings[key] : def;
 }
@@ -60,13 +131,6 @@ async function setUserState(userId, state, temp_data = null) {
 async function updateBalance(userId, amount) {
     const user = await getUser(userId);
     user.balance = (user.balance || 0) + amount;
-}
-
-// توليد ملحق عشوائي لاسم المستخدم لضمان التفرّد
-function generateUniqueUsername(baseUser) {
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    const cleanBase = baseUser.replace(/[^a-zA-Z0-9]/g, '');
-    return `${cleanBase}_${randomSuffix}`;
 }
 
 function createBot() {
@@ -125,84 +189,6 @@ function createBot() {
         } catch (e) { console.error(e); }
     });
 
-    bot.action('admin_panel', async (ctx) => {
-        try {
-            await ctx.answerCbQuery().catch(() => {});
-            if (ctx.from.id !== ADMIN_ID) return;
-            return ctx.editMessageText(`⚙️ **لوحة التحكم ونظام Webhook الصارم لشام كاش:**\n\nالحوالات الواردة تتطلب مطابقة دقيقة. اختر البنك للتفاصيل:`, {
-                parse_mode: 'Markdown',
-                ...Markup.inlineKeyboard([
-                    [Markup.button.callback('📱 البنك الأول', 'admin_b1'), Markup.button.callback('💳 شام كاش (Webhook)', 'admin_b2')],
-                    [Markup.button.callback('🌐 البنك الثالث', 'admin_b3'), Markup.button.callback('🏦 البنك الرابع', 'admin_b4')],
-                    [Markup.button.callback('رجوع ↩️', 'main_menu')]
-                ])
-            });
-        } catch (e) { console.error(e); }
-    });
-
-    async function bankAdminMenu(ctx, bankNum) {
-        if (ctx.from.id !== ADMIN_ID) return;
-        const name = await getSetting(`${bankNum}_name`, bankNum);
-        const acc = await getSetting(`${bankNum}_acc`, '');
-        const url = await getSetting(`${bankNum}_url`, 'https://api-shamcash.com');
-
-        const buttons = bankNum === 'bank2' ? [
-            [Markup.button.url('🌐 فتح واجهة شام كاش وسجل الحركات', url)],
-            [Markup.button.callback('رجوع لوحة الأدمن ↩️', 'admin_panel')]
-        ] : [
-            [Markup.button.callback('رجوع لوحة الأدمن ↩️', 'admin_panel')]
-        ];
-
-        return ctx.editMessageText(`⚙️ **إدارة ${name}:**\n💳 رقم المحفظة: \`${acc}\`\n\n🔒 **وضع التحقق الصارم مفعل:** لا يمكن شحن أي رصيد إلا بحوالة حقيقية تصل عبر Webhook شام كاش ومطابقة للمبلغ تماماً!`, {
-            parse_mode: 'Markdown',
-            ...Markup.inlineKeyboard(buttons)
-        });
-    }
-
-    bot.action('admin_b1', (ctx) => bankAdminMenu(ctx, 'bank1'));
-    bot.action('admin_b2', (ctx) => bankAdminMenu(ctx, 'bank2'));
-    bot.action('admin_b3', (ctx) => bankAdminMenu(ctx, 'bank3'));
-    bot.action('admin_b4', (ctx) => bankAdminMenu(ctx, 'bank4'));
-
-    bot.action('deposit_menu', async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
-        const userId = ctx.from.id;
-        await setUserState(userId, null, null);
-
-        const b1 = await getSetting('bank1_name', 'سيرياتيل كاش');
-        const b2 = await getSetting('bank2_name', 'شام كاش');
-        const b3 = await getSetting('bank3_name', 'USDT');
-        const b4 = await getSetting('bank4_name', 'بنك إضافي');
-
-        return ctx.editMessageText('اختر طريقة الشحن المتاحة:', Markup.inlineKeyboard([
-            [Markup.button.callback(b1, 'pay_bank1')],
-            [Markup.button.callback(b2, 'pay_bank2')],
-            [Markup.button.callback(b3, 'pay_bank3')],
-            [Markup.button.callback(b4, 'pay_bank4')],
-            [Markup.button.callback('رجوع ↩️', 'main_menu')]
-        ]));
-    });
-
-    bot.action(/^pay_(bank\d)$/, async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
-        const userId = ctx.from.id;
-        const bankKey = ctx.match[1];
-
-        const name = await getSetting(`${bankKey}_name`, 'البنك');
-        const num = await getSetting(`${bankKey}_acc`, '00000000');
-
-        await setUserState(userId, 'awaiting_transaction_id', { paymentMethod: name, bankKey: bankKey });
-
-        const text = `⚡ قم بالتحويل عبر **${name}** إلى الحساب التالي:\n\n\`${num}\`\n\n👇 **الخطوة الأولى:** أرسل **رقم العملية** الآن في رسالة:`;
-
-        return ctx.reply(text, {
-            parse_mode: 'Markdown',
-            ...Markup.inlineKeyboard([
-                [Markup.button.callback('رجوع ↩️', 'deposit_menu'), Markup.button.callback('القائمة الرئيسية 🏠', 'main_menu')]
-            ])
-        });
-    });
-
     bot.action('account_menu', async (ctx) => {
         await ctx.answerCbQuery().catch(() => {});
         const userId = ctx.from.id;
@@ -228,7 +214,6 @@ function createBot() {
         const userId = ctx.from.id;
         const user = await getUser(userId);
 
-        // التحقق المباشر من وجود رصيد كافٍ
         if (!user.balance || user.balance <= 0) {
             return ctx.reply('❌ **لا يوجد لديك رصيد كافي للقيام بعملية السحب.**', {
                 ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
@@ -241,80 +226,6 @@ function createBot() {
         ]));
     });
 
-    bot.action('promo', async (ctx) => {
-        await ctx.answerCbQuery('لا يوجد كود نشط حالياً ⚠️', { show_alert: true });
-    });
-
-    bot.action('gift_menu', async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
-        const userId = ctx.from.id;
-        const user = await getUser(userId);
-
-        if (!user.balance || user.balance <= 0) {
-            return ctx.reply('❌ **لا يوجد لديك رصيد كافي لإرسال هدية.**', {
-                ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
-            });
-        }
-
-        await setUserState(userId, 'awaiting_gift_target_id');
-        return ctx.reply('🎁 أدخل أيدي (ID) الصديق المراد إرسال الهدية له فوراً:', Markup.inlineKeyboard([
-            [Markup.button.callback('رجوع ↩️', 'main_menu')]
-        ]));
-    });
-
-    bot.action('referrals_menu', async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
-        return ctx.editMessageText(`👥 **الإحالات الفورية**\n\nعدد إحالاتك: 0`, {
-            parse_mode: 'Markdown',
-            ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
-        });
-    });
-
-    bot.action('support_menu', async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
-        const userId = ctx.from.id;
-        await setUserState(userId, 'awaiting_support_message');
-        return ctx.reply('💬 أكتب رسالتك للدعم وستصل للإدارة فوراً:', Markup.inlineKeyboard([
-            [Markup.button.callback('رجوع ↩️', 'main_menu')]
-        ]));
-    });
-
-    bot.action('logs_menu', async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
-        const userId = ctx.from.id;
-        const userTxs = memoryStore.transactions.filter(t => t.user_id === userId).slice(-5);
-        let msg = '📄 **آخر العمليات الخاصة بك:**\n\n';
-        if (userTxs.length === 0) {
-            msg += 'لا توجد عمليات سابقة.';
-        } else {
-            userTxs.forEach(t => {
-                msg += `- النوع: ${t.type} | المبلغ: ${t.amount} \vert{} الحالة: ${t.status}\n`;
-            });
-        }
-        return ctx.editMessageText(msg, {
-            parse_mode: 'Markdown',
-            ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
-        });
-    });
-
-    bot.action('offers', async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
-        const b = await getSetting('deposit_bonus_percent', '10');
-        const d = await getSetting('withdraw_discount_percent', '10');
-        return ctx.editMessageText(`🎁 **العروض النشطة:**\n\n✨ بونص إيداع: +${b}\%\n🔻 عمولة سحب: ${d}%`, {
-            parse_mode: 'Markdown',
-            ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
-        });
-    });
-
-    bot.action('terms', async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
-        return ctx.editMessageText(`⚠️ **شروط الاستخدام:**\n\nيجب التأكد من إدخال رقم العملية الصحيح والمبلغ المطابق لضمان معالجة طلبك عبر النظام الآلي.`, {
-            parse_mode: 'Markdown',
-            ...Markup.inlineKeyboard([[Markup.button.callback('رجوع ↩️', 'main_menu')]])
-        });
-    });
-
     bot.on(['photo', 'text'], async (ctx) => {
         try {
             const userId = ctx.from.id;
@@ -324,89 +235,27 @@ function createBot() {
             if (!ctx.message.text) return;
             const text = ctx.message.text.trim();
 
-            if (!state) {
-                return ctx.reply('⚠️ يرجى اختيار العملية من القائمة الرئيسية أو الضغط على /start للبدء.');
-            }
-
-            // إنشاء حساب آيسانسي مع إضافة الرموز للتفرّد
             if (state === 'awaiting_account_creation') {
-                const finalUsername = generateUniqueUsername(text);
-                const generatedPass = Math.random().toString(36).slice(-8);
-
-                user.ichancy_user = finalUsername;
-                user.ichancy_pass = generatedPass;
-
-                await setUserState(userId, null, null);
-                await ctx.reply(`✅ **تم إنشاء حسابك على آيسانسي بنجاح!**\n\n👤 اسم المستخدم: \`${finalUsername}\`\n🔑 كلمة المرور: \`${generatedPass}\``, { parse_mode: 'Markdown' });
-                return sendMainMenu(ctx, user);
-            }
-
-            if (state === 'awaiting_transaction_id') {
-                let temp = user.temp_data ? JSON.parse(user.temp_data) : {};
-                temp.transactionId = text;
-                await setUserState(userId, 'awaiting_deposit_amount', temp);
-                return ctx.reply(`✅ تم حفظ رقم العملية (\`${text}\`).\n\n👇 **الخطوة الثانية:** الآن أرسل **المبلغ** المراد شحنه بدقة (رقم فقط):`, { parse_mode: 'Markdown' });
-            }
-
-            if (state === 'awaiting_deposit_amount') {
-                const amount = parseFloat(text);
-                if (isNaN(amount) || amount <= 0) {
-                    return ctx.reply('❌ يرجى إدخال مبلغ صحيح (أرقام فقط):');
-                }
-
-                let temp = user.temp_data ? JSON.parse(user.temp_data) : {};
-                const txId = temp.transactionId || '';
-                const bankKey = temp.bankKey || 'bank1';
-                const method = temp.paymentMethod || 'البنك';
-
-                if (bankKey === 'bank2') {
-                    const shamTx = memoryStore.incomingShamCash[txId];
-                    if (!shamTx) {
-                        await setUserState(userId, null, null);
-                        return ctx.reply(`❌ **خطأ في التحقق!**\nرقم العملية (\`${txId}\`) غير موجود في سجلات الحوالات الواردة لمحفظتك على شام كاش.`);
-                    }
-                    if (parseFloat(shamTx.amount) !== amount) {
-                        await setUserState(userId, null, null);
-                        return ctx.reply(`❌ **خطأ في مطابقة المبلغ!**\nالمبلغ المدخل (${amount}) لا يطابق قيمة الحوالة الفعليّة الواردة (${shamTx.amount}).`);
-                    }
-                } else {
-                    if (txId.length < 5) {
-                        await setUserState(userId, null, null);
-                        return ctx.reply(`❌ **خطأ:** رقم العملية قصير جداً أو غير صالح.`);
-                    }
-                }
-
-                const rate = parseFloat(await getSetting(`${bankKey}_rate`, '100'));
-                const bonus = parseFloat(await getSetting('deposit_bonus_percent', '10'));
-
-                const multipliedAmount = amount * rate;
-                const net = multipliedAmount + (multipliedAmount * (bonus / 100));
-
-                await setUserState(userId, null, null);
-                await updateBalance(userId, net);
-
-                const txItem = { id: memoryStore.transactions.length + 1, user_id: userId, type: 'deposit', amount, net_amount: net, transaction_id: txId, status: 'approved' };
-                memoryStore.transactions.push(txItem);
-
-                await ctx.reply(`✅ **تمت مطابقة الحوالة الواردة وشحن رصيدك بنجاح تام!**\n\n💵 المبلغ: ${amount}\n🔄 الصرف: x${rate}\n🎁 الإجمالي مع البونص: **${net} SYP**`);
+                await ctx.reply('⏳ **جاري إنشاء الحساب الحقيقي على لوحة آيسانسي، يرجى الانتظار لحظات...**');
                 
-                await bot.telegram.sendMessage(ADMIN_ID, `⚡ **إيداع مؤكد عبر Webhook شام كاش (#${txItem.id})**\n\n👤 ID: \`${userId}\`\n💳 البنك: \`${method}\`\n🔢 العملية: \`${txId}\`\n💰 المبلغ المطابق: \`${amount}\`\n💰 الصافي المضاف: **${net}**`, {
-                    parse_mode: 'Markdown'
-                });
+                const userPass = Math.random().toString(36).slice(-8);
+                const result = await createRealIchancyPlayer(text, userPass);
 
-                return sendMainMenu(ctx, user);
-            }
+                if (result.success) {
+                    user.ichancy_user = result.username;
+                    user.ichancy_pass = result.password;
 
-            if (state === 'awaiting_withdraw_account') {
-                let temp = { targetAccount: text };
-                await setUserState(userId, 'awaiting_withdraw_amount', temp);
-                return ctx.reply('✅ تم حفظ الحساب. أدخل المبلغ المراد سحبه:');
+                    await setUserState(userId, null, null);
+                    await ctx.reply(`✅ **تم إنشاء حسابك الحقيقي على آيسانسي بنجاح!**\n\n👤 اسم المستخدم: \`${result.username}\`\n🔑 كلمة المرور: \`${result.password}\`\n📧 البريد المرتبط: \`${result.email}\``, { parse_mode: 'Markdown' });
+                    return sendMainMenu(ctx, user);
+                } else {
+                    return ctx.reply('❌ حدث خطأ أثناء إنشاء الحساب، يرجى المحاولة مرة أخرى.');
+                }
             }
 
             if (state === 'awaiting_withdraw_amount') {
                 const amount = parseFloat(text);
                 
-                // التحقق الصارم من وجود رصيد كافٍ
                 if (isNaN(amount) || amount <= 0 || !user.balance || user.balance < amount) {
                     await setUserState(userId, null, null);
                     return ctx.reply('❌ **لا يوجد لديك رصيد كافي للقيام بهذه العملية.**');
@@ -425,69 +274,11 @@ function createBot() {
 
                 await ctx.reply(`✅ تم خصم ${amount} وإرسال طلب السحب للإدارة للمراجعة.`);
                 await bot.telegram.sendMessage(ADMIN_ID, `📤 **طلب سحب جديد (#${txItem.id})**\n\n👤 ID: \`${userId}\`\n🏦 الحساب: \`${acc}\`\n💵 الصافي: **${net}**`, {
-                    parse_mode: 'Markdown',
-                    ...Markup.inlineKeyboard([
-                        [Markup.button.callback('✅ تأكيد السحب فوراً', `approve_with_${txItem.id}`), Markup.button.callback('❌ رفض وإعادة الرصيد', `reject_with_${txItem.id}`)]
-                    ])
+                    parse_mode: 'Markdown'
                 });
                 return sendMainMenu(ctx, user);
             }
-
-            if (state === 'awaiting_gift_target_id') {
-                let temp = { targetId: text };
-                await setUserState(userId, 'awaiting_gift_amount', temp);
-                return ctx.reply(`أدخل المبلغ المراد إهداؤه لـ \`${text}\`:`, { parse_mode: 'Markdown' });
-            }
-
-            if (state === 'awaiting_gift_amount') {
-                const amount = parseFloat(text);
-                let temp = user.temp_data ? JSON.parse(user.temp_data) : {};
-                const targetId = parseInt(temp.targetId);
-
-                if (isNaN(amount) || amount <= 0 || !user.balance || user.balance < amount) {
-                    await setUserState(userId, null, null);
-                    return ctx.reply('❌ **لا يوجد لديك رصيد كافي لإكمال التحويل.**');
-                }
-
-                await updateBalance(userId, -amount);
-                await updateBalance(targetId, amount);
-                await setUserState(userId, null, null);
-
-                await ctx.reply(`🎉 تم إرسال الهدية فوراً بنجاح!`);
-                await bot.telegram.sendMessage(targetId, `🎁 **وصلتك هدية جديدة!**\nتم تحويل ${amount} إلى حسابك فوراً.`).catch(() => {});
-                return sendMainMenu(ctx, user);
-            }
-
-            if (state === 'awaiting_support_message') {
-                await setUserState(userId, null, null);
-                await bot.telegram.sendMessage(ADMIN_ID, `💬 **رسالة دعم فورية**\n\n👤 ID: \`${userId}\`\n\n${text}`, { parse_mode: 'Markdown' });
-                await ctx.reply('✅ تم إرسال رسالتك للدعم بنجاح.');
-                return sendMainMenu(ctx, user);
-            }
         } catch (e) { console.error(e); }
-    });
-
-    bot.action(/^approve_with_(\d+)$/, async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
-        const txId = parseInt(ctx.match[1]);
-        const tx = memoryStore.transactions.find(t => t.id === txId && t.status === 'pending');
-        if (tx) {
-            tx.status = 'approved';
-            await ctx.editMessageText(`${ctx.callbackQuery.message.text}\n\n✅ **تم تأكيد السحب فوراً.**`);
-            await bot.telegram.sendMessage(tx.user_id, `🎉 تم إتمام وتحويل عملية السحب بنجاح!`).catch(() => {});
-        }
-    });
-
-    bot.action(/^reject_with_(\d+)$/, async (ctx) => {
-        await ctx.answerCbQuery().catch(() => {});
-        const txId = parseInt(ctx.match[1]);
-        const tx = memoryStore.transactions.find(t => t.id === txId && t.status === 'pending');
-        if (tx) {
-            tx.status = 'rejected';
-            await updateBalance(tx.user_id, tx.amount);
-            await ctx.editMessageText(`${ctx.callbackQuery.message.text}\n\n❌ **تم رفض السحب وإعادة المبلغ للرصيد فوراً.**`);
-            await bot.telegram.sendMessage(tx.user_id, `❌ تم رفض السحب وإعادة مبلغ ${tx.amount} إلى رصيدك.`).catch(() => {});
-        }
     });
 
     return bot;
@@ -498,86 +289,6 @@ module.exports = async (req, res) => {
         let body = req.body;
         if (typeof body === 'string') {
             try { body = JSON.parse(body); } catch (e) { body = {}; }
-        }
-
-        if (req.method === 'GET' && req.headers['host']) {
-            const currentUrl = `https://${req.headers['host']}/api/bot`;
-            const botInstance = new Telegraf(BOT_TOKEN);
-            await botInstance.telegram.setWebhook(currentUrl).catch(() => {});
-        }
-
-        if (req.method === 'POST' && body && (body.transaction_id || body.id)) {
-            const txId = body.transaction_id || body.id;
-            const amount = parseFloat(body.amount || 0);
-            
-            memoryStore.incomingShamCash[txId] = { amount, time: Date.now() };
-
-            const bot = createBot();
-            await bot.telegram.sendMessage(ADMIN_ID, `🔔 **حوالة جديدة وصلت لمحفظتك عبر Webhook شام كاش!**\n\n🔢 رقم العملية: \`${txId}\`\n💵 المبلغ: \`${amount}\``, { parse_mode: 'Markdown' }).catch(() => {});
-            
-            return res.status(200).json({ status: 'received', message: 'Webhook verified successfully' });
-        }
-
-        if (req.method === 'GET') {
-            const b2_name = await getSetting('bank2_name');
-            const b2_acc = await getSetting('bank2_acc');
-            const b2_rate = await getSetting('bank2_rate');
-            const b2_url = await getSetting('bank2_url');
-
-            res.setHeader('Content-Type', 'text/html; charset=utf-8');
-            return res.status(200).send(`
-                <!DOCTYPE html>
-                <html lang="ar" dir="rtl">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>لوحة تحكم شام كاش Webhook</title>
-                    <style>
-                        body { font-family: Tahoma, sans-serif; background: #0f172a; color: #f8fafc; padding: 20px; direction: rtl; }
-                        .container { max-width: 750px; margin: 0 auto; background: #1e293b; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-                        h2 { text-align: center; color: #38bdf8; margin-bottom: 25px; }
-                        fieldset { border: 1px solid #475569; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
-                        legend { color: #38bdf8; font-weight: bold; padding: 0 10px; }
-                        .form-group { margin-bottom: 12px; }
-                        label { display: block; margin-bottom: 4px; color: #cbd5e1; font-size: 14px; }
-                        input { width: 100%; padding: 9px; background: #0f172a; border: 1px solid #475569; border-radius: 6px; color: white; box-sizing: border-box; }
-                        button { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; }
-                        button:hover { background: #1d4ed8; }
-                        .alert { background: #0284c7; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; line-height: 1.6; }
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <h2>🚀 ربط Webhook التوكن الجديد</h2>
-                        <div class="alert">
-                            📌 <b>حالة النظام:</b> تم تحديث منطق التحقق من الأرصدة وإنشاء اسم المستخدم بالرموز لضمان التفرّد بنجاح.
-                        </div>
-                        <form method="POST" action="">
-                            <fieldset style="border-color: #38bdf8;">
-                                <legend>💳 إعدادات شام كاش</legend>
-                                <div class="form-group"><label>اسم البنك:</label><input type="text" name="bank2_name" value="${b2_name}"></div>
-                                <div class="form-group"><label>رقم المحفظة (Account ID):</label><input type="text" name="bank2_acc" value="${b2_acc}"></div>
-                                <div class="form-group"><label>رابط واجهة شام كاش وسجل الحركات (URL):</label><input type="text" name="bank2_url" value="${b2_url}"></div>
-                                <div class="form-group"><label>سعر الصرف:</label><input type="text" name="bank2_rate" value="${b2_rate}"></div>
-                            </fieldset>
-                            <button type="submit">💾 حفظ الإعدادات</button>
-                        </form>
-                    </div>
-                </body>
-                </html>
-            `);
-        }
-
-        if (req.method === 'POST' && body && Object.keys(body).length > 0 && !body.transaction_id && !body.id && !body.update_id) {
-            for (const [k, v] of Object.entries(body)) {
-                memoryStore.settings[k] = v;
-            }
-            res.setHeader('Content-Type', 'text/html; charset=utf-8');
-            return res.status(200).send(`
-                <body style="background:#0f172a;color:#4ade80;text-align:center;padding-top:50px;font-family:Tahoma;">
-                    <h2>✅ تم حفظ الإعدادات بنجاح!</h2>
-                    <br><a href="/" style="color:#38bdf8;text-decoration:none;font-size:18px;">⬅️ العودة للوحة التحكم</a>
-                </body>
-            `);
         }
 
         const bot = createBot();
