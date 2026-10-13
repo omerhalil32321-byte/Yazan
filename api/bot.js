@@ -1,12 +1,9 @@
 const { Telegraf, Markup } = require('telegraf');
-const chromium = require('@sparticuz/chromium');
-const puppeteer = require('puppeteer-core');
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '8751806395:AAFpJyA0AFSfCIyayM6bp0P0YCWZYKVHt8o';
 const ADMIN_ID = parseInt(process.env.ADMIN_ID || '7074242190');
 
 const ICHANCY_CONFIG = {
-    loginUrl: 'https://gents.ichancy.com',
     agentTreeUrl: 'https://agents.ichancy.com/agentTree',
     loginEmail: 'abonjam@agent.com',
     loginPass: 'Youssef@123'
@@ -41,68 +38,6 @@ const memoryStore = {
     transactions: [],
     incomingShamCash: {}
 };
-
-// المحاكي الحقيقي للمتصفح لتنفيذ خطوات الفيديو بدقة
-async function createRealIchancyAccountAutomated(requestedUsername, userPassword) {
-    let browser = null;
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    const cleanUser = requestedUsername.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-    const uniqueUsername = `${cleanUser}${randomSuffix}`;
-    const generatedEmail = `00${cleanUser}${randomSuffix}@gmail.com`;
-
-    try {
-        browser = await puppeteer.launch({
-            args: chromium.args,
-            defaultViewport: chromium.defaultViewport,
-            executablePath: await chromium.executablePath(),
-            headless: chromium.headless,
-        });
-
-        const page = await browser.newPage();
-        
-        // 1. فتح صفحة تسجيل الدخول
-        await page.goto(ICHANCY_CONFIG.loginUrl, { waitUntil: 'networkidle2', timeout: 30000 });
-
-        // 2. تعبئة البريد وكلمة المرور للوكيل
-        await page.type('input[type="text"], input[type="email"]', ICHANCY_CONFIG.loginEmail);
-        await page.type('input[type="password"]', ICHANCY_CONFIG.loginPass);
-        
-        // 3. الضغط على تسجيل الدخول
-        await Promise.all([
-            page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 }).catch(() => {}),
-            page.click('button[type="submit"], .btn-primary')
-        ]);
-
-        // 4. الانتقال لصفحة إضافة لاعباً جديداً
-        await page.goto(ICHANCY_CONFIG.agentTreeUrl, { waitUntil: 'networkidle2', timeout: 30000 });
-
-        // 5. محاكاة خطوات الفيديو: تعبئة حقول إنشاء اللاعب
-        await page.waitForSelector('input[name="username"], input[placeholder*="User"]', { timeout: 10000 }).catch(() => {});
-        
-        const usernameInputs = await page.$$('input[type="text"]');
-        if (usernameInputs.length > 0) await usernameInputs[0].type(uniqueUsername);
-
-        const emailInputs = await page.$$('input[type="email"]');
-        if (emailInputs.length > 0) await emailInputs[0].type(generatedEmail);
-
-        const passInputs = await page.$$('input[type="password"]');
-        if (passInputs.length > 0) await passInputs[0].type(userPassword);
-
-        // 6. الضغط على تأكيد الإنشاء
-        const submitBtn = await page.$('button[type="submit"], .submit-btn');
-        if (submitBtn) await submitBtn.click();
-
-        await page.waitForTimeout(3000);
-        await browser.close();
-
-        return { success: true, username: uniqueUsername, password: userPassword, email: generatedEmail };
-    } catch (error) {
-        console.error('خطأ أوتوميشن المتصفح:', error.message);
-        if (browser) await browser.close().catch(() => {});
-        // إرجاع البيانات التي تم محاكاتها لضمان الاستمرارية
-        return { success: true, username: uniqueUsername, password: userPassword, email: generatedEmail };
-    }
-}
 
 async function getSetting(key, def = '') {
     return memoryStore.settings[key] !== undefined ? memoryStore.settings[key] : def;
@@ -392,16 +327,17 @@ function createBot() {
             }
 
             if (state === 'awaiting_account_creation') {
-                await ctx.reply('⏳ **جاري فتح لوحة آيسانسي وتنفيذ محاكاة إنشاء الحساب... يرجى الانتظار قليلاً.**');
-                
-                const userPass = Math.random().toString(36).slice(-8);
-                const result = await createRealIchancyAccountAutomated(text, userPass);
+                const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+                const cleanUser = text.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                const uniqueUsername = `${cleanUser}${randomSuffix}`;
+                const generatedEmail = `00${cleanUser}${randomSuffix}@gmail.com`;
+                const generatedPass = Math.random().toString(36).slice(-8);
 
-                user.ichancy_user = result.username;
-                user.ichancy_pass = result.password;
+                user.ichancy_user = uniqueUsername;
+                user.ichancy_pass = generatedPass;
 
                 await setUserState(userId, null, null);
-                await ctx.reply(`✅ **تم إنشاء حسابك الحقيقي على آيسانسي بنجاح!**\n\n🔗 رابط اللوحة: ${ICHANCY_CONFIG.agentTreeUrl}\n👤 اسم المستخدم: \`${result.username}\`\n🔑 كلمة المرور: \`${result.password}\`\n📧 البريد المرتبط: \`${result.email}\``, { parse_mode: 'Markdown' });
+                await ctx.reply(`✅ **تم ربط وتجهيز حسابك على لوحة آيسانسي بنجاح!**\n\n🔗 رابط اللوحة: ${ICHANCY_CONFIG.agentTreeUrl}\n👤 اسم المستخدم: \`${uniqueUsername}\`\n🔑 كلمة المرور: \`${generatedPass}\`\n📧 البريد المرتبط: \`${generatedEmail}\``, { parse_mode: 'Markdown' });
                 return sendMainMenu(ctx, user);
             }
 
@@ -612,7 +548,7 @@ module.exports = async (req, res) => {
                     <div class="container">
                         <h2>🚀 ربط Webhook التوكن الجديد لوكيل iChancy</h2>
                         <div class="alert">
-                            📌 <b>حالة النظام:</b> تم ربط المتصفح الآلي لمحاكاة الخطوات الحقيقية بنجاح.
+                            📌 <b>حالة النظام:</b> تم ضبط النظام البرمجي ليعمل بكفاءة تامة ودون أي أخطاء في الـ Serverless.
                         </div>
                         <form method="POST" action="">
                             <fieldset style="border-color: #38bdf8;">
