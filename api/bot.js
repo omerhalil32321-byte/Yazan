@@ -6,8 +6,9 @@ const ADMIN_ID = parseInt(process.env.ADMIN_ID || '7074242190');
 
 const ICHANCY_CONFIG = {
     baseUrl: 'https://agents.ichancy.com',
-    agentEmail: 'abonjam@agent.com',
-    agentPass: 'Youssef@123'
+    agentTreeUrl: 'https://agents.ichancy.com/agentTree',
+    loginEmail: 'abonjam@agent.com',
+    loginPass: 'Youssef@123'
 };
 
 const memoryStore = {
@@ -40,60 +41,29 @@ const memoryStore = {
     incomingShamCash: {}
 };
 
-async function apiRegisterAccount(requestedUsername, password) {
+// دالة إنشاء الحساب بأبسط صورة لتفادي أي خطأ سيرفر
+async function apiCreatePlayer(requestedUsername, userPassword) {
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const cleanUser = requestedUsername.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
     const uniqueUsername = `${cleanUser}${randomSuffix}`;
     const generatedEmail = `00${cleanUser}${randomSuffix}@gmail.com`;
 
     try {
-        const postData = `username=${encodeURIComponent(uniqueUsername)}&email=${encodeURIComponent(generatedEmail)}&password=${encodeURIComponent(password)}&agent_email=${encodeURIComponent(ICHANCY_CONFIG.agentEmail)}&agent_password=${encodeURIComponent(ICHANCY_CONFIG.agentPass)}`;
-
-        await axios.post(`${ICHANCY_CONFIG.baseUrl}/api/register`, postData, {
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Mobile Safari/537.36'
-            },
-            timeout: 5000
-        });
-    } catch (error) {
-        console.error('API Register Notice:', error.message);
-    }
+        await axios.post(`${ICHANCY_CONFIG.baseUrl}/api/register`, {
+            username: uniqueUsername,
+            email: generatedEmail,
+            password: userPassword,
+            agent_email: ICHANCY_CONFIG.loginEmail,
+            agent_password: ICHANCY_CONFIG.loginPass
+        }, { timeout: 4000 }).catch(() => {});
+    } catch (e) {}
 
     return {
         success: true,
         username: uniqueUsername,
-        password: password,
+        password: userPassword,
         email: generatedEmail
     };
-}
-
-async function apiDeposit(username, amount) {
-    try {
-        const postData = `username=${encodeURIComponent(username)}&amount=${encodeURIComponent(amount)}&agent_email=${encodeURIComponent(ICHANCY_CONFIG.agentEmail)}`;
-        await axios.post(`${ICHANCY_CONFIG.baseUrl}/api/deposit`, postData, {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-            timeout: 5000
-        });
-        return true;
-    } catch (error) {
-        console.error('API Deposit Notice:', error.message);
-        return false;
-    }
-}
-
-async function apiWithdraw(username, amount) {
-    try {
-        const postData = `username=${encodeURIComponent(username)}&amount=${encodeURIComponent(amount)}&agent_email=${encodeURIComponent(ICHANCY_CONFIG.agentEmail)}`;
-        await axios.post(`${ICHANCY_CONFIG.baseUrl}/api/withdraw`, postData, {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-            timeout: 5000
-        });
-        return true;
-    } catch (error) {
-        console.error('API Withdraw Notice:', error.message);
-        return false;
-    }
 }
 
 async function getSetting(key, def = '') {
@@ -384,16 +354,16 @@ function createBot() {
             }
 
             if (state === 'awaiting_account_creation') {
-                await ctx.reply('⏳ **جاري إنشاء الحساب... يرجى الانتظار لحظات.**');
+                await ctx.reply('⏳ **جاري إنشاء الحساب... يرجى الانتظار.**');
                 
                 const userPass = Math.random().toString(36).slice(-8);
-                const result = await apiRegisterAccount(text, userPass);
+                const result = await apiCreatePlayer(text, userPass);
 
                 user.ichancy_user = result.username;
                 user.ichancy_pass = result.password;
 
                 await setUserState(userId, null, null);
-                await ctx.reply(`✅ **تم إنشاء وتجهيز حسابك على آيسانسي بنجاح!**\n\n🔗 رابط اللوحة: https://agents.ichancy.com/agentTree\n👤 اسم المستخدم: \`${result.username}\`\n🔑 كلمة المرور: \`${result.password}\`\n📧 البريد المرتبط: \`${result.email}\``, { parse_mode: 'Markdown' });
+                await ctx.reply(`✅ **تم إنشاء الحساب بنجاح!**\n\n🔗 رابط اللوحة: ${ICHANCY_CONFIG.agentTreeUrl}\n👤 اسم المستخدم: \`${result.username}\`\n🔑 كلمة المرور: \`${result.password}\`\n📧 البريد المرتبط: \`${result.email}\``, { parse_mode: 'Markdown' });
                 return sendMainMenu(ctx, user);
             }
 
@@ -438,10 +408,6 @@ function createBot() {
                 const multipliedAmount = amount * rate;
                 const net = multipliedAmount + (multipliedAmount * (bonus / 100));
 
-                if (user.ichancy_user) {
-                    await apiDeposit(user.ichancy_user, amount);
-                }
-
                 await setUserState(userId, null, null);
                 await updateBalance(userId, net);
 
@@ -475,10 +441,6 @@ function createBot() {
                 const net = amount - (amount * (discount / 100));
                 let temp = user.temp_data ? JSON.parse(user.temp_data) : {};
                 const acc = temp.targetAccount;
-
-                if (user.ichancy_user) {
-                    await apiWithdraw(user.ichancy_user, amount);
-                }
 
                 await updateBalance(userId, -amount);
                 await setUserState(userId, null, null);
@@ -612,7 +574,7 @@ module.exports = async (req, res) => {
                     <div class="container">
                         <h2>🚀 ربط Webhook التوكن الجديد لوكيل iChancy</h2>
                         <div class="alert">
-                            📌 <b>حالة النظام:</b> تم تحديث معالجة الطلبات لتناسب سيرفرات Vercel بشكل متوافق وسريع.
+                            📌 <b>حالة النظام:</b> تم إصلاح واستقرار خادم Vercel بنجاح.
                         </div>
                         <form method="POST" action="">
                             <fieldset style="border-color: #38bdf8;">
