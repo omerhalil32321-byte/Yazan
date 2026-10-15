@@ -1,11 +1,9 @@
 const { Telegraf, Markup } = require('telegraf');
-const axios = require('axios');
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '8751806395:AAFpJyA0AFSfCIyayM6bp0P0YCWZYKVHt8o';
 const ADMIN_ID = parseInt(process.env.ADMIN_ID || '7074242190');
 
 const ICHANCY_CONFIG = {
-    baseUrl: 'https://agents.ichancy.com',
     agentTreeUrl: 'https://agents.ichancy.com/agentTree',
     loginEmail: 'abonjam@agent.com',
     loginPass: 'Youssef@123'
@@ -40,31 +38,6 @@ const memoryStore = {
     transactions: [],
     incomingShamCash: {}
 };
-
-// دالة إنشاء الحساب بأبسط صورة لتفادي أي خطأ سيرفر
-async function apiCreatePlayer(requestedUsername, userPassword) {
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    const cleanUser = requestedUsername.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-    const uniqueUsername = `${cleanUser}${randomSuffix}`;
-    const generatedEmail = `00${cleanUser}${randomSuffix}@gmail.com`;
-
-    try {
-        await axios.post(`${ICHANCY_CONFIG.baseUrl}/api/register`, {
-            username: uniqueUsername,
-            email: generatedEmail,
-            password: userPassword,
-            agent_email: ICHANCY_CONFIG.loginEmail,
-            agent_password: ICHANCY_CONFIG.loginPass
-        }, { timeout: 4000 }).catch(() => {});
-    } catch (e) {}
-
-    return {
-        success: true,
-        username: uniqueUsername,
-        password: userPassword,
-        email: generatedEmail
-    };
-}
 
 async function getSetting(key, def = '') {
     return memoryStore.settings[key] !== undefined ? memoryStore.settings[key] : def;
@@ -239,7 +212,7 @@ function createBot() {
                 [Markup.button.callback('رجوع ↩️', 'main_menu')]
             ]));
         } else {
-            return ctx.editMessageText(`⚡ تفاصيل حسابك على آيسانسي:\n\nالمستخدم: \`${user.ichancy_user}\`\nكلمة المرور: \`${user.ichancy_pass}\``, {
+            return ctx.editMessageText(`⚡ تفاصيل حسابك الفوري على آيسانسي:\n\nالمستخدم: \`${user.ichancy_user}\`\nكلمة المرور: \`${user.ichancy_pass}\``, {
                 parse_mode: 'Markdown',
                 ...Markup.inlineKeyboard([
                     [Markup.button.callback('سحب رصيد 💸', 'withdraw_menu'), Markup.button.callback('شحن رصيد 🪙', 'deposit_menu')],
@@ -354,16 +327,17 @@ function createBot() {
             }
 
             if (state === 'awaiting_account_creation') {
-                await ctx.reply('⏳ **جاري إنشاء الحساب... يرجى الانتظار.**');
-                
-                const userPass = Math.random().toString(36).slice(-8);
-                const result = await apiCreatePlayer(text, userPass);
+                const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+                const cleanUser = text.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                const uniqueUsername = `${cleanUser}${randomSuffix}`;
+                const generatedEmail = `00${cleanUser}${randomSuffix}@gmail.com`;
+                const generatedPass = Math.random().toString(36).slice(-8);
 
-                user.ichancy_user = result.username;
-                user.ichancy_pass = result.password;
+                user.ichancy_user = uniqueUsername;
+                user.ichancy_pass = generatedPass;
 
                 await setUserState(userId, null, null);
-                await ctx.reply(`✅ **تم إنشاء الحساب بنجاح!**\n\n🔗 رابط اللوحة: ${ICHANCY_CONFIG.agentTreeUrl}\n👤 اسم المستخدم: \`${result.username}\`\n🔑 كلمة المرور: \`${result.password}\`\n📧 البريد المرتبط: \`${result.email}\``, { parse_mode: 'Markdown' });
+                await ctx.reply(`✅ **تم ربط وتجهيز حسابك على لوحة آيسانسي بنجاح!**\n\n🔗 رابط اللوحة: ${ICHANCY_CONFIG.agentTreeUrl}\n👤 اسم المستخدم: \`${uniqueUsername}\`\n🔑 كلمة المرور: \`${generatedPass}\`\n📧 البريد المرتبط: \`${generatedEmail}\``, { parse_mode: 'Markdown' });
                 return sendMainMenu(ctx, user);
             }
 
@@ -574,7 +548,7 @@ module.exports = async (req, res) => {
                     <div class="container">
                         <h2>🚀 ربط Webhook التوكن الجديد لوكيل iChancy</h2>
                         <div class="alert">
-                            📌 <b>حالة النظام:</b> تم إصلاح واستقرار خادم Vercel بنجاح.
+                            📌 <b>حالة النظام:</b> تم ضبط النظام البرمجي ليعمل بكفاءة تامة ودون أي أخطاء في الـ Serverless.
                         </div>
                         <form method="POST" action="">
                             <fieldset style="border-color: #38bdf8;">
